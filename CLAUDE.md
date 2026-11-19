@@ -66,6 +66,18 @@ env/         (B)  grader/              (B)   tests/{env,grader}/ (B)
 policies/    (B, oracle — A)                 trajectories/ (B)
 schemas/  docs/  README.md  requirements.txt  — общий контракт
 ```
+Общий контракт (форматы, типы ошибок, каноничные ID, доказательства, допуски) — `docs/contract.md`.
+Устройство генератора и ограничения — `docs/generator.md`.
+
+## Команды (зона A, только stdlib Python 3.11)
+```
+python -m unittest discover -s tests/generator -p "test_gen_*.py"   # тесты генератора
+python -m generator build-splits      # пересобрать episodes/train, dev, stub
+python -m generator check-splits      # побайтовая воспроизводимость открытых эпизодов
+python -m generator audit <ep_dir>    # эталон == вывод по открытым данным
+```
+Любое изменение генератора меняет эпизоды → после него `build-splits` и коммит эпизодов вместе с кодом.
+Python-файлы писать с `newline=""` (LF), иначе Windows вставит CRLF.
 
 ## Ключевые требования ТЗ (не нарушать)
 
