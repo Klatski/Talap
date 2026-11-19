@@ -8,6 +8,8 @@
   python -m generator transform <src> <dst> --seed 1
   python -m generator oracle <episode_dir>      # findings.json от oracle
   python -m generator leakcheck --n 60          # признаки-артефакты vs ошибки
+  python -m generator attacks <episode_dir> --out attacks.json   # атаки на оценщик B
+  python -m generator scan-trajectories trajectories/trajectories.jsonl
 """
 
 from __future__ import annotations
@@ -105,6 +107,30 @@ def _cmd_leakcheck(args) -> int:
     return 0
 
 
+def _cmd_attacks(args) -> int:
+    from .attacks import attacks_for_episode_dir
+
+    cases = attacks_for_episode_dir(args.episode_dir, args.seed)
+    text = json.dumps(cases, indent=2, ensure_ascii=False) + "\n"
+    if args.out:
+        with open(args.out, "w", encoding="utf-8", newline="") as fh:
+            fh.write(text)
+        print(json.dumps({"cases": len(cases), "out": args.out}))
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+def _cmd_scan(args) -> int:
+    from .leakscan import scan_trajectories
+
+    problems = scan_trajectories(args.trajectories, args.episodes)
+    for p in problems[:100]:
+        print("LEAK", p)
+    print("scan-trajectories:", "OK" if not problems else f"{len(problems)} problems")
+    return 1 if problems else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m generator", description="Synthetic audit episode generator")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -140,6 +166,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--config", default="mixed_random")
     p.add_argument("--n", type=int, default=60)
     p.set_defaults(func=_cmd_leakcheck)
+
+    p = sub.add_parser("attacks", help="adversarial submissions with spec-derived expected tp/fp/fn/reward")
+    p.add_argument("episode_dir")
+    p.add_argument("--out")
+    p.add_argument("--seed", type=int, default=0)
+    p.set_defaults(func=_cmd_attacks)
+
+    p = sub.add_parser("scan-trajectories", help="look for truth leaks in trajectories.jsonl")
+    p.add_argument("trajectories")
+    p.add_argument("--episodes", default=str(Path(__file__).resolve().parent.parent / "episodes"))
+    p.set_defaults(func=_cmd_scan)
 
     args = parser.parse_args(argv)
     if hasattr(args, "seed") and isinstance(args.seed, str) and args.seed.lstrip("-").isdigit():

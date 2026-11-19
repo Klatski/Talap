@@ -155,7 +155,20 @@ class Policy:
 ```
 Oracle реализует этот интерфейс (одним `submit`), но создаётся на стороне оценщика из truth.
 
+## 10. Перекрёстная проверка A → B (готовые инструменты)
+- `python -m generator attacks <episode_dir> --out attacks.json` — 36 атакующих submit'ов на эпизод
+  (дубли, угаданные ID, чужая валюта, сумма вне допуска, неполные/поддельные доказательства,
+  «пометить всё», убедительный текст explanation, 18 вариантов неверной структуры) с ожидаемыми
+  по ТЗ `valid/tp/fp/fn/reward`.
+- `tests/generator/test_gen_crosscheck_tools.py::AgainstGraderTests` сам прогонит их через
+  оценщик, как только появится `grader.score_submission(truth, submission, inspection_steps)
+  -> {"valid", "tp", "fp", "fn", "reward", ...}`. Если B выберет другое имя — поправим адаптер в тесте.
+- `python -m generator scan-trajectories trajectories/trajectories.jsonl` — ищет в траекториях
+  issue_id, scenario_group, имена сценариев, cause/variant, ключи закрытых файлов, пути `private/`,
+  seed и суммы эталона, которых нет в открытых данных.
+
 ## Открытые вопросы к B
 1. Формат действия: плоский `{"action": …, …}` как выше или `{"name": …, "args": {…}}`?
 2. Принимать ли в `evidence_ids` бизнес-ID (`INV-…`) как синоним `doc_id`? Сейчас наборы — только `doc_id`/`row_id`/`FX:`.
 3. Считается ли submit в `inspection_steps` (предлагаю: нет) и шаги с ошибкой (предлагаю: да).
+4. Имя и сигнатура функции оценки для автоматического прогона атак (см. раздел 10).
