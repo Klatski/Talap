@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "provenance.json (grader only)",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^ep-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{10}$"
+    },
+    "seed": {
+      "type": "string"
+    },
+    "salted": {
+      "type": "boolean"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "config_name": {
+      "type": "string"
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "config": {
+      "type": "object"
+    },
+    "params": {
+      "type": "object"
+    },
+    "checks_before_injection": {
+      "type": "object"
+    },
+    "checks_after_injection": {
+      "type": "object"
+    },
+    "history": {
+      "type": "object"
+    },
+    "injections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "issue_id",
+          "type",
+          "variant",
+          "cause",
+          "before",
+          "after"
+        ]
+      }
+    },
+    "distractors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind"
+        ]
+      }
+    },
+    "transforms": {
+      "type": "array"
+    },
+    "self_check": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "generator_version",
+    "episode_id",
+    "seed",
+    "config_digest",
+    "config",
+    "injections",
+    "distractors",
+    "transforms"
+  ],
+  "additionalProperties": false
+}

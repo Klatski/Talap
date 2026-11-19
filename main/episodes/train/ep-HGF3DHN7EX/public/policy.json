@@ -1,0 +1,54 @@
+{
+  "accounts": {
+    "1000": "Bank (ledger currency)",
+    "1200": "Accounts receivable",
+    "2300": "Unapplied customer receipts",
+    "4000": "Sales revenue",
+    "6100": "Rent",
+    "6200": "Salaries and wages",
+    "6300": "Utilities",
+    "6400": "Software subscriptions",
+    "6500": "Travel",
+    "6600": "Office supplies",
+    "6700": "Professional services",
+    "6800": "Marketing",
+    "6900": "Bank charges",
+    "7900": "Realized FX gain/loss"
+  },
+  "billing": {
+    "order_lines": "each (order_ref, sku) pair is billed at most once; recurring services get a new order_ref for every billing"
+  },
+  "company_timezone": "+03:00",
+  "document_window": "invoices.jsonl and payments.jsonl also contain documents from about 30 days before and 5 days after the period; those must not be posted in this ledger.",
+  "fx": {
+    "formula": "target_minor = round(source_minor * rate * 10^(exponent(target) - exponent(source)))",
+    "invoice_posting": "1200 debit and 4000 credit, both converted at the invoice rate",
+    "missing_rate": "latest_prior_available",
+    "missing_rate_description": "if fx.csv has no rate for the selected date, use the latest earlier date that has one",
+    "payment_posting": "1000 and 2300 converted at the payment rate; each 1200 credit converted at the rate of the invoice it settles; the difference goes to 7900",
+    "quote": "rate = units of target_currency for 1 unit of source_currency",
+    "rate_date_rule": "previous_day",
+    "rate_date_rule_description": "rate of the calendar day before the document's date in company_timezone",
+    "record_id": "FX:<source_currency>:<target_currency>:<date>"
+  },
+  "ledger_currency": "EUR",
+  "ledger_scope": "Postings of documents that belong to the reporting period only; no opening balances.",
+  "payments": {
+    "allocation_source": "invoice_refs: list of {invoice_id, amount_minor} in the payment currency (always the invoice currency); null when the payer gave no reference",
+    "refunds": "negative amount_minor, no invoice_refs; debit 2300, credit 1000; ledger currency only",
+    "unallocated_amounts": "payments without invoice_refs and any excess of amount_minor over the sum of invoice_refs are credited to 2300"
+  },
+  "period": {
+    "attribution": "A document belongs to the period that contains its own timestamp (invoices: issued_at, payments: timestamp) converted to company_timezone.",
+    "end": "2026-09-01T00:00:00+03:00",
+    "end_inclusive": false,
+    "start": "2026-08-01T00:00:00+03:00",
+    "start_inclusive": true
+  },
+  "rounding": {
+    "applies_to": "every converted ledger line, separately",
+    "description": "round half to even (banker's rounding) to an integer number of minor units",
+    "mode": "half_even"
+  },
+  "schema_version": "1.0"
+}

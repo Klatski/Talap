@@ -1,0 +1,164 @@
+{
+  "episodes": [
+    {
+      "config": "clean_small",
+      "config_digest": "16de79ab95663e41907ce6354fd4144daad9b156cc5eb590e0efd4adfcf63152",
+      "episode_id": "ep-775BGFMEPG",
+      "issue_types": [],
+      "issues": 0,
+      "overrides": {},
+      "path": "ep-775BGFMEPG",
+      "scenarios": [],
+      "seed": 101
+    },
+    {
+      "config": "clean_medium",
+      "config_digest": "ea564f10e822e74aef36bc1283d9c2f7fe3b73661a931ae5f424599ec8ebe69f",
+      "episode_id": "ep-6T8YWM4JDA",
+      "issue_types": [],
+      "issues": 0,
+      "overrides": {},
+      "path": "ep-6T8YWM4JDA",
+      "scenarios": [],
+      "seed": 102
+    },
+    {
+      "config": "two_types",
+      "config_digest": "d2cf148573ee3f8caf864e94529154c66e0c1dbecb8656d557c3772dfa8117e2",
+      "episode_id": "ep-FHU8P9QET4",
+      "issue_types": [
+        "duplicate_invoice",
+        "unapplied_payment"
+      ],
+      "issues": 2,
+      "overrides": {},
+      "path": "ep-FHU8P9QET4",
+      "scenarios": [],
+      "seed": 103
+    },
+    {
+      "config": "all_types",
+      "config_digest": "8eb86061e0a2199add26e9e5bb30df0b1b1659cc599640560e2d74f852f2edaa",
+      "episode_id": "ep-TMA46YV5FW",
+      "issue_types": [
+        "cutoff_error",
+        "duplicate_invoice",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 4,
+      "overrides": {},
+      "path": "ep-TMA46YV5FW",
+      "scenarios": [],
+      "seed": 104
+    },
+    {
+      "config": "fx_cutoff",
+      "config_digest": "fde86d93abc2893d7c0b95d6c24023c5b9c67c473ae5c9a13e366c4cc21424c0",
+      "episode_id": "ep-6GZ29XPNAT",
+      "issue_types": [
+        "cutoff_error",
+        "fx_rate_error"
+      ],
+      "issues": 4,
+      "overrides": {},
+      "path": "ep-6GZ29XPNAT",
+      "scenarios": [],
+      "seed": 105
+    },
+    {
+      "config": "interaction_payment",
+      "config_digest": "4f8f963b54c1bc4e28d398de4405e7265f557d808bfe92b39499bb707f510de7",
+      "episode_id": "ep-UQQ9DU9QZ5",
+      "issue_types": [
+        "cutoff_error",
+        "duplicate_invoice",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 4,
+      "overrides": {},
+      "path": "ep-UQQ9DU9QZ5",
+      "scenarios": [
+        "fx_partial_boundary_payment"
+      ],
+      "seed": 106
+    },
+    {
+      "config": "interaction_invoice",
+      "config_digest": "ac2c079c0cb55eb8955a034824bba6170da2b2c1625de11caf82f149d51b5e0a",
+      "episode_id": "ep-WHHN283C3P",
+      "issue_types": [
+        "cutoff_error",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 4,
+      "overrides": {},
+      "path": "ep-WHHN283C3P",
+      "scenarios": [
+        "cutoff_fx_boundary_invoice"
+      ],
+      "seed": 107
+    },
+    {
+      "config": "interactions_both",
+      "config_digest": "470b6ad0f2cc51a239aa909fd3468264fe985f67fe2a12e2f2e2e8079393e9f5",
+      "episode_id": "ep-D2Z88UACCQ",
+      "issue_types": [
+        "cutoff_error",
+        "duplicate_invoice",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 5,
+      "overrides": {},
+      "path": "ep-D2Z88UACCQ",
+      "scenarios": [
+        "cutoff_fx_boundary_invoice",
+        "fx_partial_boundary_payment"
+      ],
+      "seed": 108
+    },
+    {
+      "config": "heavy",
+      "config_digest": "0c362906c74db0addba7181ec13852cfe3be4557af69e7014446c7c3ab0cdfe2",
+      "episode_id": "ep-5C8KTAPXJA",
+      "issue_types": [
+        "cutoff_error",
+        "duplicate_invoice",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 12,
+      "overrides": {},
+      "path": "ep-5C8KTAPXJA",
+      "scenarios": [
+        "cutoff_fx_boundary_invoice",
+        "fx_partial_boundary_payment"
+      ],
+      "seed": 109
+    },
+    {
+      "config": "mixed_random",
+      "config_digest": "ac14bf3b2fbed494262dd4d819450a873cb34472e3da6631e53b56ae3bd7cd1c",
+      "episode_id": "ep-HGF3DHN7EX",
+      "issue_types": [
+        "cutoff_error",
+        "duplicate_invoice",
+        "fx_rate_error",
+        "unapplied_payment"
+      ],
+      "issues": 7,
+      "overrides": {},
+      "path": "ep-HGF3DHN7EX",
+      "scenarios": [
+        "cutoff_fx_boundary_invoice"
+      ],
+      "seed": 110
+    }
+  ],
+  "generator_version": "0.1.0",
+  "schema_version": "1.0",
+  "split": "train"
+}

@@ -1,0 +1,44 @@
+{
+  "episode_id": "ep-TBP8V4MB8H",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-KAJUZEE",
+        "INV-YJEPGZH"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-CGHA496G",
+          "D-CRC845AM"
+        ]
+      ],
+      "expected_amount_minor": 15651225,
+      "issue_id": "ISS-6RKGC2B9",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice"
+    },
+    {
+      "affected_ids": [
+        "INV-MS9JX9M",
+        "PAY-T4RBFHG"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-HQE5CFGZ",
+          "L-F2HFZGYC"
+        ]
+      ],
+      "expected_amount_minor": 9663200,
+      "issue_id": "ISS-4YMU3URR",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

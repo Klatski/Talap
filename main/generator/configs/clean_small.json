@@ -1,0 +1,15 @@
+{
+  "config_version": "1.0",
+  "name": "clean_small",
+  "size": "small",
+  "errors": {
+    "duplicate_invoice": 0,
+    "unapplied_payment": 0,
+    "fx_rate_error": 0,
+    "cutoff_error": 0
+  },
+  "scenarios": {
+    "fx_partial_boundary_payment": 0,
+    "cutoff_fx_boundary_invoice": 0
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "truth.json (grader only)",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^ep-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{10}$"
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "episode_id",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "properties": {
+        "issue_id": {
+          "type": "string",
+          "pattern": "^ISS-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$"
+        },
+        "type": {
+          "enum": [
+            "duplicate_invoice",
+            "unapplied_payment",
+            "fx_rate_error",
+            "cutoff_error"
+          ]
+        },
+        "affected_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_amount_minor": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "amount_tolerance_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence_sets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "scenario": {
+          "anyOf": [
+            {
+              "enum": [
+                "fx_partial_boundary_payment",
+                "cutoff_fx_boundary_invoice"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scenario_group": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^SCN-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "issue_id",
+        "type",
+        "affected_ids",
+        "expected_amount_minor",
+        "currency",
+        "amount_tolerance_minor",
+        "evidence_sets",
+        "scenario",
+        "scenario_group"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

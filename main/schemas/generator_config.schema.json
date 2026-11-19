@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "generator config (every field optional)",
+  "type": "object",
+  "properties": {
+    "config_version": {
+      "const": "1.0"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "size": {
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ]
+    },
+    "base_currency": {
+      "anyOf": [
+        {
+          "enum": [
+            "KZT",
+            "USD",
+            "EUR",
+            "GBP",
+            "JPY"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "foreign_currencies": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          }
+        }
+      ]
+    },
+    "timezone": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[+-]\\d{2}:\\d{2}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "period": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rounding_mode": {
+      "anyOf": [
+        {
+          "enum": [
+            "half_up",
+            "half_even"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fx_rate_date_rule": {
+      "anyOf": [
+        {
+          "enum": [
+            "document_date",
+            "previous_day"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "errors": {
+      "type": "object",
+      "properties": {
+        "duplicate_invoice": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        },
+        "unapplied_payment": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        },
+        "fx_rate_error": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        },
+        "cutoff_error": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "scenarios": {
+      "type": "object",
+      "properties": {
+        "fx_partial_boundary_payment": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        },
+        "cutoff_fx_boundary_invoice": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "distractors": {
+      "type": "object",
+      "properties": {
+        "recurring_invoices": {
+          "type": "boolean"
+        },
+        "partial_shipments": {
+          "type": "boolean"
+        },
+        "split_payments": {
+          "type": "boolean"
+        },
+        "partial_payments": {
+          "type": "boolean"
+        },
+        "batch_payments": {
+          "type": "boolean"
+        },
+        "overpayment_refunds": {
+          "type": "boolean"
+        },
+        "on_account_payments": {
+          "type": "boolean"
+        },
+        "boundary_documents": {
+          "type": "boolean"
+        },
+        "posting_lag": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

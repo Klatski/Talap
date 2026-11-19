@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "submit(findings) payload",
+  "type": "object",
+  "properties": {
+    "episode_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "required": [
+    "episode_id",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "duplicate_invoice",
+            "unapplied_payment",
+            "fx_rate_error",
+            "cutoff_error"
+          ]
+        },
+        "affected_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "claimed_amount_minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "explanation": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "type",
+        "affected_ids",
+        "claimed_amount_minor",
+        "currency",
+        "evidence_ids",
+        "explanation"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "base_currency": "JPY",
+  "counts": {
+    "documents": 137,
+    "fx_rates": 249,
+    "invoices": 79,
+    "ledger_rows": 1196,
+    "payments": 58
+  },
+  "currency_exponents": {
+    "AED": 2,
+    "JPY": 0,
+    "KWD": 3,
+    "RUB": 2
+  },
+  "episode_id": "ep-SYDT74KXT8",
+  "fx_rate_format": "decimal string",
+  "generator_version": "0.1.0",
+  "money_format": "integer minor units; exponent per currency in currency_exponents",
+  "period_end": "2026-03-01T00:00:00+06:00",
+  "period_start": "2026-02-01T00:00:00+06:00",
+  "rounding": {
+    "mode": "half_up",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "tables": {
+    "fx": {
+      "file": "fx.csv",
+      "id_format": "FX:<source_currency>:<target_currency>:<date>"
+    },
+    "invoices": {
+      "document_id_field": "doc_id",
+      "file": "invoices.jsonl",
+      "id_field": "invoice_id"
+    },
+    "ledger": {
+      "file": "ledger.csv",
+      "id_field": "row_id"
+    },
+    "payments": {
+      "document_id_field": "doc_id",
+      "file": "payments.jsonl",
+      "id_field": "payment_id"
+    }
+  },
+  "timezone": "+06:00"
+}

@@ -1,0 +1,15 @@
+{
+  "config_version": "1.0",
+  "name": "heavy",
+  "size": "large",
+  "errors": {
+    "duplicate_invoice": 2,
+    "unapplied_payment": 2,
+    "fx_rate_error": 2,
+    "cutoff_error": 2
+  },
+  "scenarios": {
+    "fx_partial_boundary_payment": 1,
+    "cutoff_fx_boundary_invoice": 1
+  }
+}
