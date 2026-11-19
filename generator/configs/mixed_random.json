@@ -1,0 +1,33 @@
+{
+  "config_version": "1.0",
+  "name": "mixed_random",
+  "size": "medium",
+  "errors": {
+    "duplicate_invoice": [
+      0,
+      2
+    ],
+    "unapplied_payment": [
+      0,
+      2
+    ],
+    "fx_rate_error": [
+      0,
+      2
+    ],
+    "cutoff_error": [
+      0,
+      2
+    ]
+  },
+  "scenarios": {
+    "fx_partial_boundary_payment": [
+      0,
+      1
+    ],
+    "cutoff_fx_boundary_invoice": [
+      0,
+      1
+    ]
+  }
+}

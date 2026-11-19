@@ -1,0 +1,93 @@
+{
+  "episode_id": "ep-6GZ29XPNAT",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-UHNMFMS"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-YJARWMVF",
+          "L-44ZKQM9C"
+        ],
+        [
+          "D-YJARWMVF",
+          "L-KFNH8Q9C"
+        ]
+      ],
+      "expected_amount_minor": 725795127,
+      "issue_id": "ISS-ZQX95SFU",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "PAY-RY46ASU"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-ENXGFV4R",
+          "L-DDAMHX4R"
+        ],
+        [
+          "D-ENXGFV4R",
+          "L-KQADWP95"
+        ]
+      ],
+      "expected_amount_minor": 5716594,
+      "issue_id": "ISS-QPTGM7Z7",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-K38QP4J"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-HGYCKVBM",
+          "FX:CNY:KZT:2025-06-26",
+          "L-A7UCPM36"
+        ],
+        [
+          "D-HGYCKVBM",
+          "FX:CNY:KZT:2025-06-26",
+          "L-EBTQZVYU"
+        ]
+      ],
+      "expected_amount_minor": 357638,
+      "issue_id": "ISS-HAV8ZX3R",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "PAY-S56NFNA"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-3WN54ZC8",
+          "FX:CNY:KZT:2025-06-27",
+          "L-QRW6H28B"
+        ]
+      ],
+      "expected_amount_minor": 512843,
+      "issue_id": "ISS-EG5C9MPA",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    }
+  ],
+  "schema_version": "1.0"
+}

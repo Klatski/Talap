@@ -1,0 +1,258 @@
+{
+  "episode_id": "ep-5C8KTAPXJA",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-KMYFCH2"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-PMJS7T36",
+          "L-CGKE4JK2"
+        ],
+        [
+          "D-PMJS7T36",
+          "L-YP5SGGT3"
+        ]
+      ],
+      "expected_amount_minor": 809359,
+      "issue_id": "ISS-AGXY4BUX",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-9HZWUJ",
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-KVZMP4H"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-AU9BSGF6",
+          "L-94YDCXN5"
+        ],
+        [
+          "D-AU9BSGF6",
+          "L-KFYEZYV3"
+        ]
+      ],
+      "expected_amount_minor": 95140,
+      "issue_id": "ISS-BS982EWB",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-UM5RTN8"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-2QFCP5TB",
+          "L-RCC8VHKH"
+        ],
+        [
+          "D-2QFCP5TB",
+          "L-WWV9KQRK"
+        ]
+      ],
+      "expected_amount_minor": 62457,
+      "issue_id": "ISS-GYW7ZH5U",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-3GUYFYA",
+        "INV-NVJ8B7H"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-AGVCQAS7",
+          "D-BRKQ9YWH"
+        ]
+      ],
+      "expected_amount_minor": 24236,
+      "issue_id": "ISS-J6G945DX",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice"
+    },
+    {
+      "affected_ids": [
+        "INV-FF9AX4X",
+        "INV-MT43D54"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-6YH86MP3",
+          "D-ZH84S2G3"
+        ]
+      ],
+      "expected_amount_minor": 270000,
+      "issue_id": "ISS-F5K7ZRWD",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice"
+    },
+    {
+      "affected_ids": [
+        "INV-4K2F32T"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-8KJ45BWW",
+          "FX:USD:EUR:2025-04-18",
+          "L-B32TVF8T"
+        ],
+        [
+          "D-8KJ45BWW",
+          "FX:USD:EUR:2025-04-18",
+          "L-EE5HXU94"
+        ]
+      ],
+      "expected_amount_minor": 2435,
+      "issue_id": "ISS-2T572XG9",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-DGF29RA"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-4WZPWT8K",
+          "FX:USD:EUR:2025-04-17",
+          "L-NPCN294X"
+        ],
+        [
+          "D-4WZPWT8K",
+          "FX:USD:EUR:2025-04-17",
+          "L-YQ5Z9E4K"
+        ]
+      ],
+      "expected_amount_minor": 309,
+      "issue_id": "ISS-D4XDM6KY",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-KMYFCH2"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-PMJS7T36",
+          "FX:USD:EUR:2025-04-30",
+          "L-CGKE4JK2"
+        ],
+        [
+          "D-PMJS7T36",
+          "FX:USD:EUR:2025-04-30",
+          "L-YP5SGGT3"
+        ]
+      ],
+      "expected_amount_minor": 1787,
+      "issue_id": "ISS-DJENT7DJ",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-9HZWUJ",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "PAY-UWQ7H33"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-FXBAS86G",
+          "FX:USD:EUR:2025-03-31",
+          "L-UBDQVDEP"
+        ]
+      ],
+      "expected_amount_minor": 5145,
+      "issue_id": "ISS-9MCPMJ5U",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-NRW7UA",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-AS8XR43",
+        "PAY-WJWZSHR"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-RJ2S2EFN",
+          "L-KZMYBWPZ"
+        ]
+      ],
+      "expected_amount_minor": 2839117,
+      "issue_id": "ISS-8H2VNV68",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment"
+    },
+    {
+      "affected_ids": [
+        "INV-T33FRQ3",
+        "PAY-UWQ7H33"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-FXBAS86G",
+          "L-WFGYB9EH"
+        ]
+      ],
+      "expected_amount_minor": 431870,
+      "issue_id": "ISS-4KMJR4YY",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-NRW7UA",
+      "type": "unapplied_payment"
+    },
+    {
+      "affected_ids": [
+        "INV-ZT7JQRD",
+        "PAY-JQ3HK43"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-PQW2H7BP",
+          "L-GS9QHYV8"
+        ]
+      ],
+      "expected_amount_minor": 173325,
+      "issue_id": "ISS-Y84QGH4M",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

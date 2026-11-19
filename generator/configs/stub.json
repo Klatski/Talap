@@ -1,0 +1,22 @@
+{
+  "config_version": "1.0",
+  "name": "stub",
+  "size": "small",
+  "errors": {
+    "duplicate_invoice": 1,
+    "unapplied_payment": 1,
+    "fx_rate_error": 1,
+    "cutoff_error": 1
+  },
+  "scenarios": {
+    "fx_partial_boundary_payment": 1,
+    "cutoff_fx_boundary_invoice": 0
+  },
+  "base_currency": "KZT",
+  "foreign_currencies": [
+    "USD",
+    "EUR"
+  ],
+  "timezone": "+05:00",
+  "period": "2026-03"
+}

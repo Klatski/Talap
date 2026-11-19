@@ -1,0 +1,408 @@
+{
+  "attempt": 0,
+  "checks_after_injection": {
+    "entries_balanced": 611,
+    "ledger_debit_equals_credit": true,
+    "ledger_rows": 1360,
+    "status": "passed"
+  },
+  "checks_before_injection": {
+    "allocations_within_totals": 50,
+    "conversions_match_policy": 101,
+    "entries_balanced": 611,
+    "invoices": 77,
+    "order_lines_unique": 164,
+    "payments": 60,
+    "posted_documents": 101,
+    "status": "passed"
+  },
+  "config": {
+    "base_currency": null,
+    "config_version": "1.0",
+    "distractors": {
+      "batch_payments": true,
+      "boundary_documents": true,
+      "on_account_payments": true,
+      "overpayment_refunds": true,
+      "partial_payments": true,
+      "partial_shipments": true,
+      "posting_lag": true,
+      "recurring_invoices": true,
+      "split_payments": true
+    },
+    "errors": {
+      "cutoff_error": 0,
+      "duplicate_invoice": 0,
+      "fx_rate_error": 0,
+      "unapplied_payment": 0
+    },
+    "foreign_currencies": 2,
+    "fx_rate_date_rule": null,
+    "name": "clean_large",
+    "period": null,
+    "rounding_mode": null,
+    "scenarios": {
+      "cutoff_fx_boundary_invoice": 0,
+      "fx_partial_boundary_payment": 0
+    },
+    "size": "large",
+    "timezone": null
+  },
+  "config_digest": "194636377e2436d783f2ad287de581304f05289327bab14d555cdf2634fc003f",
+  "config_name": "clean_large",
+  "distractors": [
+    {
+      "invoices": [
+        "INV-TFTW2K8",
+        "INV-4TJHX9U",
+        "INV-5RTEE89"
+      ],
+      "kind": "batch_payment",
+      "payment": "PAY-45BEZ59"
+    },
+    {
+      "in_period": false,
+      "invoice": "INV-5TVTDPV",
+      "kind": "boundary_document",
+      "side": "start"
+    },
+    {
+      "in_period": false,
+      "invoice": "INV-N5XBUMR",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": false,
+      "invoice": "INV-N7JKZV6",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": false,
+      "invoice": "INV-YPS48BJ",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": true,
+      "invoice": "INV-7CHBWG9",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": true,
+      "kind": "boundary_document",
+      "payment": "PAY-4DSFRJJ",
+      "side": "end"
+    },
+    {
+      "in_period": true,
+      "kind": "boundary_document",
+      "payment": "PAY-VXGRFMF",
+      "side": "end"
+    },
+    {
+      "kind": "on_account_payment",
+      "payment": "PAY-752E48V"
+    },
+    {
+      "kind": "on_account_payment",
+      "payment": "PAY-GSS2BHB"
+    },
+    {
+      "invoice": "INV-N7D84FJ",
+      "kind": "overpayment",
+      "payments": [
+        "PAY-PAV8VJS"
+      ]
+    },
+    {
+      "invoice": "INV-3JJ8TQ7",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-RVJVEMS"
+      ]
+    },
+    {
+      "invoice": "INV-7CHBWG9",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-4B389US"
+      ]
+    },
+    {
+      "invoice": "INV-7KHD493",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-ZDT4KMA"
+      ]
+    },
+    {
+      "invoice": "INV-FZCDVR9",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-696V93X"
+      ]
+    },
+    {
+      "invoice": "INV-MDUQYAS",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-VJ87QKZ"
+      ]
+    },
+    {
+      "invoice": "INV-MXMMVK8",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-U56K73D"
+      ]
+    },
+    {
+      "invoice": "INV-WXEZ222",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-AHP4G57"
+      ]
+    },
+    {
+      "invoices": [
+        "INV-84MGD8D",
+        "INV-NZ7JAD4"
+      ],
+      "kind": "partial_shipments"
+    },
+    {
+      "doc": "INV-2N2VYT2",
+      "kind": "posting_lag",
+      "lag_minutes": 1136
+    },
+    {
+      "doc": "INV-6TVECHD",
+      "kind": "posting_lag",
+      "lag_minutes": 2066
+    },
+    {
+      "doc": "INV-7KHD493",
+      "kind": "posting_lag",
+      "lag_minutes": 2934
+    },
+    {
+      "doc": "INV-DUE6FNA",
+      "kind": "posting_lag",
+      "lag_minutes": 3520
+    },
+    {
+      "doc": "INV-HFHHDXT",
+      "kind": "posting_lag",
+      "lag_minutes": 2005
+    },
+    {
+      "doc": "INV-MDQE7KQ",
+      "kind": "posting_lag",
+      "lag_minutes": 52
+    },
+    {
+      "doc": "INV-NB46GED",
+      "kind": "posting_lag",
+      "lag_minutes": 3187
+    },
+    {
+      "doc": "INV-NZ7JAD4",
+      "kind": "posting_lag",
+      "lag_minutes": 2291
+    },
+    {
+      "doc": "INV-TE4B7SZ",
+      "kind": "posting_lag",
+      "lag_minutes": 4032
+    },
+    {
+      "doc": "INV-TFS5CXK",
+      "kind": "posting_lag",
+      "lag_minutes": 1656
+    },
+    {
+      "doc": "INV-TKABHHP",
+      "kind": "posting_lag",
+      "lag_minutes": 585
+    },
+    {
+      "doc": "INV-UW9D7TS",
+      "kind": "posting_lag",
+      "lag_minutes": 1004
+    },
+    {
+      "doc": "INV-XD9KW4D",
+      "kind": "posting_lag",
+      "lag_minutes": 1591
+    },
+    {
+      "doc": "INV-ZBYDMH3",
+      "kind": "posting_lag",
+      "lag_minutes": 810
+    },
+    {
+      "doc": "PAY-45BEZ59",
+      "kind": "posting_lag",
+      "lag_minutes": 2271
+    },
+    {
+      "doc": "PAY-CV2AXTR",
+      "kind": "posting_lag",
+      "lag_minutes": 3081
+    },
+    {
+      "doc": "PAY-FF2SCHB",
+      "kind": "posting_lag",
+      "lag_minutes": 2828
+    },
+    {
+      "doc": "PAY-GGC24XP",
+      "kind": "posting_lag",
+      "lag_minutes": 1067
+    },
+    {
+      "doc": "PAY-S4WX2JX",
+      "kind": "posting_lag",
+      "lag_minutes": 1799
+    },
+    {
+      "invoices": [
+        "INV-VPY77SH",
+        "INV-VXFF47Q",
+        "INV-UWEKNU9",
+        "INV-6TVECHD"
+      ],
+      "kind": "recurring_invoices"
+    },
+    {
+      "invoice": "INV-2N2VYT2",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-78KCBJS",
+        "PAY-HFHA89K",
+        "PAY-BXT28B8"
+      ]
+    },
+    {
+      "invoice": "INV-CYK3DBQ",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-C3KGSPA",
+        "PAY-THHN26H"
+      ]
+    },
+    {
+      "invoice": "INV-D9E8E49",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-P4CHQGE",
+        "PAY-TPB2QZ8",
+        "PAY-HRQ9R8F"
+      ]
+    },
+    {
+      "invoice": "INV-FDNGQ9V",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-N6VKF43",
+        "PAY-FF2SCHB",
+        "PAY-5ZJAC4J"
+      ]
+    },
+    {
+      "invoice": "INV-JT6W4KS",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-JU7PH26",
+        "PAY-5CKTHEQ"
+      ]
+    },
+    {
+      "invoice": "INV-NZ7JAD4",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-EMSYHWC",
+        "PAY-J39KBVX"
+      ]
+    },
+    {
+      "invoice": "INV-TAZYTHR",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-2VPC5UE",
+        "PAY-25K7VBY"
+      ]
+    }
+  ],
+  "episode_id": "ep-8A8DSJVPNS",
+  "generator_version": "0.1.0",
+  "history": {
+    "customers": 16,
+    "doc_offsets": [
+      "+00:00",
+      "+03:00",
+      "+05:00",
+      "+07:00"
+    ],
+    "invoices_by_period": {
+      "cur": 56,
+      "next": 9,
+      "prev": 12
+    },
+    "payments_by_period": {
+      "cur": 45,
+      "next": 9,
+      "prev": 6
+    },
+    "products": 10,
+    "vendors": 9
+  },
+  "injections": [],
+  "params": {
+    "base_currency": "JPY",
+    "company_offset_minutes": 300,
+    "customers": 16,
+    "distractors": {
+      "batch_payments": true,
+      "boundary_documents": true,
+      "on_account_payments": true,
+      "overpayment_refunds": true,
+      "partial_payments": true,
+      "partial_shipments": true,
+      "posting_lag": true,
+      "recurring_invoices": true,
+      "split_payments": true
+    },
+    "errors": {
+      "cutoff_error": 0,
+      "duplicate_invoice": 0,
+      "fx_rate_error": 0,
+      "unapplied_payment": 0
+    },
+    "foreign_currencies": [
+      "EUR",
+      "RUB"
+    ],
+    "fx_rate_date_rule": "document_date",
+    "invoices_current": 47,
+    "period": "2025-03",
+    "rounding_mode": "half_up",
+    "scenarios": {
+      "cutoff_fx_boundary_invoice": 0,
+      "fx_partial_boundary_payment": 0
+    },
+    "target_ledger_rows": 1252
+  },
+  "salted": false,
+  "schema_version": "1.0",
+  "seed": "202",
+  "self_check": {
+    "audit_matches_truth": true,
+    "counterfactual_clean": true,
+    "evidence_sets_sufficient": true
+  },
+  "transforms": []
+}
