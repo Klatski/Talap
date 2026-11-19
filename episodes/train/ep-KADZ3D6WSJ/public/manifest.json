@@ -1,0 +1,46 @@
+{
+  "base_currency": "EUR",
+  "counts": {
+    "documents": 113,
+    "fx_rates": 86,
+    "invoices": 73,
+    "ledger_rows": 1187,
+    "payments": 40
+  },
+  "currency_exponents": {
+    "EUR": 2,
+    "USD": 2
+  },
+  "episode_id": "ep-KADZ3D6WSJ",
+  "fx_rate_format": "decimal string",
+  "generator_version": "0.1.0",
+  "money_format": "integer minor units; exponent per currency in currency_exponents",
+  "period_end": "2025-05-01T00:00:00+01:00",
+  "period_start": "2025-04-01T00:00:00+01:00",
+  "rounding": {
+    "mode": "half_even",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "tables": {
+    "fx": {
+      "file": "fx.csv",
+      "id_format": "FX:<source_currency>:<target_currency>:<date>"
+    },
+    "invoices": {
+      "document_id_field": "doc_id",
+      "file": "invoices.jsonl",
+      "id_field": "invoice_id"
+    },
+    "ledger": {
+      "file": "ledger.csv",
+      "id_field": "row_id"
+    },
+    "payments": {
+      "document_id_field": "doc_id",
+      "file": "payments.jsonl",
+      "id_field": "payment_id"
+    }
+  },
+  "timezone": "+01:00"
+}

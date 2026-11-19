@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "policy.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "company_timezone": {
+      "type": "string",
+      "pattern": "^[+-]\\d{2}:\\d{2}$"
+    },
+    "ledger_currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "ledger_scope": {
+      "type": "string"
+    },
+    "document_window": {
+      "type": "string"
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$"
+        },
+        "start_inclusive": {
+          "const": true
+        },
+        "end_inclusive": {
+          "const": false
+        },
+        "attribution": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "start_inclusive",
+        "end_inclusive",
+        "attribution"
+      ],
+      "additionalProperties": false
+    },
+    "fx": {
+      "type": "object",
+      "properties": {
+        "rate_date_rule": {
+          "enum": [
+            "document_date",
+            "previous_day"
+          ]
+        },
+        "rate_date_rule_description": {
+          "type": "string"
+        },
+        "missing_rate": {
+          "const": "latest_prior_available"
+        },
+        "missing_rate_description": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "formula": {
+          "type": "string"
+        },
+        "invoice_posting": {
+          "type": "string"
+        },
+        "payment_posting": {
+          "type": "string"
+        },
+        "record_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rate_date_rule",
+        "rate_date_rule_description",
+        "missing_rate",
+        "missing_rate_description",
+        "quote",
+        "formula",
+        "invoice_posting",
+        "payment_posting",
+        "record_id"
+      ],
+      "additionalProperties": false
+    },
+    "rounding": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "half_up",
+            "half_even"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "applies_to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "description",
+        "applies_to"
+      ],
+      "additionalProperties": false
+    },
+    "payments": {
+      "type": "object",
+      "properties": {
+        "allocation_source": {
+          "type": "string"
+        },
+        "unallocated_amounts": {
+          "type": "string"
+        },
+        "refunds": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "allocation_source",
+        "unallocated_amounts",
+        "refunds"
+      ],
+      "additionalProperties": false
+    },
+    "billing": {
+      "type": "object",
+      "properties": {
+        "order_lines": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "order_lines"
+      ],
+      "additionalProperties": false
+    },
+    "accounts": {
+      "type": "object",
+      "patternProperties": {
+        "^\\d{4}$": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "company_timezone",
+    "ledger_currency",
+    "ledger_scope",
+    "document_window",
+    "period",
+    "fx",
+    "rounding",
+    "payments",
+    "billing",
+    "accounts"
+  ],
+  "additionalProperties": false
+}

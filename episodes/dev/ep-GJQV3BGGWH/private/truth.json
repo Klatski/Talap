@@ -1,0 +1,109 @@
+{
+  "episode_id": "ep-GJQV3BGGWH",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-FHJD4QC"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "TRY",
+      "evidence_sets": [
+        [
+          "D-ZNKJ9BR3",
+          "L-4HUPQBN4"
+        ],
+        [
+          "D-ZNKJ9BR3",
+          "L-MJQGV2JW"
+        ]
+      ],
+      "expected_amount_minor": 11176004,
+      "issue_id": "ISS-HP529UZC",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-6MCUNS",
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-EABG22A",
+        "INV-G338TC6"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "TRY",
+      "evidence_sets": [
+        [
+          "D-M2ZZGV2A",
+          "D-N5A7TRY4"
+        ]
+      ],
+      "expected_amount_minor": 4122884,
+      "issue_id": "ISS-W3WCJ7RK",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice"
+    },
+    {
+      "affected_ids": [
+        "INV-FHJD4QC"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-ZNKJ9BR3",
+          "FX:TRY:USD:2025-09-30",
+          "L-4HUPQBN4"
+        ],
+        [
+          "D-ZNKJ9BR3",
+          "FX:TRY:USD:2025-09-30",
+          "L-MJQGV2JW"
+        ]
+      ],
+      "expected_amount_minor": 335,
+      "issue_id": "ISS-MC2PY5MY",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-6MCUNS",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "PAY-5FFKXHV"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-PYQJR32Q",
+          "FX:TRY:USD:2025-10-01",
+          "L-UFQGQKM5"
+        ]
+      ],
+      "expected_amount_minor": 1449,
+      "issue_id": "ISS-RG4KMU4S",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-PBAVQ5",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-VDCV3JB",
+        "PAY-5FFKXHV"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "USD",
+      "evidence_sets": [
+        [
+          "D-PYQJR32Q",
+          "L-FU2VV957"
+        ]
+      ],
+      "expected_amount_minor": 93190,
+      "issue_id": "ISS-GWYNKH8J",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-PBAVQ5",
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

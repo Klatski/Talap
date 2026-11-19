@@ -1,0 +1,95 @@
+{
+  "episode_id": "ep-4EP93M7VCU",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-KF39GHH"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "RUB",
+      "evidence_sets": [
+        [
+          "D-BYPV8N83",
+          "L-9MM4ZPRY"
+        ],
+        [
+          "D-BYPV8N83",
+          "L-CAGMJJHE"
+        ]
+      ],
+      "expected_amount_minor": 2021365,
+      "issue_id": "ISS-SU5FYQ8F",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-XZ72PF",
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-KF39GHH"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-BYPV8N83",
+          "FX:RUB:EUR:2025-09-30",
+          "L-9MM4ZPRY"
+        ],
+        [
+          "D-BYPV8N83",
+          "FX:RUB:EUR:2025-09-30",
+          "L-CAGMJJHE"
+        ]
+      ],
+      "expected_amount_minor": 54,
+      "issue_id": "ISS-NMHSATNF",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-XZ72PF",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-MP3D3MH"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-HJHYQHB7",
+          "FX:RUB:EUR:2025-10-08",
+          "L-7DFYRX7F"
+        ],
+        [
+          "D-HJHYQHB7",
+          "FX:RUB:EUR:2025-10-08",
+          "L-N7PXC5WM"
+        ]
+      ],
+      "expected_amount_minor": 6,
+      "issue_id": "ISS-TAP3TX28",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-P3UVCJB",
+        "PAY-HNT3PJF"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-DAMCKUW6",
+          "L-KP9VQP3M"
+        ]
+      ],
+      "expected_amount_minor": 1087950,
+      "issue_id": "ISS-SHCWP5Y2",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

@@ -1,0 +1,114 @@
+{
+  "config_version": "1.0",
+  "description": "Open train/dev/stub splits. Seeds and configs are public; closed evaluation uses other seeds, new parameter combinations and an optional salt.",
+  "splits": {
+    "train": [
+      {
+        "seed": 101,
+        "config": "clean_small"
+      },
+      {
+        "seed": 102,
+        "config": "clean_medium"
+      },
+      {
+        "seed": 103,
+        "config": "two_types"
+      },
+      {
+        "seed": 104,
+        "config": "all_types"
+      },
+      {
+        "seed": 105,
+        "config": "fx_cutoff"
+      },
+      {
+        "seed": 106,
+        "config": "interaction_payment"
+      },
+      {
+        "seed": 107,
+        "config": "interaction_invoice"
+      },
+      {
+        "seed": 108,
+        "config": "interactions_both"
+      },
+      {
+        "seed": 109,
+        "config": "heavy"
+      },
+      {
+        "seed": 110,
+        "config": "mixed_random"
+      }
+    ],
+    "dev": [
+      {
+        "seed": 201,
+        "config": "clean_medium"
+      },
+      {
+        "seed": 202,
+        "config": "clean_large"
+      },
+      {
+        "seed": 203,
+        "config": "mixed_random"
+      },
+      {
+        "seed": 204,
+        "config": "all_types",
+        "overrides": {
+          "size": "small"
+        }
+      },
+      {
+        "seed": 205,
+        "config": "interaction_payment",
+        "overrides": {
+          "size": "large"
+        }
+      },
+      {
+        "seed": 206,
+        "config": "interaction_invoice",
+        "overrides": {
+          "size": "small"
+        }
+      },
+      {
+        "seed": 207,
+        "config": "interactions_both",
+        "overrides": {
+          "size": "medium"
+        }
+      },
+      {
+        "seed": 208,
+        "config": "heavy"
+      },
+      {
+        "seed": 209,
+        "config": "mixed_random",
+        "overrides": {
+          "size": "large"
+        }
+      },
+      {
+        "seed": 210,
+        "config": "two_types",
+        "overrides": {
+          "size": "large"
+        }
+      }
+    ],
+    "stub": [
+      {
+        "seed": 1,
+        "config": "stub"
+      }
+    ]
+  }
+}

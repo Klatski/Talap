@@ -1,0 +1,46 @@
+{
+  "base_currency": "GBP",
+  "counts": {
+    "documents": 84,
+    "fx_rates": 85,
+    "invoices": 49,
+    "ledger_rows": 241,
+    "payments": 35
+  },
+  "currency_exponents": {
+    "CNY": 2,
+    "GBP": 2
+  },
+  "episode_id": "ep-PGS65UQ9XT",
+  "fx_rate_format": "decimal string",
+  "generator_version": "0.1.0",
+  "money_format": "integer minor units; exponent per currency in currency_exponents",
+  "period_end": "2026-10-01T00:00:00+03:00",
+  "period_start": "2026-09-01T00:00:00+03:00",
+  "rounding": {
+    "mode": "half_up",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "tables": {
+    "fx": {
+      "file": "fx.csv",
+      "id_format": "FX:<source_currency>:<target_currency>:<date>"
+    },
+    "invoices": {
+      "document_id_field": "doc_id",
+      "file": "invoices.jsonl",
+      "id_field": "invoice_id"
+    },
+    "ledger": {
+      "file": "ledger.csv",
+      "id_field": "row_id"
+    },
+    "payments": {
+      "document_id_field": "doc_id",
+      "file": "payments.jsonl",
+      "id_field": "payment_id"
+    }
+  },
+  "timezone": "+03:00"
+}

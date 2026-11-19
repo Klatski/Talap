@@ -1,0 +1,85 @@
+{
+  "episode_id": "ep-YE3YXGV3NW",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-RGS2SKA"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "KZT",
+      "evidence_sets": [
+        [
+          "D-HY8MP3XR",
+          "L-82TSCWCH"
+        ],
+        [
+          "D-HY8MP3XR",
+          "L-QCF35WRY"
+        ]
+      ],
+      "expected_amount_minor": 80987320,
+      "issue_id": "ISS-JF3Y2NQC",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-GM6DSKX",
+        "INV-GY4KVTU"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-V5PG7Z78",
+          "D-XJW3SZ7S"
+        ]
+      ],
+      "expected_amount_minor": 119959,
+      "issue_id": "ISS-NFR98UAG",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice"
+    },
+    {
+      "affected_ids": [
+        "PAY-53SP5MQ"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-VFU2F42C",
+          "FX:CNY:JPY:2026-11-27",
+          "L-2P5AS9HV"
+        ]
+      ],
+      "expected_amount_minor": 642,
+      "issue_id": "ISS-MMWKJGW3",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-G6936F",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-SZMHBSG",
+        "PAY-53SP5MQ"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-VFU2F42C",
+          "L-HQ54E38Q"
+        ]
+      ],
+      "expected_amount_minor": 257444,
+      "issue_id": "ISS-5CXJCAG4",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-G6936F",
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

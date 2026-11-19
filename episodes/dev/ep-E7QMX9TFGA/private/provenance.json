@@ -1,0 +1,580 @@
+{
+  "attempt": 0,
+  "checks_after_injection": {
+    "entries_balanced": 246,
+    "ledger_debit_equals_credit": true,
+    "ledger_rows": 550,
+    "status": "passed"
+  },
+  "checks_before_injection": {
+    "allocations_within_totals": 38,
+    "conversions_match_policy": 84,
+    "entries_balanced": 84,
+    "invoices": 62,
+    "order_lines_unique": 114,
+    "payments": 53,
+    "posted_documents": 84,
+    "status": "passed"
+  },
+  "config": {
+    "base_currency": null,
+    "config_version": "1.0",
+    "distractors": {
+      "batch_payments": true,
+      "boundary_documents": true,
+      "on_account_payments": true,
+      "overpayment_refunds": true,
+      "partial_payments": true,
+      "partial_shipments": true,
+      "posting_lag": true,
+      "recurring_invoices": true,
+      "split_payments": true
+    },
+    "errors": {
+      "cutoff_error": [
+        0,
+        2
+      ],
+      "duplicate_invoice": [
+        0,
+        2
+      ],
+      "fx_rate_error": [
+        0,
+        2
+      ],
+      "unapplied_payment": [
+        0,
+        2
+      ]
+    },
+    "foreign_currencies": null,
+    "fx_rate_date_rule": null,
+    "name": "mixed_random",
+    "period": null,
+    "rounding_mode": null,
+    "scenarios": {
+      "cutoff_fx_boundary_invoice": [
+        0,
+        1
+      ],
+      "fx_partial_boundary_payment": [
+        0,
+        1
+      ]
+    },
+    "size": "medium",
+    "timezone": null
+  },
+  "config_digest": "ac14bf3b2fbed494262dd4d819450a873cb34472e3da6631e53b56ae3bd7cd1c",
+  "config_name": "mixed_random",
+  "distractors": [
+    {
+      "in_period": false,
+      "invoice": "INV-DDSSM2H",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": false,
+      "invoice": "INV-DRJJ85H",
+      "kind": "boundary_document",
+      "side": "end"
+    },
+    {
+      "in_period": true,
+      "invoice": "INV-Y6C2TEE",
+      "kind": "boundary_document",
+      "side": "start"
+    },
+    {
+      "in_period": true,
+      "kind": "boundary_document",
+      "payment": "PAY-3C5W3JD",
+      "side": "end"
+    },
+    {
+      "in_period": true,
+      "kind": "boundary_document",
+      "payment": "PAY-DAW4RJC",
+      "side": "start"
+    },
+    {
+      "in_period": true,
+      "kind": "boundary_document",
+      "payment": "PAY-T4UNM2F",
+      "side": "end"
+    },
+    {
+      "kind": "on_account_payment",
+      "payment": "PAY-6Z9BYHH"
+    },
+    {
+      "kind": "on_account_payment",
+      "payment": "PAY-HQYJQTB"
+    },
+    {
+      "invoice": "INV-NVW9YX9",
+      "kind": "overpayment",
+      "payments": [
+        "PAY-VZP3DJA"
+      ],
+      "refund": "PAY-4U5CQMT"
+    },
+    {
+      "invoice": "INV-42D6FJW",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-2MYGJK5"
+      ]
+    },
+    {
+      "invoice": "INV-9VHNQUF",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-7F5FKGB"
+      ]
+    },
+    {
+      "invoice": "INV-ZHUZ9UX",
+      "kind": "partial_payment",
+      "payments": [
+        "PAY-C25PGMP"
+      ]
+    },
+    {
+      "invoices": [
+        "INV-FTFAAEF",
+        "INV-SRYYMRZ"
+      ],
+      "kind": "partial_shipments"
+    },
+    {
+      "doc": "INV-49GMTWY",
+      "kind": "posting_lag",
+      "lag_minutes": 1632
+    },
+    {
+      "doc": "INV-AHE2B72",
+      "kind": "posting_lag",
+      "lag_minutes": 27
+    },
+    {
+      "doc": "INV-MNC7NSA",
+      "kind": "posting_lag",
+      "lag_minutes": 2703
+    },
+    {
+      "doc": "INV-RZV2AT2",
+      "kind": "posting_lag",
+      "lag_minutes": 1639
+    },
+    {
+      "doc": "INV-VZ2GXDY",
+      "kind": "posting_lag",
+      "lag_minutes": 1181
+    },
+    {
+      "doc": "PAY-39TEUVP",
+      "kind": "posting_lag",
+      "lag_minutes": 106
+    },
+    {
+      "doc": "PAY-5RHPHBF",
+      "kind": "posting_lag",
+      "lag_minutes": 3089
+    },
+    {
+      "doc": "PAY-BAQN87X",
+      "kind": "posting_lag",
+      "lag_minutes": 695
+    },
+    {
+      "doc": "PAY-DRGAUFW",
+      "kind": "posting_lag",
+      "lag_minutes": 2349
+    },
+    {
+      "doc": "PAY-K7S22FR",
+      "kind": "posting_lag",
+      "lag_minutes": 4121
+    },
+    {
+      "doc": "PAY-Q5RDUSH",
+      "kind": "posting_lag",
+      "lag_minutes": 51
+    },
+    {
+      "doc": "PAY-QBEUVAQ",
+      "kind": "posting_lag",
+      "lag_minutes": 1409
+    },
+    {
+      "doc": "PAY-R8KC7A6",
+      "kind": "posting_lag",
+      "lag_minutes": 1829
+    },
+    {
+      "invoices": [
+        "INV-EE7SKR6",
+        "INV-H98A7BV",
+        "INV-UZBTN59",
+        "INV-T8VVFMC"
+      ],
+      "kind": "recurring_invoices"
+    },
+    {
+      "invoices": [
+        "INV-MNC7NSA",
+        "INV-USNH4VQ",
+        "INV-49GMTWY",
+        "INV-R9W4F5Z"
+      ],
+      "kind": "recurring_invoices"
+    },
+    {
+      "invoice": "INV-9SQNQS7",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-9DZGKK5",
+        "PAY-QBEUVAQ",
+        "PAY-FPR4K2N"
+      ]
+    },
+    {
+      "invoice": "INV-AV43PQP",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-TFQP85H",
+        "PAY-CDF3H2S"
+      ]
+    },
+    {
+      "invoice": "INV-C72CSNW",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-FW5M4TJ",
+        "PAY-Q5RDUSH",
+        "PAY-39TEUVP"
+      ]
+    },
+    {
+      "invoice": "INV-EK294QC",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-JSCF5BF",
+        "PAY-QT7VQGW",
+        "PAY-ARB37ZS"
+      ]
+    },
+    {
+      "invoice": "INV-H9MJ3EV",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-H2QWRK9",
+        "PAY-KA5Y6ZC",
+        "PAY-NHMFXT5"
+      ]
+    },
+    {
+      "invoice": "INV-RZV2AT2",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-RNYBYJJ",
+        "PAY-R6PGDGG"
+      ]
+    },
+    {
+      "invoice": "INV-T9PJJEE",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-BAQN87X",
+        "PAY-R8KC7A6"
+      ]
+    },
+    {
+      "invoice": "INV-TEKJWTP",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-ZDNKUWV",
+        "PAY-J2KDCP6"
+      ]
+    },
+    {
+      "invoice": "INV-WBVQJCH",
+      "kind": "split_payments",
+      "payments": [
+        "PAY-WCF93PD",
+        "PAY-K7S22FR"
+      ]
+    }
+  ],
+  "episode_id": "ep-E7QMX9TFGA",
+  "generator_version": "0.1.0",
+  "history": {
+    "customers": 11,
+    "doc_offsets": [
+      "+00:00",
+      "+03:00",
+      "+06:00",
+      "+10:00"
+    ],
+    "invoices_by_period": {
+      "cur": 46,
+      "next": 7,
+      "prev": 10
+    },
+    "payments_by_period": {
+      "cur": 39,
+      "next": 9,
+      "prev": 5
+    },
+    "products": 11,
+    "vendors": 4
+  },
+  "injections": [
+    {
+      "affected_doc_ids": [
+        "D-G458EUJX"
+      ],
+      "affected_ids": [
+        "PAY-9APMS8S"
+      ],
+      "after": {
+        "ledger_timestamp_variant": "shifted_into_period",
+        "posted_in_period": true
+      },
+      "before": {
+        "document_period": "next",
+        "posted_in_period": false
+      },
+      "cause": "документ следующего периода проведён в текущем",
+      "currency": "GBP",
+      "expected_amount_minor": 19904,
+      "issue_id": "ISS-4RG9EGK5",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "cutoff_error",
+      "variant": "shifted_into_period"
+    },
+    {
+      "affected_doc_ids": [
+        "D-HNERNMZT",
+        "D-J357PVBJ"
+      ],
+      "affected_ids": [
+        "INV-JMCTJ66",
+        "INV-R9W4F5Z"
+      ],
+      "after": {
+        "documents_for_order_lines": 2,
+        "duplicate": "INV-JMCTJ66",
+        "original": "INV-R9W4F5Z"
+      },
+      "before": {
+        "documents_for_order_lines": 1
+      },
+      "cause": "счёт повторно введён (те же клиент, время, заказ и строки) и проведён второй раз",
+      "currency": "JPY",
+      "expected_amount_minor": 4808,
+      "issue_id": "ISS-D3EBW45C",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "duplicate_invoice",
+      "variant": "reentered_document"
+    },
+    {
+      "affected_doc_ids": [
+        "D-WRN379MX"
+      ],
+      "affected_ids": [
+        "INV-T8VVFMC"
+      ],
+      "after": {
+        "rate": "0.00814335",
+        "rate_date": "2025-07-01"
+      },
+      "before": {
+        "rate": "0.00812312",
+        "rate_date": "2025-06-27"
+      },
+      "cause": "курс взят за соседнюю дату вместо даты по политике",
+      "currency": "GBP",
+      "expected_amount_minor": 6,
+      "issue_id": "ISS-9X5Q47FG",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error",
+      "variant": "adjacent_date"
+    },
+    {
+      "affected_doc_ids": [
+        "D-TKHSXAGS"
+      ],
+      "affected_ids": [
+        "PAY-T4UNM2F"
+      ],
+      "after": {
+        "rate": "0.00517558",
+        "rate_date": "2025-07-01"
+      },
+      "before": {
+        "rate": "0.00517299",
+        "rate_date": "2025-06-30"
+      },
+      "cause": "дата курса взята в часовом поясе записи документа, а не компании",
+      "currency": "GBP",
+      "expected_amount_minor": 89,
+      "issue_id": "ISS-7N2385T6",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-G5DDEB",
+      "type": "fx_rate_error",
+      "variant": "document_offset_date"
+    },
+    {
+      "affected_doc_ids": [
+        "D-QR9DZBY6"
+      ],
+      "affected_ids": [
+        "PAY-WCF93PD"
+      ],
+      "after": {
+        "rate": "0.00514332",
+        "rate_date": "2025-06-13"
+      },
+      "before": {
+        "rate": "0.00514845",
+        "rate_date": "2025-06-18"
+      },
+      "cause": "курс взят за соседнюю дату вместо даты по политике",
+      "currency": "GBP",
+      "expected_amount_minor": 956,
+      "issue_id": "ISS-U578TTFS",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error",
+      "variant": "adjacent_date"
+    },
+    {
+      "affected_doc_ids": [
+        "D-3DDJUGKJ",
+        "D-8MAXAM3X"
+      ],
+      "affected_ids": [
+        "INV-DKHKDUC",
+        "PAY-65XGFB8"
+      ],
+      "after": {
+        "allocated_minor": 149221,
+        "unapplied_minor": 159414
+      },
+      "before": {
+        "allocated_minor": 308635,
+        "unapplied_minor": 0
+      },
+      "cause": "платёж разнесён на счёт частично, остаток осел на 2300",
+      "currency": "GBP",
+      "expected_amount_minor": 1279,
+      "issue_id": "ISS-KQZU7Z7C",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment",
+      "variant": "partial_allocation"
+    },
+    {
+      "affected_doc_ids": [
+        "D-RGSB25TU",
+        "D-TKHSXAGS"
+      ],
+      "affected_ids": [
+        "INV-QAS4YRF",
+        "PAY-T4UNM2F"
+      ],
+      "after": {
+        "allocated_minor": 271426,
+        "unapplied_minor": 72734
+      },
+      "before": {
+        "allocated_minor": 344160,
+        "unapplied_minor": 0
+      },
+      "cause": "платёж разнесён на счёт частично, остаток осел на 2300",
+      "currency": "GBP",
+      "expected_amount_minor": 37644,
+      "issue_id": "ISS-3S92SRBR",
+      "scenario": "fx_partial_boundary_payment",
+      "scenario_group": "SCN-G5DDEB",
+      "type": "unapplied_payment",
+      "variant": "partial_allocation"
+    },
+    {
+      "affected_doc_ids": [
+        "D-AFPVQ3HQ",
+        "D-MZ8GTEUK"
+      ],
+      "affected_ids": [
+        "INV-VZ2GXDY",
+        "PAY-DRGAUFW"
+      ],
+      "after": {
+        "allocated_minor": 552087,
+        "unapplied_minor": 352721
+      },
+      "before": {
+        "allocated_minor": 904808,
+        "unapplied_minor": 0
+      },
+      "cause": "платёж разнесён на счёт частично, остаток осел на 2300",
+      "currency": "GBP",
+      "expected_amount_minor": 181561,
+      "issue_id": "ISS-KX82DRP8",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment",
+      "variant": "partial_allocation"
+    }
+  ],
+  "params": {
+    "base_currency": "GBP",
+    "company_offset_minutes": 360,
+    "customers": 11,
+    "distractors": {
+      "batch_payments": true,
+      "boundary_documents": true,
+      "on_account_payments": true,
+      "overpayment_refunds": true,
+      "partial_payments": true,
+      "partial_shipments": true,
+      "posting_lag": true,
+      "recurring_invoices": true,
+      "split_payments": true
+    },
+    "errors": {
+      "cutoff_error": 1,
+      "duplicate_invoice": 1,
+      "fx_rate_error": 2,
+      "unapplied_payment": 2
+    },
+    "foreign_currencies": [
+      "JPY",
+      "RUB"
+    ],
+    "fx_rate_date_rule": "document_date",
+    "invoices_current": 31,
+    "period": "2025-06",
+    "rounding_mode": "half_up",
+    "scenarios": {
+      "cutoff_fx_boundary_invoice": 0,
+      "fx_partial_boundary_payment": 1
+    },
+    "target_ledger_rows": 519
+  },
+  "salted": false,
+  "schema_version": "1.0",
+  "seed": "203",
+  "self_check": {
+    "audit_matches_truth": true,
+    "evidence_sets_sufficient": true
+  },
+  "transforms": []
+}
