@@ -24,8 +24,9 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .calculator import CalculatorError, evaluate
-from .constants import ACTIONS, CALC_DETAILS, ERRORS, MAX_ACTION_BYTES, MAX_ID_CHARS, PAGE_LIMIT, TABLES
+from .constants import ACTIONS, CALC_DETAILS, ERRORS, MAX_ACTION_BYTES, MAX_ID_CHARS, MAX_PARSE_BYTES, PAGE_LIMIT, TABLES
 from .cursor import CursorError, decode_cursor, encode_cursor
+from .jsonsafe import loads_text
 from .observation import initial_observation
 from .records import PublicEpisode
 
@@ -134,7 +135,10 @@ class EnvCore:
             except ActionError as exc:
                 return self._after_tool(ep, None, error_obj(exc.code, exc.detail))
             if name == "submit":
-                payload = args.get("findings") if set(args) == {"findings"} else _MalformedSubmit()
+                if isinstance(args, _MalformedSubmit):
+                    payload = args
+                else:
+                    payload = args.get("findings") if set(args) == {"findings"} else _MalformedSubmit("wrapper")
                 self._finish(ep, payload, ep.steps_used - 1, "submit", truncated=False)
                 return self._terminal(ep, {"status": "submitted"}, None)
             try:
@@ -162,7 +166,7 @@ class EnvCore:
         ep.truncated = truncated
         ep.end_reason = reason
         if isinstance(payload, _MalformedSubmit):
-            payload = {"__malformed_submit_action__": True}
+            payload = {"__malformed_submit_action__": payload.reason}
         response = self._finish_handler(payload, inspection_steps, ep.steps_used, reason) or {}
         reward = response.get("reward", 0.0)
         ep.terminal_reward = float(reward) if isinstance(reward, (int, float)) and not isinstance(reward, bool) else 0.0
@@ -174,21 +178,29 @@ class EnvCore:
         return {"result": _json_copy(result), "error": error, "remaining_steps": remaining}
 
     @staticmethod
-    def _parse(action: Any) -> tuple[str, dict]:
+    def _parse(action: Any) -> tuple[str, Any]:
+        """(имя, аргументы). Правило: объект с action == "submit" (или JSON-строка такого объекта)
+        ВСЕГДА завершает эпизод; если он не JSON или больше MAX_ACTION_BYTES (валидный submit по лимитам
+        ТЗ занимает < 100 КБ) — это неверная структура (-1). Прочие такие действия — ограниченная ошибка."""
         if isinstance(action, str):
-            if len(action.encode("utf-8", "replace")) > MAX_ACTION_BYTES:
+            if len(action.encode("utf-8", "replace")) > MAX_PARSE_BYTES:
                 raise ActionError("action_too_large")
             try:
-                action = json.loads(action)
-            except (json.JSONDecodeError, RecursionError):
+                action = loads_text(action)
+            except (ValueError, RecursionError):
                 raise ActionError("invalid_action") from None
         if not isinstance(action, dict):
             raise ActionError("invalid_action")
+        is_submit = action.get("action") == "submit"
         try:
-            size = len(json.dumps(action, allow_nan=False).encode("utf-8"))
+            size = len(json.dumps(action, allow_nan=False, sort_keys=True).encode("utf-8"))
         except (TypeError, ValueError, RecursionError):
+            if is_submit:
+                return "submit", _MalformedSubmit("not_json")
             raise ActionError("invalid_action") from None
         if size > MAX_ACTION_BYTES:
+            if is_submit:
+                return "submit", _MalformedSubmit("too_large")
             raise ActionError("action_too_large")
         name = action.get("action")
         if not isinstance(name, str):
@@ -266,4 +278,10 @@ class EnvCore:
 
 
 class _MalformedSubmit:
-    """Маркер: submit с лишними/отсутствующими полями обёртки — неверная структура (-1)."""
+    """Маркер: submit, который нельзя передать оценщику как есть — неверная структура (-1).
+    reason: wrapper (лишние/отсутствующие поля обёртки), not_json, too_large."""
+
+    __slots__ = ("reason",)
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason

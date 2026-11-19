@@ -13,6 +13,7 @@ MAX_STEPS = 100            # включая submit
 PAGE_LIMIT = 50            # максимум строк на страницу list_records
 TIME_LIMIT_S = 60.0        # на эпизод, от reset
 MAX_ACTION_BYTES = 262_144  # сериализованное действие; валидный submit занимает < 100 КБ
+MAX_PARSE_BYTES = 524_288   # действие-строку длиннее (UTF-8) среда даже не разбирает -> action_too_large
 MAX_ID_CHARS = 128
 
 MODES = ("train", "eval")

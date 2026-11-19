@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .constants import MAX_ACTION_BYTES
+from .constants import MAX_ACTION_BYTES, MAX_PARSE_BYTES
 from .protocol import Channel, RemoteError
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,6 +29,32 @@ ROOT = Path(__file__).resolve().parent.parent
 class EnvError(RuntimeError):
     pass
 
+
+
+def wire_action(action: Any) -> Any:
+    """Что отправить серверу, чтобы итог шага совпал с тем, что EnvCore._parse сделал бы с action в процессе.
+
+    * строка длиннее MAX_PARSE_BYTES -> action_too_large; иначе уходит как есть (сервер разберёт сам);
+    * объект не JSON -> invalid_action, а если это submit — неверная структура (-1, эпизод завершён);
+    * объект больше MAX_ACTION_BYTES -> action_too_large, а если это submit — неверная структура (-1).
+    """
+    if isinstance(action, str):
+        if len(action.encode("utf-8", "replace")) > MAX_PARSE_BYTES:
+            return "x" * (MAX_PARSE_BYTES + 1)
+        return action
+    is_submit = isinstance(action, dict) and action.get("action") == "submit"
+    try:
+        text = json.dumps(action, allow_nan=False, sort_keys=True)
+    except (TypeError, ValueError, RecursionError):
+        return _malformed_submit("not_json") if is_submit else "<not JSON>"
+    if len(text.encode("utf-8")) > MAX_ACTION_BYTES:
+        return _malformed_submit("too_large") if is_submit else "x" * (MAX_PARSE_BYTES + 1)
+    return action
+
+
+def _malformed_submit(reason: str) -> dict:
+    # Тот же маркер, который EnvCore передаёт оценщику; подделать его можно, но выгоды нет: это всегда -1.
+    return {"action": "submit", "findings": {"__malformed_submit_action__": reason}}
 
 class AuditEnv:
     def __init__(
@@ -52,6 +78,10 @@ class AuditEnv:
 
     def reset(self, seed: Any = None, config: dict | None = None) -> tuple[dict, dict]:
         try:
+            json.dumps({"seed": seed, "config": config}, allow_nan=False, sort_keys=True)
+        except (TypeError, ValueError, RecursionError):
+            raise EnvError("reset failed: seed and config must be JSON values (no NaN, string keys only)") from None
+        try:
             out = self._channel.request("reset", {"seed": seed, "config": config}, self._timeout)
         except RemoteError as exc:
             raise EnvError(f"reset failed: {exc.public_message}") from None
@@ -59,15 +89,7 @@ class AuditEnv:
 
     def step(self, action: Any) -> tuple[dict, float, bool, bool, dict]:
         try:
-            text = json.dumps(action, allow_nan=False)
-            payload: Any = action
-        except (TypeError, ValueError, RecursionError):
-            payload = "<not JSON>"  # среда ответит invalid_action и спишет шаг
-            text = payload
-        if len(text.encode("utf-8")) > MAX_ACTION_BYTES:
-            payload = "x" * (MAX_ACTION_BYTES + 1)  # среда ответит action_too_large и спишет шаг
-        try:
-            out = self._channel.request("step", {"action": payload}, self._timeout)
+            out = self._channel.request("step", {"action": wire_action(action)}, self._timeout)
         except RemoteError as exc:
             raise EnvError(f"step failed: {exc.public_message}") from None
         return out["observation"], out["reward"], out["terminated"], out["truncated"], out["info"]

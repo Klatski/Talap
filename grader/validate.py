@@ -23,6 +23,11 @@ MAX_EXPLANATION = 1000
 MAX_ID_LEN = 64
 MAX_ERRORS = 20
 _CURRENCY = re.compile(r"[A-Z]{3}")
+MALFORMED_REASONS = {
+    "wrapper": "must have exactly one argument, findings",
+    "not_json": "is not JSON-serializable (e.g. NaN or an integer too long to parse)",
+    "too_large": "is larger than any valid submission can be",
+}
 
 
 def _is_int(v: Any) -> bool:
@@ -78,6 +83,9 @@ def validate_submission(submission: Any, episode_id: str | None = None) -> list[
     errors: list[str] = []
     if not isinstance(submission, dict):
         return ["submission: must be an object {episode_id, findings}"]
+    if "__malformed_submit_action__" in submission:  # маркер среды: submit нельзя было передать как есть
+        reason = submission["__malformed_submit_action__"]
+        return [f"submit action: {MALFORMED_REASONS.get(reason, MALFORMED_REASONS['wrapper']) if isinstance(reason, str) else MALFORMED_REASONS['wrapper']}"]
     keys = set(submission)
     for k in sorted(TOP_FIELDS - keys):
         errors.append(f"submission: missing field {k}")

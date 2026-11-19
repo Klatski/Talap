@@ -13,6 +13,8 @@ import subprocess
 import threading
 from typing import Any, BinaryIO
 
+from .jsonsafe import loads_text
+
 MAX_LINE_BYTES = 4 * 1024 * 1024  # ответ list_records на 50 строк — десятки КБ; эпизод целиком (load) — до ~3 МБ
 
 
@@ -20,16 +22,13 @@ class ProtocolError(RuntimeError):
     pass
 
 
-def _reject_constant(name: str) -> Any:
-    raise ValueError(f"non-finite number {name}")
-
-
 def dumps(obj: Any) -> bytes:
     return json.dumps(obj, sort_keys=True, ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode("ascii") + b"\n"
 
 
 def loads(line: bytes) -> Any:
-    return json.loads(line.decode("utf-8"), parse_constant=_reject_constant)
+    """Сверхдлинные целые -> маркер (env/jsonsafe.py), NaN/Infinity -> ValueError (bad_request)."""
+    return loads_text(line.decode("utf-8"))
 
 
 def read_line(stream: BinaryIO, limit: int = MAX_LINE_BYTES) -> tuple[bytes | None, bool]:

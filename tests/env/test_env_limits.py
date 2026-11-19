@@ -92,9 +92,9 @@ class StepLimitTests(unittest.TestCase):
 class TimeLimitTests(unittest.TestCase):
     def test_late_action_is_not_executed(self):
         env = local_env()
-        env.reset(seed=0, config={**STUB, "time_limit_s": 0.3})
+        env.reset(seed=0, config={**STUB, "time_limit_s": 1.0})
         env.step(LIST)
-        time.sleep(0.45)
+        time.sleep(1.3)
         obs, r, term, trunc, info = env.step(LIST)
         self.assertTrue(trunc)
         self.assertFalse(term)
@@ -107,8 +107,8 @@ class TimeLimitTests(unittest.TestCase):
 
     def test_watchdog_finishes_without_steps(self):
         env = local_env()
-        env.reset(seed=0, config={**STUB, "time_limit_s": 0.2, "mode": "eval"})
-        time.sleep(0.5)
+        env.reset(seed=0, config={**STUB, "time_limit_s": 0.3, "mode": "eval"})
+        time.sleep(1.2)
         self.assertEqual(len(env.grader_records), 1)  # оценщик уже получил пустой ответ
         self.assertEqual(env.grader_records[0]["end_reason"], "time_limit")
         obs, r, term, trunc, info = env.step(LIST)
