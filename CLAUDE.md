@@ -75,6 +75,8 @@ python -m unittest discover -s tests/generator -p "test_gen_*.py"   # тесты
 python -m generator build-splits      # пересобрать episodes/train, dev, stub
 python -m generator check-splits      # побайтовая воспроизводимость открытых эпизодов
 python -m generator audit <ep_dir>    # эталон == вывод по открытым данным
+python -m generator stress --n 200    # случайные конфиги + парные проверки (как закрытый прогон)
+python -m generator leakcheck --n 40  # утечки через артефакты (признаки + наивный Байес)
 ```
 Любое изменение генератора меняет эпизоды → после него `build-splits` и коммит эпизодов вместе с кодом.
 Python-файлы писать с `newline=""` (LF), иначе Windows вставит CRLF.

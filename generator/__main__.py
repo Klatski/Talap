@@ -10,6 +10,8 @@
   python -m generator leakcheck --n 60          # признаки-артефакты vs ошибки
   python -m generator attacks <episode_dir> --out attacks.json   # атаки на оценщик B
   python -m generator scan-trajectories trajectories/trajectories.jsonl
+  python -m generator holdout --salt <secret> --out <dir>    # как закрытая проверка жюри
+  python -m generator stress --n 200            # случайные конфиги + парные проверки
 """
 
 from __future__ import annotations
@@ -95,7 +97,7 @@ def _cmd_oracle(args) -> int:
 
 def _cmd_leakcheck(args) -> int:
     from .generate import generate_episode
-    from .leakcheck import leak_report
+    from .leakcheck import full_report
     from .splits import resolve_config
 
     cfg = resolve_config(args.config)
@@ -103,7 +105,7 @@ def _cmd_leakcheck(args) -> int:
     for seed in range(args.n):
         ep = generate_episode(10_000 + seed, cfg)
         episodes.append((ep.public, ep.truth))
-    print(json.dumps(leak_report(episodes), indent=2))
+    print(json.dumps(full_report(episodes), indent=2))
     return 0
 
 
@@ -129,6 +131,28 @@ def _cmd_scan(args) -> int:
         print("LEAK", p)
     print("scan-trajectories:", "OK" if not problems else f"{len(problems)} problems")
     return 1 if problems else 0
+
+
+def _cmd_holdout(args) -> int:
+    from .holdout import build_holdout
+
+    report = build_holdout(args.salt, args.n, args.out)
+    for e in report["episodes"]:
+        status = "OK  " if not e["problems"] else "FAIL"
+        print(f"{status} {e['episode_id']} {e['kind']:11s} issues={e['issues']:2d} rows={e['ledger_rows']:4d} "
+              f"docs={e['documents']:3d} {e['generation_seconds']:.2f}s {e['scenarios']}")
+        for p in e["problems"][:5]:
+            print("     ", p)
+    print("holdout:", "OK" if not report["failures"] else f"{report['failures']} failed", f"-> {args.out}" if args.out else "")
+    return 1 if report["failures"] else 0
+
+
+def _cmd_stress(args) -> int:
+    from .holdout import stress
+
+    report = stress(args.n, args.salt)
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 1 if report["failures"] else 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -177,6 +201,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("trajectories")
     p.add_argument("--episodes", default=str(Path(__file__).resolve().parent.parent / "episodes"))
     p.set_defaults(func=_cmd_scan)
+
+    p = sub.add_parser("holdout", help="closed-set emulation: n salted episodes with new configs + paired transforms")
+    p.add_argument("--salt", required=True)
+    p.add_argument("--n", type=int, default=20)
+    p.add_argument("--out", help="write episodes/, pairs/ and holdout_index.json here (grader-only)")
+    p.set_defaults(func=_cmd_holdout)
+
+    p = sub.add_parser("stress", help="random configs in memory: truth, evidence, counterfactual, pair checks")
+    p.add_argument("--n", type=int, default=200)
+    p.add_argument("--salt", default="stress")
+    p.set_defaults(func=_cmd_stress)
 
     args = parser.parse_args(argv)
     if hasattr(args, "seed") and isinstance(args.seed, str) and args.seed.lstrip("-").isdigit():

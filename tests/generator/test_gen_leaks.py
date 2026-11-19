@@ -6,7 +6,7 @@ import unittest
 
 from gen_helpers import CONFIGS, episode
 from generator.fileio import parse_fx, parse_jsonl, parse_ledger
-from generator.leakcheck import leak_report
+from generator.leakcheck import ARTIFACT_FEATURES, classifier_report, leak_report
 
 ID_LIKE = re.compile(r"(?:L|D|INV|PAY|C|V|SO|SKU|ep)-[0-9A-Z]+")
 
@@ -96,6 +96,16 @@ class LeakTests(unittest.TestCase):
         for name, stats in report["features"].items():
             with self.subTest(feature=name, stats=stats):
                 self.assertLess(stats["precision"], 0.35)
+
+    def test_dumb_classifier_on_artifacts_is_near_random(self):
+        """Наивный Байес по форме записей (позиция, ID, час, круглость, смещение), обученный на
+        одних эпизодах и проверенный на других, на проведённых документах периода ~ случайный."""
+        episodes = [(episode(k, s).public, episode(k, s).truth) for k in ("all_types", "scenarios", "heavy") for s in range(12)]
+        r = classifier_report(episodes, ARTIFACT_FEATURES, posted_in_period_only=True)
+        self.assertLess(r["auc"], 0.62, r)
+        self.assertLess(r["lift_at_k"], 1.8, r)
+        everything = classifier_report(episodes)
+        self.assertLess(everything["auc"], 0.85, everything)  # даже со смысловыми признаками далеко от 1
 
     def test_injected_rows_are_not_appended_at_the_end(self):
         positions = []
