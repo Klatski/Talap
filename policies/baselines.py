@@ -38,7 +38,10 @@ class RandomBaselinePolicy(BasePolicy):
         self._max_actions_before_submit = max(1, max_actions_before_submit)
 
     def reset(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> None:
-        self._rng = random.Random(self.seed + hash(obs.get("manifest", {}).get("episode_id", "")) % 10000)
+        ep_id = ""
+        if isinstance(obs, dict) and isinstance(obs.get("manifest"), dict):
+            ep_id = str(obs["manifest"].get("episode_id") or "")
+        self._rng = random.Random(self.seed + (sum(ord(ch) for ch in ep_id) % 10000))
         super().reset(obs, info)
 
     def act(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -89,12 +92,43 @@ class ReconcileBaselinePolicy(BasePolicy):
         self._scan_idx = 0
         self._cursor = 0
         self._calc_done = False
+        self._awaiting_table_page = False
 
     def reset(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> None:
         self._scan_idx = 0
         self._cursor = 0
         self._calc_done = False
+        self._awaiting_table_page = False
         super().reset(obs, info)
+
+    def _advance_cursor_from_obs(self, obs: dict[str, Any]) -> None:
+        if not self._awaiting_table_page or not isinstance(obs, dict):
+            return
+        self._awaiting_table_page = False
+
+        next_cur = obs.get("next_cursor")
+        returned = obs.get("returned")
+        has_more = obs.get("has_more")
+
+        if isinstance(returned, int) and returned <= 0:
+            self._scan_idx += 1
+            self._cursor = 0
+            return
+
+        if has_more is False:
+            self._scan_idx += 1
+            self._cursor = 0
+            return
+
+        if isinstance(next_cur, int) and next_cur > self._cursor:
+            if isinstance(returned, int) and returned < 50:
+                self._scan_idx += 1
+                self._cursor = 0
+            else:
+                self._cursor = next_cur
+        else:
+            self._scan_idx += 1
+            self._cursor = 0
 
     def _build_reconciled_findings(self, limit: int | None = None) -> list[dict[str, Any]]:
         findings: list[dict[str, Any]] = []
@@ -166,15 +200,9 @@ class ReconcileBaselinePolicy(BasePolicy):
 
     def act(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> dict[str, Any]:
         self.ingest_obs(obs)
+        self._advance_cursor_from_obs(obs)
         self.step_count += 1
         steps_left = int(obs.get("steps_remaining", 100 - self.step_count))
-
-        if isinstance(obs.get("next_cursor"), int) and obs["next_cursor"] > self._cursor:
-            self._cursor = obs["next_cursor"]
-        elif obs.get("returned") == 0 or obs.get("next_cursor") is None:
-            if self._scan_idx < len(self._tables_to_scan) - 1:
-                self._scan_idx += 1
-                self._cursor = 0
 
         if steps_left <= 1 or self._scan_idx >= len(self._tables_to_scan):
             if not self._calc_done and steps_left > 2:
@@ -189,6 +217,7 @@ class ReconcileBaselinePolicy(BasePolicy):
             return self.make_submit(self._build_reconciled_findings())
 
         table = self._tables_to_scan[self._scan_idx]
+        self._awaiting_table_page = True
         return {
             "name": "list_records",
             "args": {"table": table, "cursor": self._cursor, "limit": 50},
@@ -200,15 +229,9 @@ class AllFindingsBaselinePolicy(ReconcileBaselinePolicy):
 
     def act(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> dict[str, Any]:
         self.ingest_obs(obs)
+        self._advance_cursor_from_obs(obs)
         self.step_count += 1
         steps_left = int(obs.get("steps_remaining", 100 - self.step_count))
-
-        if isinstance(obs.get("next_cursor"), int) and obs["next_cursor"] > self._cursor:
-            self._cursor = obs["next_cursor"]
-        elif obs.get("returned") == 0 or obs.get("next_cursor") is None:
-            if self._scan_idx < len(self._tables_to_scan) - 1:
-                self._scan_idx += 1
-                self._cursor = 0
 
         if steps_left <= 1 or self._scan_idx >= len(self._tables_to_scan):
             findings = self._build_reconciled_findings()
@@ -236,6 +259,7 @@ class AllFindingsBaselinePolicy(ReconcileBaselinePolicy):
             return self.make_submit(findings)
 
         table = self._tables_to_scan[self._scan_idx]
+        self._awaiting_table_page = True
         return {
             "name": "list_records",
             "args": {"table": table, "cursor": self._cursor, "limit": 50},
