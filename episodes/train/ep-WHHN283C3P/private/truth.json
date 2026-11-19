@@ -1,0 +1,90 @@
+{
+  "episode_id": "ep-WHHN283C3P",
+  "issues": [
+    {
+      "affected_ids": [
+        "INV-VGUGUXF"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "EUR",
+      "evidence_sets": [
+        [
+          "D-MNHQK7QQ",
+          "L-8BE47NET"
+        ],
+        [
+          "D-MNHQK7QQ",
+          "L-C3AAQUKX"
+        ]
+      ],
+      "expected_amount_minor": 694432,
+      "issue_id": "ISS-PHEF32KT",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-YQFDFW",
+      "type": "cutoff_error"
+    },
+    {
+      "affected_ids": [
+        "INV-VGUGUXF"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-MNHQK7QQ",
+          "FX:EUR:JPY:2025-03-31",
+          "L-8BE47NET"
+        ],
+        [
+          "D-MNHQK7QQ",
+          "FX:EUR:JPY:2025-03-31",
+          "L-C3AAQUKX"
+        ]
+      ],
+      "expected_amount_minor": 6000,
+      "issue_id": "ISS-3R6W8ZHU",
+      "scenario": "cutoff_fx_boundary_invoice",
+      "scenario_group": "SCN-YQFDFW",
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "PAY-TVD5G4X"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-U8TKKFEP",
+          "FX:EUR:JPY:2025-04-18",
+          "L-6NB2TEY2"
+        ]
+      ],
+      "expected_amount_minor": 930,
+      "issue_id": "ISS-3SRXFVF3",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "fx_rate_error"
+    },
+    {
+      "affected_ids": [
+        "INV-AHSH7YV",
+        "PAY-NBVG9JF"
+      ],
+      "amount_tolerance_minor": 1,
+      "currency": "JPY",
+      "evidence_sets": [
+        [
+          "D-U5EF4ECK",
+          "L-PFUDYDBB"
+        ]
+      ],
+      "expected_amount_minor": 126923,
+      "issue_id": "ISS-F68TDDYF",
+      "scenario": null,
+      "scenario_group": null,
+      "type": "unapplied_payment"
+    }
+  ],
+  "schema_version": "1.0"
+}

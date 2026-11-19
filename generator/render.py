@@ -31,26 +31,46 @@ class Rendered:
     provenance: dict
 
 
+class KeyedIds:
+    """ID выводится из (материал, внутренний ключ записи): у одной и той же записи один и тот же
+    ID и в чистой (контрфактической), и в испорченной версии эпизода. Порядок назначения
+    не влияет на результат; коллизии разрешаются детерминированно."""
+
+    def __init__(self, material: str) -> None:
+        self.material = material
+        self.used: set[str] = set()
+
+    def new(self, prefix: str, length: int, key: str) -> str:
+        attempt = 0
+        while True:
+            rng = random.Random(f"{self.material}|{prefix}|{key}|{attempt}")
+            candidate = IdFactory(rng).new(prefix, length)
+            if candidate not in self.used:
+                self.used.add(candidate)
+                return candidate
+            attempt += 1
+
+
 class IdMaps:
-    def __init__(self, h: History, rng: random.Random) -> None:
-        ids = IdFactory(rng)
-        self.episode_id = ids.new("ep-", 10)
-        self.entity = {k: ids.new("C-", 6) for k in h.customers}
-        self.entity.update({k: ids.new("V-", 6) for k in h.vendors})
+    def __init__(self, h: History, material: str) -> None:
+        ids = KeyedIds(material)
+        self.episode_id = ids.new("ep-", 10, "episode")
+        self.entity = {k: ids.new("C-", 6, k) for k in h.customers}
+        self.entity.update({k: ids.new("V-", 6, k) for k in h.vendors})
         self.invoice_id: dict[str, str] = {}
         self.payment_id: dict[str, str] = {}
         self.doc_id: dict[str, str] = {}
         for key in h.invoices:
-            self.invoice_id[key] = ids.new("INV-", 7)
-            self.doc_id[key] = ids.new("D-", 8)
+            self.invoice_id[key] = ids.new("INV-", 7, key)
+            self.doc_id[key] = ids.new("D-", 8, key)
         for key in h.payments:
-            self.payment_id[key] = ids.new("PAY-", 7)
-            self.doc_id[key] = ids.new("D-", 8)
+            self.payment_id[key] = ids.new("PAY-", 7, key)
+            self.doc_id[key] = ids.new("D-", 8, key)
         self.order: dict[str, str] = {}
         for inv in h.invoices.values():
             for line in inv.lines:
                 if line.order not in self.order:
-                    self.order[line.order] = ids.new("SO-", 7)
+                    self.order[line.order] = ids.new("SO-", 7, line.order)
         self.ids = ids
 
     def business_id(self, key: str) -> str:
@@ -107,24 +127,32 @@ def _policy(h: History) -> dict:
     }
 
 
+def _tiebreak(material: str, key: str) -> float:
+    return random.Random(f"{material}|order|{key}").random()
+
+
 def render(
     h: History,
     issues: list[IssueSpec],
-    rng_ids: random.Random,
-    rng_order: random.Random,
+    id_material: str,
+    order_material: str,
     meta: dict[str, Any],
 ) -> Rendered:
-    maps = IdMaps(h, rng_ids)
+    maps = IdMaps(h, id_material)
     entries = h.all_entries()
-    tiebreak = {e.key: rng_order.random() for e in entries}
+    tiebreak = {e.key: _tiebreak(order_material, e.key) for e in entries}
     entries_sorted = sorted(entries, key=lambda e: (e.ts, tiebreak[e.key]))
 
     ledger_rows = []
     row_ids: dict[tuple[str, int], str] = {}
     for entry in entries_sorted:
         ts = to_iso(entry.ts, entry.offset)
+        seen_roles: dict[tuple[str, str], int] = {}
         for i, line in enumerate(entry.lines):
-            row_id = maps.ids.new("L-", 8)
+            role_key = (line.role, line.invoice or "")
+            n = seen_roles.get(role_key, 0)
+            seen_roles[role_key] = n + 1
+            row_id = maps.ids.new("L-", 8, f"{entry.key}|{line.role}|{line.invoice or ''}|{n}")
             row_ids[(entry.key, i)] = row_id
             ledger_rows.append(
                 {
@@ -140,7 +168,7 @@ def render(
                 }
             )
 
-    inv_tie = {k: rng_order.random() for k in h.invoices}
+    inv_tie = {k: _tiebreak(order_material, k) for k in h.invoices}
     invoices = []
     for inv in sorted(h.invoices.values(), key=lambda i: (i.issued_at, inv_tie[i.key])):
         invoices.append(
@@ -167,7 +195,7 @@ def render(
             }
         )
 
-    pay_tie = {k: rng_order.random() for k in h.payments}
+    pay_tie = {k: _tiebreak(order_material, k) for k in h.payments}
     payments = []
     for pay in sorted(h.payments.values(), key=lambda p: (p.ts, pay_tie[p.key])):
         payments.append(
@@ -254,7 +282,7 @@ def render(
         group = None
         if issue.group is not None:
             if issue.group not in group_ids:
-                group_ids[issue.group] = maps.ids.new("SCN-", 6)
+                group_ids[issue.group] = maps.ids.new("SCN-", 6, f"group{issue.group}")
             group = group_ids[issue.group]
         record = {
             "issue_id": None,
@@ -271,7 +299,7 @@ def render(
 
     truth_issues.sort(key=lambda pair: (pair[0]["type"], pair[0]["affected_ids"]))
     for record, issue in truth_issues:
-        record["issue_id"] = maps.ids.new("ISS-", 8)
+        record["issue_id"] = maps.ids.new("ISS-", 8, f"{issue.type}|{'|'.join(sorted(issue.affected))}")
         provenance_injections.append(
             {
                 "issue_id": record["issue_id"],

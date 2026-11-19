@@ -107,11 +107,17 @@ def check_splits(splits_path: str | Path = DEFAULT_SPLITS, out_root: str | Path 
             if episode.episode_id != entry["episode_id"]:
                 problems.append(f"{name}/{entry['episode_id']}: regenerated as {episode.episode_id}")
                 continue
-            public, private = read_episode_dir(out / name / entry["path"])
-            for fname, text in {**episode.public, **episode.private}.items():
-                disk = public.get(fname, private.get(fname))
+            ep_dir = out / name / entry["path"]
+            expected = {f"{PUBLIC_DIR}/{k}": v for k, v in episode.public.items()}
+            expected.update({f"{PRIVATE_DIR}/{k}": v for k, v in episode.private.items()})
+            for rel, text in expected.items():
+                path = ep_dir / rel
+                disk = path.read_text(encoding="utf-8") if path.exists() else None
+                if disk is not None:
+                    with open(path, encoding="utf-8", newline="") as fh:
+                        disk = fh.read()
                 if disk != text:
-                    problems.append(f"{name}/{entry['episode_id']}/{fname}: differs from regenerated")
+                    problems.append(f"{name}/{entry['episode_id']}/{rel}: differs from regenerated")
     return problems
 
 

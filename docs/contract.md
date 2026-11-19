@@ -10,6 +10,7 @@
 episodes/<split>/<episode_id>/
   public/   manifest.json  policy.json  ledger.csv  invoices.jsonl  payments.jsonl  fx.csv
   private/  truth.json  provenance.json          ← только оценщик, агенту недоступно
+  private/counterfactual/  те же 6 файлов без внесённых ошибок (проверка данных, агенту недоступно)
 episodes/<split>/index.json                       ← seed, конфиг, дайджест (открыто для train/dev)
 ```
 

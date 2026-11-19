@@ -3,7 +3,7 @@
     {
       "config": "stub",
       "config_digest": "aba3d02bd5e715a0aab3a25753415deaa20faa2020363c5dc1bcb9c8e0b42962",
-      "episode_id": "ep-HQ5MGHP4JV",
+      "episode_id": "ep-SUW6BEVZNR",
       "issue_types": [
         "cutoff_error",
         "duplicate_invoice",
@@ -12,7 +12,7 @@
       ],
       "issues": 6,
       "overrides": {},
-      "path": "ep-HQ5MGHP4JV",
+      "path": "ep-SUW6BEVZNR",
       "scenarios": [
         "fx_partial_boundary_payment"
       ],
