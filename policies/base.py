@@ -54,8 +54,12 @@ class BasePolicy(ABC):
             self._add_rows(table_hint, records)
 
     def _add_rows(self, table: str, rows: list[Any]) -> None:
-        bucket = self.seen_records[table]
-        seen = self._seen_ids[table]
+        bucket = self.seen_records.setdefault(table, [])
+        raw_seen = self._seen_ids.get(table)
+        if not isinstance(raw_seen, set):
+            raw_seen = set(raw_seen) if raw_seen else set()
+            self._seen_ids[table] = raw_seen
+        seen = raw_seen
         for idx, item in enumerate(rows):
             if not isinstance(item, dict):
                 continue
