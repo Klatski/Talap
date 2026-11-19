@@ -56,6 +56,33 @@ with AuditEnv(grader_log="reports/grader_log.jsonl") as env:
 `calculator(expression)`, `submit(findings)`. Лимит — 100 шагов вместе с submit и 60 с на эпизод.
 Полный контракт — [`docs/contract.md`](docs/contract.md).
 
+## Закрытая проверка на своих seed и новых сочетаниях параметров
+
+Генератор — чистая функция `(seed, config, версия[, соль]) → файлы`. Конфиг — пресет из
+`generator/configs/` или свой JSON, параметры описаны в [`docs/generator.md`](docs/generator.md):
+число ошибок каждого типа независимо, сценарии, размер, валюты, правило даты курса, округление.
+Эталон и история генерации пишутся в `private/`, агент их не видит.
+
+```bash
+# 1) сгенерировать эпизоды: каталог эпизода — <корень>/<split>/ep-<4..32 букв/цифр>
+python -m generator generate --seed 9001 --config interactions_both --overrides '{"size": "small"}' \
+       --salt "$SECRET" --out /data/jury/hidden/ep-s9001
+python -m generator generate --seed 9002 --config clean_small --salt "$SECRET" --out /data/jury/hidden/ep-s9002
+# или сразу 20 эпизодов (5 чистых, 5 со взаимодействиями) + 20 пар «перестановка + смена ID»:
+python -m generator holdout --salt "$SECRET" --n 20 --out /data/jury          # -> /data/jury/{episodes,pairs}/
+
+# 2) прогнать политики через изолированную среду; в eval награда остаётся у оценщика
+python -m env.runner --episodes-root /data/jury --splits hidden --mode eval \
+       --policies random,reconcile,flag_all,oracle --report-md /data/jury/report.md
+```
+
+Из своей обвязки: `AuditEnv(episodes_root="/data/jury", grader_log="grader_log.jsonl")`, затем
+`reset(seed, {"split": "hidden", "index": i, "mode": "eval"})`. Эпизод можно сгенерировать и прямо в
+процессе оценщика: `reset(seed, {"generator": {...конфиг...}, "mode": "eval"})`, соль передаётся через
+переменную окружения `AUDIT_GRADER_SALT`. Итоги (P, R, F1, награда, причина завершения, ошибки структуры)
+появляются в журнале оценщика после `close()`. JSON-lines сервер `python -m env.server` (методы
+`reset`, `step`, `close`) подходит для политики на любом языке.
+
 ## Что где (соответствие ТЗ)
 
 | Требование | Где |
@@ -71,13 +98,13 @@ with AuditEnv(grader_log="reports/grader_log.jsonl") as env:
 | Тесты среды, сопоставления, награды, атак | `tests/env`, `tests/grader`, `tests/generator` |
 | Диагностика P, R, F1, возврат, шаги, время; разбор сбоев | `reports/baselines.md`, `reports/holdout.md` |
 | Записка о дизайне и честные ограничения | [`docs/design.md`](docs/design.md) |
-| Контейнер и единая команда | `Dockerfile`, `check.py`, `Makefile` |
+| Контейнер и единая команда | `Dockerfile`, `check.py`, `Makefile`; CI `.github/workflows/check.yml` (Linux + Docker `--network none`) |
 | Лицензия, зависимости | `LICENSE` (MIT), `requirements.txt` (только stdlib) |
 
 ## Команды по частям
 
 ```bash
-python -m unittest discover -s tests/env -p "test_env_*.py"          # среда (62 теста)
+python -m unittest discover -s tests/env -p "test_env_*.py"          # среда (66 тестов)
 python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик (33 теста)
 python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (68 тестов)
 python -m env.runner --policies random,reconcile,flag_all,oracle,auditor --splits train,dev --mode eval

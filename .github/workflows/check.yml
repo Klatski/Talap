@@ -1,0 +1,31 @@
+# Официальная проверка на Linux: та же единая команда, что и локально, плюс контейнер без сети.
+name: check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: python check.py (все тесты, данные, политики, траектории, имитация жюри)
+        run: python check.py
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build
+        run: docker build -t audit-env .
+      - name: docker run --network none (= python check.py), 2 CPU, 4 GB
+        run: docker run --rm --network none --cpus 2 --memory 4g audit-env
+      - name: demo in container
+        run: docker run --rm --network none audit-env python -m env.demo --split dev --index 1
