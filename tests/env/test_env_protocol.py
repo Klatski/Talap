@@ -19,9 +19,15 @@ class RawServer(unittest.TestCase):
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0)
 
     def tearDown(self):
+        # EOF, а не kill: сервер сам закрывает эпизод и процесс оценщика. После kill осиротевший оценщик ещё
+        # держит log.jsonl открытым, и на Windows временный каталог не удаляется (нашёл чистый прогон).
         if self.proc.poll() is None:
-            self.proc.kill()
-            self.proc.wait()
+            try:
+                self.proc.stdin.close()
+                self.proc.wait(timeout=30)
+            except (OSError, subprocess.TimeoutExpired):
+                self.proc.kill()
+                self.proc.wait()
         self.proc.stdin.close()
         self.proc.stdout.close()
         self.tmp.cleanup()
