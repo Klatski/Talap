@@ -45,9 +45,9 @@ def main(argv: list[str] | None = None) -> int:
             obs, info = service.reset(params.get("seed"), params.get("config"))
             return {"observation": obs, "info": info}
         if method == "step":
-            if "action" not in params:
+            if "action" not in params or set(params) - {"action", "unsendable"}:
                 raise _Fail("bad_params", "step needs an action")
-            obs, reward, terminated, truncated, info = service.step(params["action"])
+            obs, reward, terminated, truncated, info = service.step(params["action"], params.get("unsendable"))
             return {"observation": obs, "reward": reward, "terminated": terminated, "truncated": truncated, "info": info}
         if method == "close":
             service.close()

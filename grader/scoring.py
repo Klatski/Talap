@@ -16,7 +16,7 @@ from typing import Any
 
 from .matcher import match
 from .metrics import experimental_reward, prf, shared_reward
-from .validate import validate_submission
+from .validate import malformed_message, validate_submission
 
 
 def _distractor_index(provenance: dict | None) -> dict[str, list[str]]:
@@ -43,11 +43,15 @@ def score_submission(
     *,
     provenance: dict | None = None,
     truncated: bool = False,
+    malformed_reason: str | None = None,
 ) -> dict[str, Any]:
     if isinstance(inspection_steps, bool) or not isinstance(inspection_steps, int) or inspection_steps < 0:
         raise ValueError("inspection_steps must be a non-negative integer")
     issues = truth["issues"]
-    errors = validate_submission(submission, truth["episode_id"])
+    if malformed_reason is not None:  # среда не смогла передать submit как есть: это всегда неверная структура
+        errors = [malformed_message(malformed_reason)]
+    else:
+        errors = validate_submission(submission, truth["episode_id"])
     if errors:
         return {
             "valid": False,

@@ -12,8 +12,9 @@ CONTRACT_VERSION = "1.0"
 MAX_STEPS = 100            # включая submit
 PAGE_LIMIT = 50            # максимум строк на страницу list_records
 TIME_LIMIT_S = 60.0        # на эпизод, от reset
-MAX_ACTION_BYTES = 262_144  # сериализованное действие; валидный submit занимает < 100 КБ
-MAX_PARSE_BYTES = 524_288   # действие-строку длиннее (UTF-8) среда даже не разбирает -> action_too_large
+MAX_ACTION_BYTES = 262_144    # обычное действие, сериализованное с sort_keys и ASCII-экранированием
+MAX_SUBMIT_BYTES = 1_048_576  # submit: больше худшего валидного ответа (~0.96 МБ), см. env/jsonsafe.py
+MAX_PARSE_BYTES = 2_097_152   # действие-строку длиннее (UTF-8) среда не разбирает
 MAX_ID_CHARS = 128
 
 MODES = ("train", "eval")

@@ -24,14 +24,14 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .calculator import CalculatorError, evaluate
-from .constants import ACTIONS, CALC_DETAILS, ERRORS, MAX_ACTION_BYTES, MAX_ID_CHARS, MAX_PARSE_BYTES, PAGE_LIMIT, TABLES
+from .constants import ACTIONS, CALC_DETAILS, ERRORS, MAX_ID_CHARS, PAGE_LIMIT, TABLES
 from .cursor import CursorError, decode_cursor, encode_cursor
-from .jsonsafe import loads_text
+from .jsonsafe import REASONS, TOO_LARGE, classify_action
 from .observation import initial_observation
 from .records import PublicEpisode
 
 # finish_handler(findings_payload, inspection_steps, steps_used, end_reason) -> {"reward": float, "info": dict}
-FinishHandler = Callable[[Any, int, int, str], dict]
+FinishHandler = Callable[[Any, int, int, str, "str | None"], dict]  # payload, inspection, used, reason, malformed
 
 
 class ActionError(Exception):
@@ -115,7 +115,9 @@ class EnvCore:
         return self._ep is not None and not self._ep.done
 
     # ------------------------------------------------------------------ шаг
-    def step(self, action: Any) -> tuple[dict, float, bool, bool, dict]:
+    def step(self, action: Any, unsendable: Any = None) -> tuple[dict, float, bool, bool, dict]:
+        """unsendable — от AuditEnv-клиента: действие не удалось передать как есть (env/jsonsafe.py);
+        тогда action игнорируется, а исход тот же, что дал бы classify_action в процессе."""
         with self.lock:
             ep = self._ep
             if ep is None:
@@ -131,7 +133,7 @@ class EnvCore:
 
             ep.steps_used += 1
             try:
-                name, args = self._parse(action)
+                name, args = self._from_unsendable(unsendable) if unsendable is not None else self._parse(action)
             except ActionError as exc:
                 return self._after_tool(ep, None, error_obj(exc.code, exc.detail))
             if name == "submit":
@@ -165,9 +167,10 @@ class EnvCore:
         ep.terminated = not truncated
         ep.truncated = truncated
         ep.end_reason = reason
+        malformed = None
         if isinstance(payload, _MalformedSubmit):
-            payload = {"__malformed_submit_action__": payload.reason}
-        response = self._finish_handler(payload, inspection_steps, ep.steps_used, reason) or {}
+            payload, malformed = None, payload.reason  # причина идёт оценщику отдельным полем, не в ответе агента
+        response = self._finish_handler(payload, inspection_steps, ep.steps_used, reason, malformed) or {}
         reward = response.get("reward", 0.0)
         ep.terminal_reward = float(reward) if isinstance(reward, (int, float)) and not isinstance(reward, bool) else 0.0
         info = response.get("info", {})
@@ -178,30 +181,25 @@ class EnvCore:
         return {"result": _json_copy(result), "error": error, "remaining_steps": remaining}
 
     @staticmethod
-    def _parse(action: Any) -> tuple[str, Any]:
-        """(имя, аргументы). Правило: объект с action == "submit" (или JSON-строка такого объекта)
-        ВСЕГДА завершает эпизод; если он не JSON или больше MAX_ACTION_BYTES (валидный submit по лимитам
-        ТЗ занимает < 100 КБ) — это неверная структура (-1). Прочие такие действия — ограниченная ошибка."""
-        if isinstance(action, str):
-            if len(action.encode("utf-8", "replace")) > MAX_PARSE_BYTES:
-                raise ActionError("action_too_large")
-            try:
-                action = loads_text(action)
-            except (ValueError, RecursionError):
-                raise ActionError("invalid_action") from None
-        if not isinstance(action, dict):
+    def _bad(is_submit: bool, reason: str) -> tuple[str, Any]:
+        """Любой submit завершает эпизод: нечитаемый или слишком большой — неверная структура (-1)."""
+        if is_submit:
+            return "submit", _MalformedSubmit(reason)
+        raise ActionError("action_too_large" if reason == TOO_LARGE else "invalid_action")
+
+    def _from_unsendable(self, unsendable: Any) -> tuple[str, Any]:
+        ok = (isinstance(unsendable, dict) and set(unsendable) == {"submit", "reason"}
+              and isinstance(unsendable["submit"], bool) and unsendable["reason"] in REASONS)
+        if not ok:
             raise ActionError("invalid_action")
-        is_submit = action.get("action") == "submit"
-        try:
-            size = len(json.dumps(action, allow_nan=False, sort_keys=True).encode("utf-8"))
-        except (TypeError, ValueError, RecursionError):
-            if is_submit:
-                return "submit", _MalformedSubmit("not_json")
-            raise ActionError("invalid_action") from None
-        if size > MAX_ACTION_BYTES:
-            if is_submit:
-                return "submit", _MalformedSubmit("too_large")
-            raise ActionError("action_too_large")
+        return self._bad(unsendable["submit"], unsendable["reason"])
+
+    def _parse(self, action: Any) -> tuple[str, Any]:
+        """(имя, аргументы) по правилам env/jsonsafe.classify_action — общим с клиентом."""
+        obj, bad = classify_action(action)
+        if bad is not None:
+            return self._bad(*bad)
+        action = obj
         name = action.get("action")
         if not isinstance(name, str):
             raise ActionError("invalid_action")
@@ -279,7 +277,8 @@ class EnvCore:
 
 class _MalformedSubmit:
     """Маркер: submit, который нельзя передать оценщику как есть — неверная структура (-1).
-    reason: wrapper (лишние/отсутствующие поля обёртки), not_json, too_large."""
+    reason: wrapper (лишние/отсутствующие поля обёртки), not_json, too_large. Передаётся оценщику
+    отдельным параметром finish (malformed), а не внутри ответа агента, поэтому агент её не подделает."""
 
     __slots__ = ("reason",)
 

@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
             if method == "finish":
                 return session.finish(
                     params.get("payload"), params["inspection_steps"], params["steps_used"],
-                    params["end_reason"], params.get("elapsed_s"),
+                    params["end_reason"], params.get("elapsed_s"), malformed=params.get("malformed"),
                 )
             if method == "close":
                 session.close()

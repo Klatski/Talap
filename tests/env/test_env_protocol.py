@@ -36,7 +36,7 @@ class RawServer(unittest.TestCase):
 
     def test_garbage_and_oversize_lines(self):
         self.assertTrue(self.call("reset", {"seed": 0, "config": STUB})["ok"])
-        for raw in (b"not json\n", b"[1,2,3]\n", b'{"method": 5}\n', b'{"id":1,"method":"step","params":{"action":NaN}}\n',
+        for raw in (b"not json\n", b"[1,2,3]\n", b'{"method": 5}\n',
                     b'{"id":1,"method":"step","params":[1]}\n', b"\xff\xfe\n"):
             with self.subTest(raw=raw):
                 reply = self.send(raw)
@@ -46,6 +46,11 @@ class RawServer(unittest.TestCase):
         self.assertEqual(reply["error"]["code"], "request_too_large")
         reply = self.call("step", {"action": {"action": "calculator", "expression": "1+1"}})
         self.assertEqual(reply["result"]["observation"]["remaining_steps"], 99)  # мусор шагов не съел
+        # Синтаксически верный конверт с непредставимым числом (NaN, целое > 4300 цифр) — это уже шаг:
+        # ограниченная ошибка invalid_action, шаг расходуется (как неверный ввод по ТЗ).
+        reply = self.send(b'{"id":1,"method":"step","params":{"action":NaN}}\n')
+        self.assertEqual(reply["result"]["observation"]["error"]["code"], "invalid_action")
+        self.assertEqual(reply["result"]["observation"]["remaining_steps"], 98)
         self.assertEqual(self.call("step", {})["error"]["code"], "bad_params")
         self.assertEqual(self.call("teleport", {})["error"]["code"], "unknown_method")
 

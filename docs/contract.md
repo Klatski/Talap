@@ -144,7 +144,7 @@ ID-строки вне 1..64 символов, чужой `episode_id`) → эп
 знаменатель → 0; пустой эталон + пустой ответ → F1 = 1; пустой эталон + выводы → F1 = 0);
 `reward = clip(2·F1 − 1 − 0.002·inspection_steps, −1, 1)`. Экспериментальная награда
 (`reward_experimental`, только в журнале и отчётах, общую не заменяет): как общая, но усечённый эпизод → −1.
-**API для A:** `grader.score_submission(truth, submission, inspection_steps, *, provenance=None, truncated=False)
+**API для A:** `grader.score_submission(truth, submission, inspection_steps, *, provenance=None, truncated=False, malformed_reason=None)
 -> {"valid", "errors", "tp", "fp", "fn", "precision", "recall", "f1", "inspection_steps", "reward",
 "reward_experimental", "diagnostics"}` (для неверной структуры tp/fp/fn = None, reward = −1).
 
@@ -161,12 +161,17 @@ ID-строки вне 1..64 символов, чужой `episode_id`) → эп
   `{"code", "message"[, "detail"]}` из фиксированного каталога (`env/constants.py::ERRORS`), шаг расходуется.
   Тексты ошибок не содержат пользовательского ввода, путей и сведений об эталоне.
   Нечитаемое действие (не JSON: NaN/Infinity, целое длиннее 4300 цифр, смешанные типы ключей, глубокая
-  вложенность) → `invalid_action`; больше 256 КБ → `action_too_large`; строка больше 512 КБ не разбирается.
-* **Любой submit завершает эпизод.** Объект с `"action": "submit"` (или JSON-строка такого объекта)
-  всегда даёт `terminated=true`; если обёртка не ровно `{action, findings}`, полезная нагрузка не JSON или
-  больше любого валидного ответа (> 256 КБ, а валидный по лимитам ТЗ < 100 КБ), это неверная структура:
-  награда −1, причина (`wrapper` / `not_json` / `too_large`) в журнале оценщика. Одинаково в `AuditEnv`
-  и `LocalAuditEnv` (`tests/env/test_env_hostile_input.py`).
+  вложенность, не объект) → `invalid_action`; больше 256 КБ → `action_too_large`. Размер считается по
+  `json.dumps(sort_keys=True)` с ASCII-экранированием; строка больше 2 МБ (UTF-8) не разбирается.
+  Классификация одна для ядра и клиента — `env/jsonsafe.py::classify_action`.
+* **Любой submit завершает эпизод.** Объект с `"action": "submit"` (или JSON-строка такого объекта; строка
+  больше 2 МБ узнаётся по началу `{"action": "submit"`) всегда даёт `terminated=true`. Если обёртка не ровно
+  `{action, findings}`, полезная нагрузка не JSON или больше 1 МБ (`MAX_SUBMIT_BYTES`), это неверная
+  структура: награда −1, причина (`wrapper` / `not_json` / `too_large`) в журнале оценщика. 1 МБ — с запасом
+  выше худшего **валидного** ответа (30 выводов, ID и explanation из четырёхбайтовых символов, суммы по
+  4300 цифр ≈ 0.96 МБ), поэтому размер текста explanation никогда не меняет награду валидного ответа.
+  Причину передаёт оценщику среда отдельным полем `finish.malformed`, а не внутри ответа агента.
+  Одинаково в `AuditEnv` и `LocalAuditEnv` (`tests/env/test_env_hostile_input.py`).
 * Таблицы и ключи: `ledger` (`row_id`), `invoices` (`invoice_id`), `payments` (`payment_id`),
   `fx` (`fx_id` = `FX:<src>:<dst>:<date>`, поле добавляется средой в каждую запись fx).
   `get_document(doc_id)` → `{"doc_type": "invoice"|"payment", "document": …}`; бизнес-ID там не принимаются.
@@ -231,3 +236,6 @@ class Policy:
 6. Находка повторной проверки B (20.11, исправлена в `env/`): действие-строка с целым длиннее 4300 цифр
    роняло `step` (ValueError Python 3.11), а submit больше 256 КБ (например, explanation в 300 000 символов)
    давал `action_too_large` без завершения эпизода вместо −1. Теперь см. раздел 8 «Любой submit завершает эпизод».
+   Уточнение после ревью кода: порог для submit поднят до 1 МБ, иначе валидный ответ с эмодзи/кириллицей в
+   explanation получал −1 (ASCII-экранирование раздувает символ до 12 байт); причина неверной структуры
+   больше не читается из ответа агента (её нельзя подделать ключом в findings).

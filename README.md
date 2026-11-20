@@ -74,6 +74,9 @@ python -m generator holdout --salt "$SECRET" --n 20 --out /data/jury          # 
 # 2) прогнать политики через изолированную среду; в eval награда остаётся у оценщика
 python -m env.runner --episodes-root /data/jury --splits hidden --mode eval \
        --policies random,reconcile,flag_all,oracle --report-md /data/jury/report.md
+# после holdout сплиты называются episodes и pairs:
+python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode eval \
+       --policies random,reconcile,flag_all,oracle --report-md /data/jury/holdout.md
 ```
 
 Из своей обвязки: `AuditEnv(episodes_root="/data/jury", grader_log="grader_log.jsonl")`, затем

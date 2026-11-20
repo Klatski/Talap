@@ -27,7 +27,7 @@ def dumps(obj: Any) -> bytes:
 
 
 def loads(line: bytes) -> Any:
-    """Сверхдлинные целые -> маркер (env/jsonsafe.py), NaN/Infinity -> ValueError (bad_request)."""
+    """Сверхдлинные целые и NaN/Infinity -> маркер (env/jsonsafe.py); синтаксис -> ValueError (bad_request)."""
     return loads_text(line.decode("utf-8"))
 
 

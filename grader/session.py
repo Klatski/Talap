@@ -48,7 +48,9 @@ class GraderSession:
         self._run_index += 1
         return {"public": dict(episode.public), "mode": mode}
 
-    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float | None = None) -> dict:
+    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float | None = None,
+               *, malformed: str | None = None) -> dict:
+        """malformed — причина от среды, если submit нельзя было передать как есть (wrapper/not_json/too_large)."""
         if self._current is None or self._finished:
             raise GraderError("no episode awaiting a final answer")
         if end_reason not in END_REASONS:
@@ -57,7 +59,8 @@ class GraderSession:
         self._finished = True
         truncated = end_reason != "submit"
         submission = payload if end_reason == "submit" else empty_answer(ep.episode_id)
-        result = score_submission(ep.truth, submission, inspection_steps, provenance=ep.provenance, truncated=truncated)
+        result = score_submission(ep.truth, submission, inspection_steps, provenance=ep.provenance, truncated=truncated,
+                                  malformed_reason=malformed if end_reason == "submit" else None)
         record = {
             "run_index": self._run_index,
             "grader_version": GRADER_VERSION,

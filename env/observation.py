@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import copy
 
-from .constants import ENV_VERSION, MAX_ACTION_BYTES, PAGE_LIMIT, TABLES
+from .constants import ENV_VERSION, MAX_ACTION_BYTES, MAX_SUBMIT_BYTES, PAGE_LIMIT, TABLES
 from .records import PublicEpisode
 
 TASK = (
@@ -104,6 +104,7 @@ def initial_observation(ep: PublicEpisode, max_steps: int, time_limit_s: float) 
             "max_affected_ids": 10,
             "max_explanation_chars": 1000,
             "max_action_bytes": MAX_ACTION_BYTES,
+            "max_submit_bytes": MAX_SUBMIT_BYTES,
             "inspection_step_cost": 0.002,
         },
         "remaining_steps": max_steps,

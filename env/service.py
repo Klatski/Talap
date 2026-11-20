@@ -20,6 +20,7 @@ from typing import Any
 from .constants import MAX_STEPS, MODES, TIME_LIMIT_S
 from .core import EnvCore
 from .protocol import Channel, ProtocolError, RemoteError
+from .jsonsafe import is_json_value
 from .records import EpisodeDataError, load_public
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -53,9 +54,11 @@ class InProcessGrader:
         except EpisodeLoadError as exc:
             raise ResetError(str(exc)) from None
 
-    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float) -> dict:
+    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float,
+               malformed: str | None = None) -> dict:
         payload = json.loads(json.dumps(payload))  # как через границу процесса
-        return json.loads(json.dumps(self.session.finish(payload, inspection_steps, steps_used, end_reason, elapsed_s)))
+        return json.loads(json.dumps(self.session.finish(payload, inspection_steps, steps_used, end_reason, elapsed_s,
+                                                         malformed=malformed)))
 
     def close(self) -> None:
         self.session.close()
@@ -81,11 +84,12 @@ class SubprocessGrader:
             except RemoteError as exc:
                 raise ResetError(exc.public_message) from None
 
-    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float) -> dict:
+    def finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str, elapsed_s: float,
+               malformed: str | None = None) -> dict:
         with self._lock:
             return self.channel.request("finish", {
                 "payload": payload, "inspection_steps": inspection_steps, "steps_used": steps_used,
-                "end_reason": end_reason, "elapsed_s": elapsed_s,
+                "end_reason": end_reason, "elapsed_s": elapsed_s, "malformed": malformed,
             })
 
     def close(self) -> None:
@@ -125,10 +129,11 @@ class EnvService:
         self._started = 0.0
         self._closed = False
 
-    def _on_finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str) -> dict:
+    def _on_finish(self, payload: Any, inspection_steps: int, steps_used: int, end_reason: str,
+                   malformed: str | None = None) -> dict:
         elapsed = round(time.monotonic() - self._started, 3)
         self._cancel_timer()
-        return self.grader.finish(payload, inspection_steps, steps_used, end_reason, elapsed)
+        return self.grader.finish(payload, inspection_steps, steps_used, end_reason, elapsed, malformed)
 
     # ------------------------------------------------------------------ сторож
     def _cancel_timer(self) -> None:
@@ -155,6 +160,8 @@ class EnvService:
     def reset(self, seed: Any = None, config: Any = None) -> tuple[dict, dict]:
         if self._closed:
             raise ResetError("environment is closed")
+        if not is_json_value({"seed": seed, "config": config}):  # до abandon: текущий эпизод не трогаем
+            raise ResetError("seed and config must be JSON values")
         env_cfg, grader_cfg = split_config(config)
         with self.core.lock:
             self._cancel_timer()
@@ -169,8 +176,8 @@ class EnvService:
             self._arm_timer(env_cfg["time_limit_s"])
             return obs, info
 
-    def step(self, action: Any) -> tuple[dict, float, bool, bool, dict]:
-        return self.core.step(action)
+    def step(self, action: Any, unsendable: Any = None) -> tuple[dict, float, bool, bool, dict]:
+        return self.core.step(action, unsendable)
 
     def close(self) -> None:
         if self._closed:

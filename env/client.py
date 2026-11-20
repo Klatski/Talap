@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .constants import MAX_ACTION_BYTES, MAX_PARSE_BYTES
+from .jsonsafe import classify_action
 from .protocol import Channel, RemoteError
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,30 +31,15 @@ class EnvError(RuntimeError):
 
 
 
-def wire_action(action: Any) -> Any:
-    """Что отправить серверу, чтобы итог шага совпал с тем, что EnvCore._parse сделал бы с action в процессе.
-
-    * строка длиннее MAX_PARSE_BYTES -> action_too_large; иначе уходит как есть (сервер разберёт сам);
-    * объект не JSON -> invalid_action, а если это submit — неверная структура (-1, эпизод завершён);
-    * объект больше MAX_ACTION_BYTES -> action_too_large, а если это submit — неверная структура (-1).
-    """
-    if isinstance(action, str):
-        if len(action.encode("utf-8", "replace")) > MAX_PARSE_BYTES:
-            return "x" * (MAX_PARSE_BYTES + 1)
-        return action
-    is_submit = isinstance(action, dict) and action.get("action") == "submit"
-    try:
-        text = json.dumps(action, allow_nan=False, sort_keys=True)
-    except (TypeError, ValueError, RecursionError):
-        return _malformed_submit("not_json") if is_submit else "<not JSON>"
-    if len(text.encode("utf-8")) > MAX_ACTION_BYTES:
-        return _malformed_submit("too_large") if is_submit else "x" * (MAX_PARSE_BYTES + 1)
-    return action
-
-
-def _malformed_submit(reason: str) -> dict:
-    # Тот же маркер, который EnvCore передаёт оценщику; подделать его можно, но выгоды нет: это всегда -1.
-    return {"action": "submit", "findings": {"__malformed_submit_action__": reason}}
+def wire_params(action: Any) -> dict:
+    """Параметры step для сервера. Классификация та же, что в EnvCore (env/jsonsafe.classify_action):
+    выполнимое действие уходит как объект, а невыполнимое — только флагом unsendable {submit, reason},
+    поэтому итог совпадает с LocalAuditEnv, а гигантские или не-JSON значения не идут по проводу."""
+    obj, bad = classify_action(action)
+    if bad is None:
+        return {"action": obj}
+    is_submit, reason = bad
+    return {"action": None, "unsendable": {"submit": is_submit, "reason": reason}}
 
 class AuditEnv:
     def __init__(
@@ -89,7 +74,7 @@ class AuditEnv:
 
     def step(self, action: Any) -> tuple[dict, float, bool, bool, dict]:
         try:
-            out = self._channel.request("step", {"action": wire_action(action)}, self._timeout)
+            out = self._channel.request("step", wire_params(action), self._timeout)
         except RemoteError as exc:
             raise EnvError(f"step failed: {exc.public_message}") from None
         return out["observation"], out["reward"], out["terminated"], out["truncated"], out["info"]

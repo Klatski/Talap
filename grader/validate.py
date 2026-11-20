@@ -30,6 +30,11 @@ MALFORMED_REASONS = {
 }
 
 
+def malformed_message(reason: str) -> str:
+    """Сообщение для submit, который среда не смогла передать как есть (фиксированный набор текстов)."""
+    return f"submit action: {MALFORMED_REASONS.get(reason, MALFORMED_REASONS['wrapper'])}"
+
+
 def _is_int(v: Any) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
 
@@ -83,9 +88,6 @@ def validate_submission(submission: Any, episode_id: str | None = None) -> list[
     errors: list[str] = []
     if not isinstance(submission, dict):
         return ["submission: must be an object {episode_id, findings}"]
-    if "__malformed_submit_action__" in submission:  # маркер среды: submit нельзя было передать как есть
-        reason = submission["__malformed_submit_action__"]
-        return [f"submit action: {MALFORMED_REASONS.get(reason, MALFORMED_REASONS['wrapper']) if isinstance(reason, str) else MALFORMED_REASONS['wrapper']}"]
     keys = set(submission)
     for k in sorted(TOP_FIELDS - keys):
         errors.append(f"submission: missing field {k}")
