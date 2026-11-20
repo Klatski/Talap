@@ -118,7 +118,9 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 ```bash
 python -m unittest discover -s tests/env -p "test_env_*.py"          # среда (81 тест)
 python tests/jury/scorecard.py [--salt S] [--out card.md]            # карточка жюри на своей соли (≈45 с)
-python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик (33 теста)
+python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик (38 тестов)
+python tests/grader/test_grader_handworked.py --show                 # ручные примеры: «вручную | программа»
+python -m grader --episode episodes/stub/ep-SUW6BEVZNR --submission answer.json --steps 3   # свой ответ: TP/FP/FN, формула награды
 python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (68 тестов)
 python -m env.runner --policies random,reconcile,flag_all,oracle,auditor --splits train,dev --mode eval
 python -m generator check-splits                       # и build-splits, audit <ep>, stress, leakcheck, holdout
