@@ -82,7 +82,8 @@ python -m generator leakcheck --n 40  # утечки через артефакт
 ```
 python check.py                       # ЕДИНАЯ команда: все тесты, данные, базовые политики, траектории, имитация жюри
 python check.py --quick               # то же без имитации закрытого прогона
-python check.py --update              # перезаписать trajectories/trajectories.jsonl и reports/* (после изменений env/grader/политик/эпизодов)
+python check.py --update              # перезаписать trajectories/trajectories.jsonl и снимки reports/* (после изменений env/grader/политик/эпизодов)
+python tests/jury/scorecard.py        # карточка жюри: раздел 10 ТЗ как 4×20 проверок + баллы (этап 7 check.py)
 python -m unittest discover -s tests/env -p "test_env_*.py"
 python -m unittest discover -s tests/grader -p "test_grader_*.py"
 python -m env.runner --splits train,dev --mode eval   # таблица P/R/F1/возврат/шаги/время + разбор сбоев

@@ -60,6 +60,8 @@ ERRORS: dict[str, str] = {
     "time_limit": "Time limit exceeded: the episode is truncated with an empty final answer.",
     "episode_over": "The episode is over. Call reset() to start a new one.",
     "not_reset": "No active episode. Call reset() first.",
+    "internal_error": "The environment could not process this action; the step was used.",
+    "grader_unavailable": "The episode has ended, but the grader could not record the result.",
 }
 
 # Детали калькулятора — тоже фиксированный набор.

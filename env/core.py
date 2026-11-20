@@ -67,6 +67,7 @@ class _Episode:
     end_reason: str | None = None
     terminal_info: dict = field(default_factory=dict)
     terminal_reward: float = 0.0
+    finish_error: dict | None = None  # оценщик не ответил на finish (упал или недоступен)
 
 
 class EnvCore:
@@ -136,6 +137,8 @@ class EnvCore:
                 name, args = self._from_unsendable(unsendable) if unsendable is not None else self._parse(action)
             except ActionError as exc:
                 return self._after_tool(ep, None, error_obj(exc.code, exc.detail))
+            except Exception:  # noqa: BLE001 — дефект среды не роняет агента: ограниченная ошибка, шаг расходуется
+                return self._after_tool(ep, None, error_obj("internal_error"))
             if name == "submit":
                 if isinstance(args, _MalformedSubmit):
                     payload = args
@@ -144,9 +147,11 @@ class EnvCore:
                 self._finish(ep, payload, ep.steps_used - 1, "submit", truncated=False)
                 return self._terminal(ep, {"status": "submitted"}, None)
             try:
-                result = self._dispatch(ep, name, args)
+                result = _json_copy(self._dispatch(ep, name, args))
             except ActionError as exc:
                 return self._after_tool(ep, None, error_obj(exc.code, exc.detail))
+            except Exception:  # noqa: BLE001 — то же: никакое исключение из step наружу не выходит
+                return self._after_tool(ep, None, error_obj("internal_error"))
             return self._after_tool(ep, result, None)
 
     # ------------------------------------------------------------------ внутреннее
@@ -160,6 +165,8 @@ class EnvCore:
         remaining = max(0, ep.max_steps - ep.steps_used)
         reward = ep.terminal_reward if ep.mode == "train" else 0.0
         info = _json_copy(ep.terminal_info) if ep.mode == "train" else {}
+        if ep.finish_error is not None:
+            error = ep.finish_error
         return self._obs(result, error, remaining), reward, ep.terminated, ep.truncated, info
 
     def _finish(self, ep: _Episode, payload: Any, inspection_steps: int, reason: str, truncated: bool) -> None:
@@ -170,7 +177,12 @@ class EnvCore:
         malformed = None
         if isinstance(payload, _MalformedSubmit):
             payload, malformed = None, payload.reason  # причина идёт оценщику отдельным полем, не в ответе агента
-        response = self._finish_handler(payload, inspection_steps, ep.steps_used, reason, malformed) or {}
+        try:
+            response = self._finish_handler(payload, inspection_steps, ep.steps_used, reason, malformed) or {}
+        except Exception:  # noqa: BLE001 — оценщик упал: эпизод всё равно завершён, наружу только код ошибки
+            response, ep.finish_error = {}, error_obj("grader_unavailable")
+        if not isinstance(response, dict):
+            response = {}
         reward = response.get("reward", 0.0)
         ep.terminal_reward = float(reward) if isinstance(reward, (int, float)) and not isinstance(reward, bool) else 0.0
         info = response.get("info", {})

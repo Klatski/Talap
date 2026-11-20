@@ -11,14 +11,22 @@
 
 ```bash
 python check.py            # или: make check
-python check.py --quick    # без имитации закрытого прогона (этап 6)
+python check.py --quick    # без имитации закрытого прогона и карточки жюри (этапы 6–7)
+python check.py --update   # после намеренных изменений: перезаписать траектории и снимки reports/*
 ```
 
-Этапы (около 70 с на ноутбуке): окружение → все тесты (generator, env, grader) → побайтовая
-воспроизводимость, схемы и эталон 21 открытого эпизода → базовые политики через изолированные
-процессы в режиме eval (`reports/baselines.md`) → пересборка `trajectories/trajectories.jsonl`
-байт в байт и сканер утечек → имитация закрытой проверки жюри: 20 эпизодов с солью на новых
-сочетаниях параметров и 20 пар «перестановка + смена ID» (`reports/holdout.md`).
+Этапы (около 3 минут на ноутбуке):
+1. окружение;
+2. все тесты (generator, env, grader, jury);
+3. побайтовая воспроизводимость, схемы и эталон 21 открытого эпизода;
+4. базовые политики через изолированные процессы в режиме eval (`reports/baselines.{md,json}`);
+5. пересборка `trajectories/trajectories.jsonl` байт в байт и сканер утечек;
+6. имитация закрытой проверки жюри: 20 эпизодов с солью на новых сочетаниях параметров и 20 пар
+   «перестановка + смена ID» (`reports/holdout.{md,json}`);
+7. карточка жюри: раздел 10 ТЗ один в один, 20 проверок контракта, 20 эпизодов, 20 проверок награды,
+   20 парных проверок и баллы по формуле жюри (`reports/jury_scorecard.md`).
+
+Результаты этапов 4, 6 и 7 сравниваются с закоммиченными снимками (golden, без времени).
 Код возврата 0 только если прошли все этапы.
 
 ## Контейнер
@@ -99,6 +107,7 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 | 4 базовые политики: random, reconcile, flag_all, oracle (+ демо-аудитор) | `policies/` |
 | Траектории без эталона | `trajectories/trajectories.jsonl` |
 | Тесты среды, сопоставления, награды, атак | `tests/env`, `tests/grader`, `tests/generator` |
+| Критерии оценки (раздел 10) как проверки: 4 × 20 + баллы | `tests/jury/scorecard.py` → `reports/jury_scorecard.md` |
 | Диагностика P, R, F1, возврат, шаги, время; разбор сбоев | `reports/baselines.md`, `reports/holdout.md` |
 | Записка о дизайне и честные ограничения | [`docs/design.md`](docs/design.md) |
 | Контейнер и единая команда | `Dockerfile`, `check.py`, `Makefile`; CI `.github/workflows/check.yml` (Linux + Docker `--network none`) |
@@ -107,7 +116,8 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 ## Команды по частям
 
 ```bash
-python -m unittest discover -s tests/env -p "test_env_*.py"          # среда (66 тестов)
+python -m unittest discover -s tests/env -p "test_env_*.py"          # среда (81 тест)
+python tests/jury/scorecard.py [--salt S] [--out card.md]            # карточка жюри на своей соли (≈45 с)
 python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик (33 теста)
 python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (68 тестов)
 python -m env.runner --policies random,reconcile,flag_all,oracle,auditor --splits train,dev --mode eval
