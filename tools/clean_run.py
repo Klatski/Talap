@@ -94,6 +94,17 @@ def _default_source() -> str:
     return url or str(ROOT)
 
 
+def _rmtree(path: Path) -> None:
+    """rmtree, который удаляет и файлы «только чтение» (pack-файлы git на Windows)."""
+    import stat
+
+    def retry(func, target, _exc):
+        os.chmod(target, stat.S_IWRITE)
+        func(target)
+
+    shutil.rmtree(path, onerror=retry)
+
+
 def _scrubbed_env(tmp: Path) -> dict[str, str]:
     if sys.platform == "win32":
         keep = {k: os.environ[k] for k in ("SYSTEMROOT", "WINDIR", "COMSPEC", "NUMBER_OF_PROCESSORS") if k in os.environ}
@@ -170,7 +181,7 @@ def main(argv=None) -> int:
         if args.keep:
             print(f"kept: {base}")
         else:
-            shutil.rmtree(base, ignore_errors=True)
+            _rmtree(base)
 
 
 if __name__ == "__main__":
