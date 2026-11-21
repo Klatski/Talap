@@ -82,6 +82,26 @@ def public_ids(public: dict[str, str]) -> frozenset:
     return frozenset(ids | set(ep.documents))
 
 
+def _strings(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(x, str) for x in value)
+
+
+def _int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def issue_follows_contract(issue: Any) -> bool:
+    """Ошибка эталона в формате README («Интерфейс жюри», truth.json): обязательные type, affected_ids,
+    expected_amount_minor, currency, evidence_sets — то, без чего matcher не может сравнивать; необязательные
+    issue_id (любое значение) и amount_tolerance_minor (целое τ >= 0; нет поля или null — 0). Лишние поля
+    не мешают. Нарушение — понятная ошибка загрузки при reset/score_episode, а не авария на submit."""
+    tolerance = issue.get("amount_tolerance_minor") if isinstance(issue, dict) else None
+    return (isinstance(issue, dict) and isinstance(issue.get("type"), str) and _strings(issue.get("affected_ids"))
+            and _int(issue.get("expected_amount_minor")) and isinstance(issue.get("currency"), str)
+            and isinstance(issue.get("evidence_sets"), list) and all(_strings(s) for s in issue["evidence_sets"])
+            and (tolerance is None or (_int(tolerance) and tolerance >= 0)))
+
+
 def read_episode(episode_dir: Path) -> tuple[dict[str, str], dict, dict | None]:
     layout = episode_layout(Path(episode_dir))
     if layout is None:
@@ -100,6 +120,8 @@ def read_episode(episode_dir: Path) -> tuple[dict[str, str], dict, dict | None]:
         raise EpisodeLoadError("episode files are missing or unreadable") from exc
     if not isinstance(truth, dict) or not isinstance(truth.get("issues"), list) or not isinstance(manifest, dict):
         raise EpisodeLoadError("episode reference does not follow the contract")
+    if not all(issue_follows_contract(i) for i in truth["issues"]):
+        raise EpisodeLoadError("episode reference does not follow the contract (truth.json issue fields)")
     if "episode_id" not in truth:  # фикстура жюри может не повторять episode_id в truth
         truth = {**truth, "episode_id": manifest.get("episode_id")}
     if manifest.get("episode_id") != truth.get("episode_id"):

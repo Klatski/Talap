@@ -1,10 +1,9 @@
 """Враждебный ввод: ни одно действие агента не роняет step, а итог одинаков в процессе и через изоляцию.
 
-Правило (docs/contract.md, раздел 8): объект с action == "submit" (или JSON-строка такого объекта)
-всегда завершает эпизод; если он не JSON (NaN, целое длиннее 4300 цифр) или больше любого валидного
-ответа (> MAX_SUBMIT_BYTES), это неверная структура: награда -1 и причина в журнале оценщика.
-Порог MAX_SUBMIT_BYTES выше худшего валидного ответа, поэтому валидный ответ никогда не получает -1
-из-за размера (награда не зависит от текста explanation). Прочие нечитаемые действия дают
+Правило (docs/contract.md, раздел 8): submit в любом формате (или JSON-строка такого объекта) всегда
+завершает эпизод; если он не JSON (NaN, целое длиннее 4300 цифр) или больше MAX_SUBMIT_BYTES, это неверная
+структура: награда -1 и причина в журнале оценщика. Размер считается без текста валидных explanation, поэтому
+текст объяснения никогда не решает судьбу ответа и не меняет награду. Прочие нечитаемые действия дают
 ограниченную ошибку и расходуют шаг.
 """
 
@@ -15,11 +14,11 @@ import unittest
 
 from env_helpers import ROOT, STUB, local_env
 from env import AuditEnv
-from env.constants import ERRORS, MAX_ACTION_BYTES, MAX_PARSE_BYTES, MAX_SUBMIT_BYTES
+from env.constants import ERRORS, MAX_ACTION_BYTES, MAX_EXPLANATION_CHARS, MAX_PARSE_BYTES, MAX_SUBMIT_BYTES
 from grader.validate import MALFORMED_REASONS, MAX_EVIDENCE, MAX_EXPLANATION, MAX_FINDINGS
 
-# Под транспортный лимит submit (1 МБ JSON) рассчитан любой ответ с выводами до 10 affected_ids по 64 символа
-# (docs/contract.md, раздел 7). Структура больше не запрещает и большие списки, но такой вывод — заведомо FP.
+# «Тяжёлый» реалистичный вывод: 10 affected_ids по 64 символа. Структура не ограничивает списки и длину ID
+# (правила жюри: такой вывод — просто FP), их ограничивает только транспортный предел submit.
 MAX_AFFECTED, MAX_ID_LEN = 10, 64
 
 BIG = "9" * 5000  # больше sys.get_int_max_str_digits() по умолчанию
@@ -34,8 +33,8 @@ def finding(**kw):
     return f
 
 
-def worst_case_valid_findings(episode_id: str) -> dict:
-    """Самый «тяжёлый» ответ, который валидатор считает верной структурой."""
+def heavy_valid_findings(episode_id: str) -> dict:
+    """Тяжёлый валидный ответ: 30 выводов, ID по 64 эмодзи, суммы по 4300 цифр, объяснения по 1000 эмодзи."""
     one = {"type": "duplicate_invoice", "affected_ids": [ASTRAL * MAX_ID_LEN] * MAX_AFFECTED,
            "claimed_amount_minor": int("9" * 4300), "currency": "KZT",
            "evidence_ids": [ASTRAL * MAX_ID_LEN] * MAX_EVIDENCE, "explanation": ASTRAL * MAX_EXPLANATION}
@@ -52,6 +51,8 @@ TOOL_CASES = [
     ("float nan argument", {"action": "list_records", "table": "ledger", "limit": float("nan")}, "invalid_action"),
     ("oversize tool action", {"action": "calculator", "expression": "1" * (MAX_ACTION_BYTES + 10)}, "action_too_large"),
     ("string above parse limit", "x" * (MAX_PARSE_BYTES + 1), "action_too_large"),
+    ("string above parse limit, submit name only nested",
+     json.dumps({"name": "calculator", "args": {"pad": "x" * (MAX_PARSE_BYTES + 10), "name": "submit"}}), "action_too_large"),
     ("JSON string of a JSON string", json.dumps(json.dumps({"action": "calculator", "expression": "1"})), "invalid_action"),
     ("bytes", b'{"action": "calculator", "expression": "1"}', "invalid_action"),
     ("set", {"action", "calculator"}, "invalid_action"),
@@ -116,6 +117,9 @@ class HostileInput(unittest.TestCase):
             "jury envelope, args not an object": (lambda ep: {"name": "submit", "args": "findings"}, "wrapper"),
             "jury envelope, NaN inside": (lambda ep: {"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(claimed_amount_minor=float("nan"))]}}}, "not_json"),
             "jury envelope above MAX_SUBMIT_BYTES": (lambda ep: json.dumps({"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(explanation="x" * (MAX_PARSE_BYTES + 10))]}}}), "too_large"),
+            # регрессия /code-review: json.dumps(sort_keys=True) ставит "args" раньше "name"
+            "jury envelope above MAX_PARSE_BYTES, args first": (lambda ep: json.dumps({"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(explanation="x" * (MAX_PARSE_BYTES + 10))]}}}, sort_keys=True), "too_large"),
+            "flat form above MAX_PARSE_BYTES, action last": (lambda ep: json.dumps({"findings": {"episode_id": ep, "findings": [finding(explanation="x" * (MAX_PARSE_BYTES + 10))]}, "action": "submit"}), "too_large"),
         }
         for label, (make, reason) in cases.items():
             with self.subTest(case=label):
@@ -127,17 +131,17 @@ class HostileInput(unittest.TestCase):
                     self.assertEqual(info["inspection_steps"], 0)
                     self.assertEqual(after[0]["error"]["code"], "episode_over")
 
-    def test_worst_case_valid_submission_is_scored_not_rejected(self):
-        """Регрессия /code-review: эмодзи в explanation не должны превращать валидный ответ в -1."""
-        sample = worst_case_valid_findings("ep-AAAAAAAAAA")
+    def test_heavy_valid_submission_is_scored_not_rejected(self):
+        """Регрессия /code-review: эмодзи в explanation и ID не должны превращать валидный ответ в -1."""
+        sample = heavy_valid_findings("ep-AAAAAAAAAA")
         ascii_size = len(json.dumps({"action": "submit", "findings": sample}, sort_keys=True).encode())
-        self.assertLess(ascii_size, MAX_SUBMIT_BYTES)
-        self.assertGreater(ascii_size, MAX_ACTION_BYTES)  # старый порог отверг бы этот валидный ответ
+        self.assertGreater(ascii_size, MAX_ACTION_BYTES)  # порог обычного действия отверг бы этот валидный ответ
         makers = {
-            "dict": lambda ep: {"action": "submit", "findings": worst_case_valid_findings(ep)},
-            "string, ASCII-escaped": lambda ep: json.dumps({"action": "submit", "findings": worst_case_valid_findings(ep)}),
-            "string, raw UTF-8": lambda ep: json.dumps({"action": "submit", "findings": worst_case_valid_findings(ep)}, ensure_ascii=False),
-            "string, indented": lambda ep: json.dumps({"action": "submit", "findings": worst_case_valid_findings(ep)}, indent=2),
+            "dict": lambda ep: {"action": "submit", "findings": heavy_valid_findings(ep)},
+            "string, ASCII-escaped": lambda ep: json.dumps({"action": "submit", "findings": heavy_valid_findings(ep)}),
+            "string, raw UTF-8": lambda ep: json.dumps({"action": "submit", "findings": heavy_valid_findings(ep)}, ensure_ascii=False),
+            "string, indented": lambda ep: json.dumps({"action": "submit", "findings": heavy_valid_findings(ep)}, indent=2),
+            "jury envelope": lambda ep: {"name": "submit", "args": {"findings": heavy_valid_findings(ep)}},
         }
         for label, make in makers.items():
             with self.subTest(form=label):
@@ -146,6 +150,30 @@ class HostileInput(unittest.TestCase):
                     self.assertTrue(info["valid"], (name, info["errors"]))
                     self.assertEqual(info["errors"], [])
                     self.assertEqual(info["tp"], 0)  # разобран и сопоставлен, а не отвергнут
+
+    def test_explanation_text_never_decides_the_size_limit(self):
+        """Регрессия /code-review: размер submit меряется без текста валидных explanation. Ответ, который с
+        объяснениями по 1000 эмодзи больше порога, а без них меньше, оценивается так же, как с пустыми."""
+        ids = [f"{'X' * 25}{i:04d}" for i in range(900)]  # 30 выводов x 900 ID ~ 0.9 МБ без объяснений
+
+        def make(explanation):
+            return lambda ep: {"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [
+                finding(affected_ids=ids, explanation=explanation) for _ in range(MAX_FINDINGS)]}}}
+
+        plain, rich = make(""), make(ASTRAL * MAX_EXPLANATION)
+        sizes = [len(json.dumps(m("ep-AAAAAAAAAA"), sort_keys=True).encode()) for m in (plain, rich)]
+        self.assertLess(sizes[0], MAX_SUBMIT_BYTES)
+        self.assertGreater(sizes[1], MAX_SUBMIT_BYTES)
+        outcomes = set()
+        for make_action in (plain, rich):
+            for name, (obs, reward, term, trunc, info), _ in self.submit_both(make_action):
+                self.assertTrue(info["valid"], (name, info["errors"]))
+                self.assertEqual(info["fp"], MAX_FINDINGS)
+                outcomes.add(json.dumps([reward, term, trunc, info], sort_keys=True))
+        self.assertEqual(len(outcomes), 1)
+
+    def test_explanation_limit_mirrors_the_validator(self):
+        self.assertEqual(MAX_EXPLANATION_CHARS, MAX_EXPLANATION)
 
     def test_oversized_explanation_within_submit_limit_gets_validator_error(self):
         for name, (obs, reward, term, trunc, info), _ in self.submit_both(
@@ -171,6 +199,9 @@ class HostileInput(unittest.TestCase):
             self.assertTrue(term)
             self.assertTrue(info["valid"], (name, info["errors"]))
             self.assertEqual((info["tp"], info["fp"]), (0, 1))
+        obs, _ = self.envs["local"].reset(seed=0, config={**STUB, "mode": "train"})
+        self.assertIn("Fields beyond the format are ignored", obs["matching"])  # текст правил = поведение оценщика
+        self.assertNotIn("extra fields", obs["matching"])
 
     def test_eval_mode_hides_even_malformed_submit(self):
         results = self.run_both({"action": "submit", "findings": {"findings": [finding(explanation="x" * (MAX_SUBMIT_BYTES + 1))]}}, mode="eval")

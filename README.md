@@ -218,9 +218,9 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 ## Команды по частям
 
 ```bash
-python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница (120 тестов)
+python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница (124 теста)
 python tests/jury/scorecard.py [--salt S] [--out card.md]            # карточка жюри на своей соли (≈45 с)
-python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (65 тестов)
+python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (68 тестов)
 python tests/grader/test_grader_handworked.py --show                 # ручные примеры: «вручную | программа»
 python -m grader --episode episodes/stub/ep-SUW6BEVZNR --submission answer.json --steps 3   # свой ответ: TP/FP/FN, формула награды
 python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (68 тестов)

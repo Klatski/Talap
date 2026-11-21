@@ -14,8 +14,9 @@ PAGE_LIMIT = 50            # максимум строк на страницу l
 TIME_LIMIT_S = 60.0        # на эпизод, от reset
 POLICY_GRACE_S = 2.0       # сверх лимита эпизода ждём ответа политики (среда к этому моменту уже закрыла эпизод)
 MAX_ACTION_BYTES = 262_144    # обычное действие, сериализованное с sort_keys и ASCII-экранированием
-MAX_SUBMIT_BYTES = 1_048_576  # submit: больше худшего валидного ответа (~0.96 МБ), см. env/jsonsafe.py
+MAX_SUBMIT_BYTES = 1_048_576  # submit без текста валидных explanation (см. env/jsonsafe.py::submit_size_basis)
 MAX_PARSE_BYTES = 2_097_152   # действие-строку длиннее (UTF-8) среда не разбирает
+MAX_EXPLANATION_CHARS = 1000  # code points; зеркало grader.validate.MAX_EXPLANATION (тест сверяет)
 
 MODES = ("train", "eval", "closed")  # closed — имя жюри для eval: политика видит 0 и {}
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import platform
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -42,6 +43,7 @@ class GraderSession:
         self.store = EpisodeStore(episodes_root, salt)
         self.log_path = Path(log_path) if log_path else None
         self.records: list[dict] = []
+        self._unwritten: list[dict] = []  # записи, которые не удалось дописать в журнал (повтор при close)
         self._current: LoadedEpisode | None = None
         self._mode = "train"
         self._finished = True
@@ -104,13 +106,29 @@ class GraderSession:
         return {"reward": result["reward"], "info": info}
 
     def _append_to_log(self, record: dict) -> None:
-        if self.log_path is None:
+        if self.log_path is not None:
+            self._unwritten.append(record)
+            self._flush_log()
+
+    def _flush_log(self) -> None:
+        """Дописать накопленные записи одной операцией. Недоступный для записи журнал не роняет эпизод:
+        записи остаются в self.records и в очереди (повтор при следующем эпизоде и при close()),
+        в stderr — короткое сообщение без путей и содержимого."""
+        if not self._unwritten or self.log_path is None:
             return
-        self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.log_path, "a", encoding="utf-8", newline="") as fh:
-            fh.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
-            fh.flush()
+        text = "".join(json.dumps(rec, sort_keys=True, ensure_ascii=False) + "\n" for rec in self._unwritten)
+        try:
+            self.log_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.log_path, "a", encoding="utf-8", newline="") as fh:
+                fh.write(text)
+                fh.flush()
+        except OSError as exc:
+            print(f"grader log is not writable ({type(exc).__name__}); records are kept in memory", file=sys.stderr)
+            return
+        self._unwritten.clear()
 
     def close(self) -> None:
-        """Закрыть сессию (идемпотентно). Записи уже в журнале; незавершённый эпизод до этого закрывает среда."""
+        """Закрыть сессию (идемпотентно): дописать то, что не удалось записать раньше.
+        Незавершённый эпизод до этого закрывает среда."""
+        self._flush_log()
         self._closed = True

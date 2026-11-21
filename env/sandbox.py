@@ -127,17 +127,19 @@ class SandboxedPolicy:
 
     @classmethod
     def from_file(cls, path: str | os.PathLike, factory: str = "make_policy", kwargs: dict | None = None,
-                  **kw) -> "SandboxedPolicy":
+                  name: str | None = None, **kw) -> "SandboxedPolicy":
         """Политика из одного файла: функция `factory(**kwargs)` (по умолчанию make_policy) или класс с этим именем.
-        Пакет политики — каталог с __init__.py: путь к каталогу, модуль грузится как пакет `user_policy`."""
+        Пакет политики — каталог с __init__.py: путь к каталогу, модуль грузится как пакет `user_policy`.
+        Рядом доступна библиотека `policies` (base.py и базовые политики, без oracle): `from policies.base import …`."""
         path = Path(path)
+        sources = package_sources(POLICIES_DIR, "policies", NOT_IN_SANDBOX)
         if path.is_dir():
-            sources = package_sources(path, "user_policy")
+            sources.update(package_sources(path, "user_policy"))
         else:
             with open(path, encoding="utf-8") as fh:
-                sources = {"user_policy": [False, fh.read()]}
+                sources["user_policy"] = [False, fh.read()]
         entry = {"module": "user_policy", "factory": factory, "args": [], "kwargs": dict(kwargs or {})}
-        return cls(sources, entry, name=path.stem, **kw)
+        return cls(sources, entry, name=name or path.stem, **kw)
 
     # ------------------------------------------------------------------ интерфейс политики
     def reset(self, observation: dict, info: dict | None = None, timeout_s: float | None = None) -> None:

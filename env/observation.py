@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import copy
 
-from .constants import ENV_VERSION, MAX_ACTION_BYTES, MAX_SUBMIT_BYTES, PAGE_LIMIT, TABLES
+from .constants import ENV_VERSION, MAX_ACTION_BYTES, MAX_EXPLANATION_CHARS, MAX_SUBMIT_BYTES, PAGE_LIMIT, TABLES
 from .records import PublicEpisode
 
 TASK = (
@@ -61,9 +61,9 @@ MATCHING = (
     "payment_id, fx_id or doc_id) and evidence_ids contain at least one complete evidence set (extra existing "
     "ids are allowed). Matching to the reference is one-to-one (maximum matching): repeated findings are false "
     "positives. A well-formed but wrong finding (unknown type, wrong currency, negative amount, unknown id) is "
-    "a false positive. A malformed submission (wrong JSON types, missing or extra fields, more than 30 findings, "
-    "more than 10 evidence ids in a finding, explanation over 1000 characters, another episode_id) ends the "
-    "episode with reward -1. The text of explanation never changes the reward."
+    "a false positive. A malformed submission (wrong JSON types, a missing field, more than 30 findings, more "
+    "than 10 evidence ids in a finding, explanation over 1000 characters, another episode_id) ends the episode "
+    "with reward -1. Fields beyond the format are ignored. The text of explanation never changes the reward."
 )
 
 ACTIONS_HELP = {
@@ -114,7 +114,7 @@ def initial_observation(ep: PublicEpisode, max_steps: int, time_limit_s: float) 
             "time_limit_seconds": time_limit_s,
             "max_findings": 30,
             "max_evidence_ids": 10,
-            "max_explanation_chars": 1000,
+            "max_explanation_chars": MAX_EXPLANATION_CHARS,
             "max_action_bytes": MAX_ACTION_BYTES,
             "max_submit_bytes": MAX_SUBMIT_BYTES,
             "inspection_step_cost": 0.002,

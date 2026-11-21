@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import AbstractSet, Any
 
-from .matcher import match
+from .matcher import issue_label, match
 from .metrics import experimental_reward, prf, shared_reward
 from .validate import malformed_message, validate_submission
 
@@ -99,7 +99,7 @@ def score_submission(
         "fp_on_distractor": dict(sorted(fp_on_distractor.items())),
         "fn_near_miss": sum(1 for m in result.missed if m["reason"] == "near_miss"),
         "per_finding": result.finding_status,
-        "missed": [{**m, "issue_id": issues[m["issue_index"]]["issue_id"]} for m in result.missed],
+        "missed": [{**m, "issue_id": issue_label(issues[m["issue_index"]], m["issue_index"])} for m in result.missed],
     }
     return {
         "valid": True,

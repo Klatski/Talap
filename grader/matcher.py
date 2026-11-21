@@ -64,15 +64,21 @@ def normalize_finding(f: dict, index: int) -> NormFinding:
     )
 
 
+def issue_label(issue: dict, index: int) -> str:
+    """issue_id ошибки эталона; у фикстуры без него (или с null) — номер по порядку в truth.json."""
+    issue_id = issue.get("issue_id")
+    return str(issue_id) if issue_id is not None else f"#{index:06d}"
+
+
 def normalize_issue(issue: dict, index: int) -> NormIssue:
     return NormIssue(
         index=index,
-        issue_id=str(issue.get("issue_id", f"#{index:06d}")),
+        issue_id=issue_label(issue, index),
         type=issue["type"],
         affected=frozenset(issue["affected_ids"]),
         amount=issue["expected_amount_minor"],
         currency=issue["currency"],
-        tolerance=issue.get("amount_tolerance_minor", 0),
+        tolerance=issue.get("amount_tolerance_minor") or 0,  # нет поля или null — τ = 0 (правила жюри)
         evidence_sets=tuple(frozenset(s) for s in issue["evidence_sets"]),
     )
 

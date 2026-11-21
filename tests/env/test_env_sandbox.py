@@ -58,6 +58,27 @@ def make_policy(hang_on=None, crash_on=None):
 '''
 
 
+LIBRARY_POLICY = '''
+from policies.base import ScriptedPolicy
+
+
+class Probe(ScriptedPolicy):
+    name = "probe"
+
+    def script(self, observation):
+        yield {"name": "calculator", "args": {"expression": "1+1"}}
+        # конец сценария: ScriptedPolicy сама отправляет пустой submit
+
+
+def make_policy():
+    return Probe()
+'''
+
+ORACLE_IMPORT_POLICY = '''
+from policies.oracle import make_policy  # эталонная политика в песочницу не попадает
+'''
+
+
 def read_log(path: Path) -> list[dict]:
     if not path.is_file():
         return []
@@ -77,6 +98,10 @@ class Sandbox(unittest.TestCase):
         assert len(cls.truth["issues"]) == 12
         cls.flaky = cls.root / "flaky_policy.py"
         cls.flaky.write_bytes(FLAKY_POLICY.encode("utf-8"))
+        cls.library = cls.root / "library_policy.py"
+        cls.library.write_bytes(LIBRARY_POLICY.encode("utf-8"))
+        cls.oracle_import = cls.root / "oracle_import_policy.py"
+        cls.oracle_import.write_bytes(ORACLE_IMPORT_POLICY.encode("utf-8"))
 
     @classmethod
     def tearDownClass(cls):
@@ -135,6 +160,28 @@ class Sandbox(unittest.TestCase):
         self.assertEqual((out[1], out[2], out[4]), (0.0, True, {}))
         rec = read_log(log)[-1]
         self.assertEqual((rec["tp"], rec["fp"], rec["fn"], rec["reward"]), (0, 1, 12, -1.0))
+
+    def test_policy_file_may_use_the_policies_library(self):
+        """Регрессия /code-review: файл политики команды импортирует policies.base (README), oracle — нет."""
+        stub = EPISODES / "stub" / "ep-SUW6BEVZNR"
+        log = self.root / "library.jsonl"
+        with AuditEnv(grader_log=log) as env, SandboxedPolicy.from_file(self.library, name="probe-run") as policy:
+            self.assertEqual(policy.name, "probe-run")
+            run = run_episode(env, policy, 0, self.closed(stub))
+        self.assertNotIn("policy_error", run)
+        rec = read_log(log)[-1]
+        self.assertEqual((rec["end_reason"], rec["inspection_steps"], rec["steps_used"]), ("submit", 1, 2))
+        with self.assertRaises(PolicyError):
+            SandboxedPolicy.from_file(self.oracle_import)
+
+    def test_runner_cli_runs_a_policy_file(self):
+        """Регрессия /code-review: `python -m env.runner --policy-file` (CLAUDE.md, README) запускает эпизоды."""
+        out = subprocess.run([sys.executable, "-m", "env.runner", "--policy-file", str(self.library), "--splits", "stub",
+                              "--mode", "closed"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                             timeout=120)
+        self.assertEqual(out.returncode, 0, out.stderr[-2000:])
+        self.assertIn("library_policy", out.stdout)
+        self.assertNotIn("episode ended by the environment", out.stdout)
 
     def test_hung_policy_is_stopped_and_the_environment_ends_the_episode(self):
         stub = EPISODES / "stub" / "ep-SUW6BEVZNR"

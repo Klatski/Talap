@@ -6,6 +6,8 @@
 inspection_steps по умолчанию 10. Вещественные результаты сравниваются с абсолютной погрешностью 1e-9.
 """
 
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -16,8 +18,9 @@ from pathlib import Path
 
 from grader_helpers import EPISODES, ROOT  # noqa: F401 — ROOT кладёт корень репозитория в sys.path
 import judge_adapter
-from grader.episodes import load_episode_dir
+from grader.episodes import EpisodeLoadError, load_episode_dir
 from grader.matcher import match
+from grader.session import GraderSession
 
 STUB = EPISODES / "stub" / "ep-SUW6BEVZNR"
 EPS = 1e-9
@@ -277,6 +280,62 @@ class OpenExamples(JuryFixtures):
         got = self.score("M", [self.G(), self.G()])
         self.assertScore(got, 1, 1, 0)
         self.assertEqual(got, self.score("A", [F(), F()]))  # совпадает с вектором теста 5
+
+
+class FixtureFormat(JuryFixtures):
+    """Фикстура в формате README («Интерфейс жюри»): issue_id и amount_tolerance_minor необязательны (τ = 0, null — то же),
+    episode_id в truth можно не повторять. Без обязательного поля эталон отвергается при загрузке понятной ошибкой,
+    а не аварией посреди оценки (регрессия /code-review: KeyError 'issue_id' в разборе пропусков)."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        root = Path(cls.tmp.name)
+        sparse_a = {k: v for k, v in ISSUE_A.items() if k not in ("issue_id", "amount_tolerance_minor")}
+        sparse_b = {**ISSUE_B, "issue_id": None, "amount_tolerance_minor": None}
+        for key, issues in (("sparse", [sparse_a, sparse_b]),
+                            ("no type", [{k: v for k, v in ISSUE_A.items() if k != "type"}]),
+                            ("string amount", [{**ISSUE_A, "expected_amount_minor": "10000"}]),
+                            ("negative tolerance", [{**ISSUE_A, "amount_tolerance_minor": -1}]),
+                            ("flat evidence", [{**ISSUE_A, "evidence_sets": [D1, D2]}])):
+            d = root / f"фикстура {key}"
+            shutil.copytree(STUB / "public", d)
+            (d / "truth.json").write_text(json.dumps({"issues": issues}), encoding="utf-8")
+            cls.dirs[key] = str(d)
+
+    def test_issue_id_and_tolerance_are_optional(self):
+        self.assertScore(self.score("sparse", [F(), F_B()]), 2, 0, 0)
+        self.assertScore(self.score("sparse", [F(claimed_amount_minor=10001)]), 0, 1, 2)  # τ по умолчанию 0
+        self.assertScore(self.score("sparse", []), 0, 0, 2)  # разбор пропусков без issue_id
+
+    def test_reference_without_a_required_field_is_rejected_at_load(self):
+        for key in ("no type", "string amount", "negative tolerance", "flat evidence"):
+            with self.subTest(fixture=key), self.assertRaises(EpisodeLoadError):
+                self.score(key, [])
+
+
+class GraderLog(unittest.TestCase):
+    def test_unwritable_log_does_not_break_the_episode(self):
+        """Регрессия /code-review: журнал пишется сразу по завершении эпизода. Если писать нельзя (каталог только
+        для чтения), submit не падает, запись остаётся в памяти и дописывается при close()."""
+        with tempfile.TemporaryDirectory(prefix="grader-log-") as tmp:
+            blocker = Path(tmp) / "not a directory"
+            blocker.write_text("x", encoding="utf-8")
+            log = blocker / "log.jsonl"
+            session = GraderSession(log_path=log)
+            session.load(None, {"episode_dir": str(STUB)}, "closed")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                out = session.finish({"episode_id": "ep-SUW6BEVZNR", "findings": []}, 0, 1, "submit")
+            self.assertEqual(out, {"reward": 0.0, "info": {}})
+            self.assertEqual(len(session.records), 1)
+            self.assertIn("grader log is not writable", err.getvalue())
+            self.assertNotIn(tmp, err.getvalue())  # без путей
+            blocker.unlink()  # журнал снова доступен
+            session.close()
+            with open(log, encoding="utf-8") as fh:
+                lines = [json.loads(line) for line in fh if line.strip()]
+            self.assertEqual([(r["episode_id"], r["end_reason"]) for r in lines], [("ep-SUW6BEVZNR", "submit")])
 
 
 if __name__ == "__main__":
