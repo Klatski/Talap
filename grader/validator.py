@@ -7,6 +7,7 @@ MAX_FINDINGS = 30
 MAX_EVIDENCE_IDS = 10
 MAX_EXPLANATION_LEN = 1000
 
+PAYLOAD_KEYS = frozenset({"episode_id", "findings"})
 REQUIRED_FINDING_KEYS = frozenset(
     {
         "type",
@@ -15,6 +16,15 @@ REQUIRED_FINDING_KEYS = frozenset(
         "currency",
         "evidence_ids",
         "explanation",
+    }
+)
+
+ALLOWED_FINDING_TYPES = frozenset(
+    {
+        "duplicate_invoice",
+        "unapplied_payment",
+        "fx_rate_error",
+        "cutoff_error",
     }
 )
 
@@ -27,13 +37,18 @@ def validate_findings_payload(payload: Any, expected_episode_id: str) -> list[di
     if not isinstance(payload, dict):
         raise SubmissionSchemaError("Payload must be a JSON object")
 
-    if payload.get("episode_id") != expected_episode_id:
+    if set(payload.keys()) != PAYLOAD_KEYS:
+        raise SubmissionSchemaError("Payload has missing or extra keys")
+
+    episode_id = payload.get("episode_id")
+    if not isinstance(episode_id, str) or not episode_id:
+        raise SubmissionSchemaError("episode_id must be a non-empty string")
+    if episode_id != expected_episode_id:
         raise SubmissionSchemaError("episode_id does not match current episode")
 
     findings = payload.get("findings")
     if not isinstance(findings, list):
         raise SubmissionSchemaError("findings must be a list")
-
     if len(findings) > MAX_FINDINGS:
         raise SubmissionSchemaError(f"Too many findings: {len(findings)} > {MAX_FINDINGS}")
 
@@ -41,9 +56,8 @@ def validate_findings_payload(payload: Any, expected_episode_id: str) -> list[di
     for idx, item in enumerate(findings):
         if not isinstance(item, dict):
             raise SubmissionSchemaError(f"Finding at index {idx} must be an object")
-
-        if not REQUIRED_FINDING_KEYS.issubset(item.keys()):
-            raise SubmissionSchemaError(f"Finding at index {idx} is missing required keys")
+        if set(item.keys()) != REQUIRED_FINDING_KEYS:
+            raise SubmissionSchemaError(f"Finding at index {idx} has missing or extra keys")
 
         f_type = item["type"]
         affected_ids = item["affected_ids"]
@@ -52,7 +66,7 @@ def validate_findings_payload(payload: Any, expected_episode_id: str) -> list[di
         evidence_ids = item["evidence_ids"]
         explanation = item["explanation"]
 
-        if not isinstance(f_type, str) or not f_type.strip():
+        if not isinstance(f_type, str) or f_type not in ALLOWED_FINDING_TYPES:
             raise SubmissionSchemaError(f"Finding at index {idx} has invalid 'type'")
 
         if (
@@ -62,14 +76,16 @@ def validate_findings_payload(payload: Any, expected_episode_id: str) -> list[di
         ):
             raise SubmissionSchemaError(f"Finding at index {idx} has invalid 'affected_ids'")
 
-        if isinstance(amount, bool) or not isinstance(amount, int):
-            raise SubmissionSchemaError(f"Finding at index {idx} has non-integer 'claimed_amount_minor'")
+        if isinstance(amount, bool) or not isinstance(amount, int) or amount < 0:
+            raise SubmissionSchemaError(f"Finding at index {idx} has invalid 'claimed_amount_minor'")
 
-        if not isinstance(currency, str) or not currency.strip():
+        if not isinstance(currency, str) or len(currency) != 3 or not currency.isalpha():
             raise SubmissionSchemaError(f"Finding at index {idx} has invalid 'currency'")
+        currency = currency.upper()
 
         if (
             not isinstance(evidence_ids, list)
+            or len(evidence_ids) == 0
             or len(evidence_ids) > MAX_EVIDENCE_IDS
             or not all(isinstance(x, str) and x.strip() for x in evidence_ids)
         ):
@@ -80,10 +96,10 @@ def validate_findings_payload(payload: Any, expected_episode_id: str) -> list[di
 
         normalized.append(
             {
-                "type": f_type.strip(),
-                "affected_ids": tuple(sorted(x.strip() for x in affected_ids)),
+                "type": f_type,
+                "affected_ids": tuple(sorted({x.strip() for x in affected_ids})),
                 "claimed_amount_minor": amount,
-                "currency": currency.strip(),
+                "currency": currency,
                 "evidence_ids": frozenset(x.strip() for x in evidence_ids),
                 "explanation": explanation,
             }
