@@ -30,7 +30,9 @@ from typing import Any
 
 from env.constants import ENV_VERSION, default_grader_log
 
-from .episodes import EpisodeLoadError, load_episode_dir, resolve_generator_config
+from .codeversion import code_version
+from .episodes import (EpisodeLoadError, generator_keys, load_episode_dir, reject_misspelled_keys,
+                       resolve_generator_config)
 from .scoring import score_submission
 from .session import append_private_log
 from .version import GRADER_VERSION
@@ -55,7 +57,7 @@ def append_log(record: dict, log_path: str | os.PathLike | None = None) -> None:
 
 def _environment() -> dict:
     return {"grader_version": GRADER_VERSION, "env_version": ENV_VERSION, "python": platform.python_version(),
-            "platform": platform.platform(terse=True)}
+            "platform": platform.platform(terse=True), "code_version": code_version()}
 
 
 def score_episode(episode_dir: str, findings: Any, inspection_steps: int, *, malformed: str | None = None,
@@ -101,11 +103,11 @@ def generate_episode(seed: Any, config: Any, output_dir: str, *, log_path: str |
     ignored: list[str] = []
     if "team_config" in config:  # обёртка протокола жюри: генератору — только team_config
         team = config["team_config"]
+        reject_misspelled_keys(config, PROTOCOL_KEYS | generator_keys())  # "Mode", "team-config", "Errors"
         ignored += sorted(str(k) for k in config if k not in PROTOCOL_KEYS)
-    else:
-        team = config
-    cfg = resolve_generator_config(team if team is not None else {}, ignored,
-                                   prefix="team_config." if "team_config" in config else "")
+        cfg = resolve_generator_config(team if team is not None else {}, ignored, prefix="team_config.")
+    else:  # сам конфиг генератора: "team_confg" — опечатка обёртки, а не чужой ключ
+        cfg = resolve_generator_config(config, ignored, also_known=PROTOCOL_KEYS)
     episode = _generate(seed, cfg, salt=os.environ.get("AUDIT_GRADER_SALT", ""))
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

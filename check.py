@@ -40,7 +40,7 @@ os.chdir(ROOT)
 TRAJ_POLICIES = ("random", "reconcile", "flag_all", "auditor")
 EVAL_POLICIES = ("random", "reconcile", "flag_all", "oracle", "auditor")
 DEFAULT_SALT = "check-emulation-salt"
-VOLATILE = frozenset({"seconds", "elapsed_s", "environment"})  # время и машина — не часть снимка
+VOLATILE = frozenset({"seconds", "elapsed_s", "environment", "code_version"})  # время, машина, хэш кода — не часть снимка
 UPDATE_HINT = "if the change is intended: python check.py --update and commit reports/"
 
 

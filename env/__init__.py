@@ -8,11 +8,11 @@
 
 from .constants import CONTRACT_VERSION, ENV_VERSION
 
-__all__ = ["AuditEnv", "LocalAuditEnv", "EnvError", "ENV_VERSION", "CONTRACT_VERSION"]
+__all__ = ["AuditEnv", "LocalAuditEnv", "EnvError", "EnvConfigError", "ENV_VERSION", "CONTRACT_VERSION"]
 
 
 def __getattr__(name: str):
-    if name in ("AuditEnv", "EnvError"):
+    if name in ("AuditEnv", "EnvError", "EnvConfigError"):
         from . import client
 
         return getattr(client, name)

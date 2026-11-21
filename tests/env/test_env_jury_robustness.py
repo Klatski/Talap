@@ -3,12 +3,14 @@
 * Адаптер самодостаточен: у процесса жюри свои пакеты env/, grader/, generator/, policies/ (и PYTHONPATH на них) —
   все три точки входа работают, а пакеты жюри остаются их собственными, sys.path не меняется.
 * Один ответ — один результат: findings с кортежами в score_episode дают то же, что через step (JSON).
-* Лишние ключи config не мешают (reset и generate_episode) и записываются в журнал оценщика.
+* Лишние ключи config не мешают (reset и generate_episode) и записываются в журнал оценщика, а ключ, похожий
+  на известный ({"Errors": ...}, "Mode", "episode-dir"), — ValueError, а не молча чистая компания или train.
 * Каталог closed без truth.json проводится (метрики — у жюри); episode_id — из manifest, даже если truth другой.
 * Копия жюри с BOM, CRLF, переставленными колонками CSV и ключами JSON даёт те же записи и тот же счёт.
 * Неверный submit через step — ограниченная ошибка invalid_submission (result null), а не {"accepted": true}.
 * Ключ курса в записи жюри <date>:<source>:<target> находит ту же запись fx.
 * Брошенные без close() среды и песочница останавливаются быстро и не оставляют процессов.
+* Журнал: относительный AUDIT_GRADER_LOG — от рабочего каталога жюри; в каждой строке code_version.
 """
 
 from __future__ import annotations
@@ -119,6 +121,23 @@ print(json.dumps({"pids": [e._channel.proc.pid for e in envs] + [policy._channel
 # выход без close(): ни среды, ни песочница не закрыты явно
 '''
 
+LOG_SCRIPT = r'''
+import importlib.util, json, sys
+from pathlib import Path
+
+root, work = Path(sys.argv[1]), Path(sys.argv[2])
+spec = importlib.util.spec_from_file_location("judge_adapter", root / "judge_adapter.py")
+ja = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ja)
+ja.generate_episode(5, {"size": "small"}, "ep")  # относительные пути — от рабочего каталога жюри
+e = ja.make_env()
+obs, _ = e.reset(0, {"mode": "closed", "episode_dir": "ep"})
+e.step({"name": "submit", "args": {"findings": {"episode_id": obs["episode_id"], "findings": []}}})
+e.close()
+ja.score_episode("ep", {"episode_id": obs["episode_id"], "findings": []}, 0)
+print(json.dumps({"path": ja.grader_log_path(), "env_log": e.grader_log}))
+'''
+
 TRIVIAL_POLICY = '''
 class P:
     def reset(self, observation, info=None):
@@ -185,6 +204,28 @@ class JuryRobustness(JuryAdapter):
         rec = self.records()[-1]
         self.assertEqual(rec["source"]["ignored_config_keys"], ["jury_case", "split"])
         self.assertEqual(rec["tp"], 1)
+
+    def test_misspelled_config_keys_raise_instead_of_another_episode(self):
+        target = self.root / "gen typo"
+        for config in ({"error": {"duplicate_invoice": 1}}, {"Errors": {"duplicate_invoice": 1}},
+                       {"errors ": {"duplicate_invoice": 1}}, {"team_config": {"error": {"duplicate_invoice": 1}}},
+                       {"team_config": {"Errors": {"duplicate_invoice": 1}}},
+                       {"team_config": {"errors ": {"duplicate_invoice": 1}}},
+                       {"team_confg": {"errors": {"duplicate_invoice": 1}}}, {"Team_Config": {}, "mode": "closed"}):
+            with self.subTest(config=config), self.assertRaises(ValueError) as ctx:
+                judge_adapter.generate_episode(11, config, str(target))
+            self.assertIn("misspelling", str(ctx.exception))
+        self.assertFalse(target.exists())  # ничего не записано
+        d06 = self.root / "gen D06"
+        judge_adapter.generate_episode(11, {"kind": "D06", "errors": {"duplicate_invoice": 1}}, str(d06))
+        truth = json.loads((d06 / "private" / "truth.json").read_text(encoding="utf-8"))
+        self.assertEqual([i["type"] for i in truth["issues"]], ["duplicate_invoice"])
+        for config in ({"Mode": "closed", "episode_dir": str(self.E)}, {"mode": "closed", "episode-dir": str(self.E)},
+                       {"mode": "closed", "Episode_Dir": str(self.E)},
+                       {"mode": "train", "team_config": {"Errors": {"duplicate_invoice": 1}}}):
+            with self.subTest(reset=sorted(config)), self.assertRaises(ValueError):
+                self.env.reset(seed=0, config=config)
+        self.assertEqual(self.reset(self.C)[0]["remaining_steps"], 100)
 
     def test_extra_generator_config_keys_are_ignored_and_logged(self):
         plain, extra, wrapped = (self.root / n for n in ("gen plain", "gen extra", "gen wrapped"))
@@ -292,8 +333,17 @@ class JuryRobustness(JuryAdapter):
 
 class GraderLogLocation(unittest.TestCase):
     def test_default_grader_log_is_outside_the_repository_and_private(self):
-        path = Path(judge_adapter._team_env("constants").default_grader_log())
+        old = os.environ.pop("AUDIT_GRADER_LOG", None)
+        try:
+            path = Path(judge_adapter.grader_log_path())
+        finally:
+            if old is not None:
+                os.environ["AUDIT_GRADER_LOG"] = old
+        self.assertTrue(path.is_absolute())
         self.assertNotIn(ROOT.resolve(), path.resolve().parents)
+        self.assertEqual(path.name, "grader_log_judge.jsonl")
+        expected_dir = "talaps-grader-log" if sys.platform == "win32" else f"talaps-grader-log-{os.getuid()}"
+        self.assertEqual(path.parent.name, expected_dir)  # как в README
         from grader.session import append_private_log
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -304,6 +354,24 @@ class GraderLogLocation(unittest.TestCase):
             if os.name == "posix":
                 self.assertEqual(target.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(target.parent.stat().st_mode & 0o777, 0o700)
+
+    def test_relative_log_path_is_the_jurys_and_every_record_has_the_code_version(self):
+        code = json.loads(subprocess.run([sys.executable, "-m", "grader.codeversion"], cwd=ROOT, capture_output=True,
+                                         text=True, check=True).stdout)
+        with tempfile.TemporaryDirectory(prefix="jury-cwd-") as tmp:
+            work = Path(tmp)
+            env = {**os.environ, "AUDIT_GRADER_LOG": os.path.join("журнал", "grader.jsonl")}
+            out = subprocess.run([sys.executable, "-c", LOG_SCRIPT, str(ROOT), str(work)], cwd=work, env=env,
+                                 capture_output=True, text=True, encoding="utf-8", timeout=300)
+            self.assertEqual(out.returncode, 0, out.stderr[-3000:])
+            got = json.loads(out.stdout.strip().splitlines()[-1])
+            log = work / "журнал" / "grader.jsonl"
+            self.assertEqual(Path(got["path"]), log.resolve())
+            self.assertEqual(Path(got["env_log"]), log.resolve())
+            records = read_log(log)
+            self.assertEqual([r.get("kind", "episode") for r in records], ["generate_episode", "episode", "score_episode"])
+            self.assertEqual([r["code_version"] for r in records], [code] * 3)
+            self.assertFalse((ROOT / "журнал").exists())  # не от корня репозитория
 
 
 if __name__ == "__main__":

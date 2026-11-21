@@ -31,6 +31,10 @@ class EnvError(RuntimeError):
     pass
 
 
+class EnvConfigError(EnvError, ValueError):
+    """reset не принял seed/config (как ValueError у LocalAuditEnv); среда остаётся рабочей."""
+
+
 
 def wire_params(action: Any) -> dict:
     """Параметры step для сервера. Классификация та же, что в EnvCore (env/jsonsafe.classify_action):
@@ -77,11 +81,11 @@ class AuditEnv:
         try:
             json.dumps({"seed": seed, "config": config}, allow_nan=False, sort_keys=True)
         except (TypeError, ValueError, RecursionError):
-            raise EnvError("reset failed: seed and config must be JSON values (no NaN, string keys only)") from None
+            raise EnvConfigError("reset failed: seed and config must be JSON values (no NaN, string keys only)") from None
         try:
             out = self._channel.request("reset", {"seed": seed, "config": config}, self._timeout)
         except RemoteError as exc:
-            raise EnvError(f"reset failed: {exc.public_message}") from None
+            raise EnvConfigError(f"reset failed: {exc.public_message}") from None
         return out["observation"], out["info"]
 
     def step(self, action: Any) -> tuple[dict, float, bool, bool, dict]:

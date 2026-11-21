@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .codeversion import code_version
 from .episodes import EpisodeLoadError, EpisodeStore, LoadedEpisode
 from .scoring import check_structure_only, empty_answer, score_submission
 from .version import GRADER_VERSION
@@ -39,15 +40,38 @@ class GraderError(RuntimeError):
     pass
 
 
+def _open_append(path: Path) -> int:
+    """Дескриптор, запись в который всегда идёт в конец файла атомарно — и когда в один журнал пишут
+    несколько процессов оценщика (параллельные среды жюри). POSIX: O_APPEND, файл 0600. Windows: O_APPEND там
+    эмулирует библиотека C (сдвиг в конец, потом запись) — между процессами строки затирают друг друга;
+    поэтому файл открывается с правом только на дописывание (FILE_APPEND_DATA), и конец выбирает ядро."""
+    if os.name != "nt":
+        return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    import _winapi
+    import msvcrt
+
+    file_append_data, share_all, open_always, normal = 0x0004, 0x0007, 4, 0x80
+    handle = _winapi.CreateFile(str(path), file_append_data, share_all, 0, open_always, normal, 0)
+    try:
+        return msvcrt.open_osfhandle(handle, os.O_BINARY)
+    except OSError:
+        _winapi.CloseHandle(handle)
+        raise
+
+
 def append_private_log(path: Path, text: str) -> None:
-    """Дописать текст в журнал оценщика: каталог создаётся с правами 0700, файл — 0600 (POSIX; на Windows
-    права наследуются от профиля пользователя). Журнал лежит вне каталогов эпизодов и кода политики."""
+    """Дописать текст в журнал оценщика одной записью в конец (см. _open_append): каталог создаётся с правами
+    0700, файл — 0600 (POSIX; на Windows права наследуются от профиля пользователя). Журнал лежит вне
+    каталогов эпизодов и кода политики."""
     path = Path(path)
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_BINARY", 0), 0o600)
-    with os.fdopen(fd, "ab") as fh:
-        fh.write(text.encode("utf-8"))
-        fh.flush()
+    data = memoryview(text.encode("utf-8"))
+    fd = _open_append(path)
+    try:
+        while data:  # без буфера io: строка не делится на несколько записей вперемешку с другим процессом
+            data = data[os.write(fd, data):]
+    finally:
+        os.close(fd)
 
 
 class GraderSession:
@@ -60,6 +84,7 @@ class GraderSession:
         self._mode = "train"
         self._finished = True
         self._run_index = -1
+        self.code_version = code_version()  # заранее: хэш исходников не должен попадать на путь завершения эпизода
 
     # ------------------------------------------------------------------ протокол
     def load(self, seed: Any, config: dict, mode: str) -> dict:
@@ -97,6 +122,7 @@ class GraderSession:
             "grader_version": GRADER_VERSION,
             "env_version": ENV_VERSION,
             "environment": ENVIRONMENT,  # машинозависимое: в снимках check.py не сравнивается
+            "code_version": self.code_version,  # sha256 исходников команды (grader/codeversion.py); в снимках тоже нет
             "seed": self._seed,
             "config": self._config,
             "episode_id": ep.episode_id,

@@ -15,7 +15,11 @@
   config_version — необязательная метка версии конфигурации (пишется в журнал).
 Прочие ключи (и с episode_dir — лишние селекторы split/episode_id/index/generator) не мешают: они
 игнорируются и записываются в журнал оценщика (source.ignored_config_keys). Неизвестные ключи верхнего
-уровня team_config — так же (генератору уходят только его ключи, docs/generator.md).
+уровня team_config — так же (генератору уходят только его ключи, docs/generator.md). Исключение — ключ,
+похожий на известный (misspelled_key: регистр, пробелы, `-`/`_`, единственное/множественное число,
+одна-две опечатки): {"Errors": ...}, {"error": ...}, {"episode-dir": ...}, {"Mode": ...} — ошибка config,
+иначе опечатка молча дала бы другой эпизод (чистую компанию, сплит по seed, режим train). Явно чужие
+ключи (kind, label, note, case, ...) по-прежнему игнорируются.
 Порядок эпизодов сплита — из <split>/index.json, иначе отсортированные имена каталогов (любые имена).
 
 Раскладка каталога эпизода (обе поддерживаются):
@@ -43,12 +47,65 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_EPISODES_ROOT = ROOT / "episodes"
 PUBLIC_FILES = ("manifest.json", "policy.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv")
 GRADER_KEYS = frozenset({"split", "episode_id", "index", "generator", "team_config", "episode_dir", "config_version"})
+RESET_ENV_KEYS = frozenset({"mode", "max_steps", "time_limit_s"})  # разбирает среда; здесь — только для опечаток
 _NAME_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$")
 _PRESET_RE = re.compile(r"[a-z0-9_]{1,64}")
 
 
 class EpisodeLoadError(ValueError):
     """Сообщение безопасно для показа: без путей и закрытых данных."""
+
+
+def _key_stem(key: str) -> str:
+    """Ключ без регистра, пробелов и разделителей, в единственном числе: "Errors " -> "error"."""
+    k = "".join(ch for ch in key.casefold() if ch.isalnum())
+    if len(k) > 4 and k.endswith("ies"):
+        return k[:-3] + "y"
+    if len(k) > 3 and k.endswith("s"):
+        return k[:-1]
+    return k
+
+
+def _osa_distance(a: str, b: str) -> int:
+    """Расстояние Дамерау–Левенштейна (оптимальное выравнивание): перестановка соседних букв — одна правка."""
+    prev2: list[int] = []
+    prev = list(range(len(b) + 1))
+    for i in range(1, len(a) + 1):
+        cur = [i] + [0] * len(b)
+        for j in range(1, len(b) + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost)
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                cur[j] = min(cur[j], prev2[j - 2] + 1)
+        prev2, prev = prev, cur
+    return prev[len(b)]
+
+
+def misspelled_key(key: Any, known) -> str | None:
+    """Известный ключ, опечаткой которого выглядит `key`, иначе None (ключ известен или явно чужой).
+    Похож: совпадает без регистра/пробелов/`-`/`_` и числа (error ~ errors, Team-Config ~ team_config) или
+    отличается на одну правку (на две, если оба имени длиннее 7 букв): erors, scenarois, team_confg.
+    Короткие чужие имена не задевает: kind, label, note, case, seed, episode, salt."""
+    if not isinstance(key, str) or key in known:
+        return None
+    stem = _key_stem(key)
+    if not stem:
+        return None
+    for name in sorted(known):
+        other = _key_stem(name)
+        limit = 1 if min(len(stem), len(other)) <= 7 else 2
+        if stem == other or _osa_distance(stem, other) <= limit:
+            return name
+    return None
+
+
+def reject_misspelled_keys(config: dict, known, prefix: str = "") -> None:
+    """EpisodeLoadError, если какой-то ключ config похож на известный, но им не является (см. misspelled_key)."""
+    for key in config:
+        name = misspelled_key(key, known)
+        if name is not None:
+            shown = prefix + (key[:64] if isinstance(key, str) else repr(key))
+            raise EpisodeLoadError(f"config key {shown!r} looks like a misspelling of {prefix + name!r}")
 
 
 @dataclass
@@ -202,6 +259,7 @@ class EpisodeStore:
         """require_truth=False (eval/closed): каталог episode_dir без truth.json тоже загружается."""
         if not isinstance(config, dict):
             raise EpisodeLoadError("config must be an object")
+        reject_misspelled_keys(config, GRADER_KEYS | RESET_ENV_KEYS)  # "episode-dir", "Mode": не молча другой эпизод
         ignored = sorted(k for k in config if k not in GRADER_KEYS)  # не мешают: пишутся в журнал оценщика
         version = config.get("config_version")
         if config.get("episode_dir") is not None:  # протокол жюри: загружается ровно этот каталог
@@ -269,11 +327,22 @@ def _source_extra(seed: Any, config_version: Any, ignored: list) -> dict:
     return out
 
 
-def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefix: str = "") -> dict:
+def generator_keys() -> frozenset:
+    """Ключи верхнего уровня конфига генератора (generator/config.py::DEFAULT_CONFIG) и "preset"."""
+    try:
+        from generator.config import DEFAULT_CONFIG
+    except ImportError as exc:  # pragma: no cover
+        raise EpisodeLoadError("generator is not available") from exc
+    return frozenset(DEFAULT_CONFIG) | {"preset"}
+
+
+def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefix: str = "",
+                             also_known=frozenset()) -> dict:
     """Конфиг генератора команды: имя пресета, объект-конфиг или {"preset": имя, ...переопределения}.
     Ключи верхнего уровня, которых генератор не знает (docs/generator.md), снимаются и дописываются в
-    `ignored` (с префиксом prefix) — для журнала оценщика; вложенные ключи (errors, scenarios, distractors)
-    генератор проверяет строго: опечатка в имени типа ошибки — ошибка конфига, а не молчаливо чистая компания."""
+    `ignored` (с префиксом prefix) — для журнала оценщика. Ключ, похожий на ключ генератора или на ключ из
+    also_known ({"Errors": ...}, {"error": ...}, "team_confg"), — ошибка конфига; вложенные ключи (errors,
+    scenarios, distractors) генератор проверяет строго. Иначе опечатка молча дала бы чистую компанию."""
     try:
         from generator.config import DEFAULT_CONFIG, ConfigError, normalize_config
         from generator.splits import resolve_config
@@ -281,6 +350,7 @@ def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefi
         raise EpisodeLoadError("generator is not available") from exc
     if isinstance(gen_config, dict):
         known = set(DEFAULT_CONFIG) | {"preset"}
+        reject_misspelled_keys(gen_config, known | set(also_known), prefix)
         dropped = sorted(str(k) for k in gen_config if k not in known)
         if ignored is not None:
             ignored.extend(prefix + k for k in dropped)

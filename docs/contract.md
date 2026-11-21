@@ -276,11 +276,16 @@ TP требует, чтобы `evidence_ids` агента **содержали �
     Лимит времени считается от начала reset.
   - Прочие ключи не мешают: игнорируются и пишутся в журнал (`source.ignored_config_keys`). Неизвестные ключи
     верхнего уровня конфига генератора тоже игнорируются; вложенные имена типов ошибок и сценариев проверяются.
-  - Неверный config → исключение reset; среда остаётся рабочей.
+  - Ключ, похожий на известный (без учёта регистра, пробелов, `-`/`_`, единственного/множественного числа,
+    одна правка, две — если оба имени длиннее 7 букв): `Mode`, `episode-dir`, `team_confg`, `Errors`, `error`,
+    `errors ` → ошибка config. Иначе опечатка молча дала бы другой эпизод: сплит по seed, режим `train`,
+    чистую компанию. Явно чужие ключи (`kind`, `label`, `note`, `case`, `seed`, `episode`) игнорируются.
+  - Неверный config → исключение reset (`ValueError`; у `AuditEnv` — подкласс `EnvConfigError`); среда остаётся рабочей.
 * **Журнал оценщика** (`AuditEnv(grader_log=…)`, у адаптера — `AUDIT_GRADER_LOG`, иначе
-  `<tempdir>/talaps-grader-log/grader_log_judge.jsonl` вне репозитория, 0700/0600): одна JSON-строка на эпизод,
+  `<tempdir>/talaps-grader-log-<uid>/grader_log_judge.jsonl` на POSIX и `<tempdir>\talaps-grader-log\…` на
+  Windows, вне репозитория, 0700/0600; путь — `judge_adapter.grader_log_path()`): одна JSON-строка на эпизод,
   дописывается сразу по его завершении. В строке: `environment` (python, реализация, платформа), `env_version`,
-  `grader_version`, `seed`, `config` (вместе с `mode` и `episode_dir`), `episode_id`, `mode`, `end_reason`,
+  `grader_version`, `code_version` (sha256 исходников команды, `python -m grader.codeversion`, а с `.git` — и коммит), `seed`, `config` (вместе с `mode` и `episode_dir`), `episode_id`, `mode`, `end_reason`,
   `valid`, `errors`, TP/FP/FN/P/R/F1, `inspection_steps`, `reward`, `diagnostics`.
 * **Изоляция — три процесса.** Политика ↔ `python -m env.server` (только открытые записи) ↔
   `python -m grader.service` (эталон); обмен — JSON-lines по stdin/stdout.
@@ -361,4 +366,6 @@ class Policy:
    - лишние ключи config и неизвестные ключи верхнего уровня конфига генератора игнорируются и пишутся в журнал;
    - `closed`/`eval` без `truth.json`; `episode_id` — из manifest; BOM, CRLF, любой порядок колонок CSV;
    - синоним ключа fx `<date>:<src>:<dst>`; `limit: null` = 50; лимит 60 с — от начала reset;
-   - журнал оценщика по умолчанию вне репозитория; адаптер не трогает `sys.path` и пакеты жюри.
+   - журнал оценщика по умолчанию вне репозитория, в каждой строке `code_version` (sha256 исходников);
+     адаптер не трогает `sys.path` и пакеты жюри;
+   - ключ config, похожий на известный (`Errors`, `error`, `Mode`, `episode-dir`), — ошибка, а не молчаливо другой эпизод.

@@ -20,7 +20,8 @@ generate_episode(seed, config, output_dir) -> None
     ...переопределения} — пресет из generator/configs/; полный объект {"size", "errors": {тип: число},
     "scenarios", "distractors", ...}; обёртка {"team_config": <любое из этого>} тоже принимается. Ключи,
     которых генератор не знает (и ключи reset: mode, episode_dir, ...), игнорируются и пишутся в журнал
-    оценщика. Пример одной ошибки: {"errors": {"duplicate_invoice": 1}}. Одинаковые seed+config (+ соль
+    оценщика; ключ, похожий на известный ({"Errors": ...}, {"error": ...}, "team_confg"), — ValueError, а не
+    молча чистая компания. Пример одной ошибки: {"errors": {"duplicate_invoice": 1}}. Одинаковые seed+config (+ соль
     AUDIT_GRADER_SALT, по умолчанию пустая) -> побайтово одинаковые файлы — тот же эпизод, что
     reset({"mode": "train", "team_config": config}). Файлы эпизода в output_dir перезаписываются.
 
@@ -31,7 +32,8 @@ make_env() -> среда с reset(seed, config) -> (observation, info) и step(a
             его заново; reward политике = 0;
         {"mode": "train", "team_config": {...}} — эпизод генерируется по seed и team_config;
             терминальная награда видна; можно и {"mode": "train", "episode_dir": ...}.
-    Лишние ключи config не мешают (игнорируются, пишутся в журнал оценщика). Лимит 60 с — от начала reset.
+    Лишние ключи config не мешают (игнорируются, пишутся в журнал оценщика); похожий на известный ключ
+    ("Mode", "episode-dir", "team_confg") — ValueError. Лимит 60 с — от начала reset.
     step принимает {"name": <действие>, "args": {...}}: list_records{table, cursor, limit (null = 50)},
     get_record{table, id}, get_document{doc_id}, calculator{expression}, submit{findings}. Таблицы: ledger,
     invoices, payments, fx (id записи fx — "FX:<source>:<target>:<date>"; "<date>:<source>:<target>" — то же).
@@ -45,9 +47,12 @@ score_episode(episode_dir, findings, inspection_steps) -> {"tp", "fp", "fn", "pr
     findings проходит через json.dumps/json.loads (кортежи = массивы, как через step); не-JSON значение —
     неверная структура.
 
-Журнал оценщика: переменная окружения AUDIT_GRADER_LOG, иначе <временная папка системы>/talaps-grader-log/
-grader_log_judge.jsonl (вне репозитория, каталог 0700, файл 0600). Туда пишутся окружение, версии, seed,
-config и результат каждого эпизода среды (сразу по его завершении), каждого generate_episode и score_episode.
+Журнал оценщика: grader_log_path() — переменная окружения AUDIT_GRADER_LOG (относительный путь — от
+рабочего каталога жюри), иначе <временная папка системы>/talaps-grader-log-<uid>/grader_log_judge.jsonl
+на Linux и macOS, <временная папка>/talaps-grader-log/grader_log_judge.jsonl на Windows (вне репозитория,
+каталог 0700, файл 0600). Туда пишутся окружение, версии, sha256 исходников команды (code_version:
+python -m grader.codeversion), seed, config и результат каждого эпизода среды (сразу по его завершении),
+каждого generate_episode и score_episode.
 
 Соответствие четырёх типов ошибок кейса (имена совпадают с внутренними, перевод не нужен):
     дубль счёта -> duplicate_invoice; пропущенное/частичное распределение платежа -> unapplied_payment;
@@ -70,7 +75,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 
-__all__ = ["generate_episode", "make_env", "score_episode", "load_policy"]
+__all__ = ["generate_episode", "make_env", "score_episode", "load_policy", "grader_log_path"]
 _PACKAGE = "_talaps_team_env"  # env/ команды под частным именем: пакеты процесса жюри не затрагиваются
 _JUDGE_TIMEOUT_S = 300.0
 _ERRORS = {"ValueError": ValueError, "TypeError": TypeError, "FileNotFoundError": FileNotFoundError,
@@ -109,7 +114,8 @@ def _judge_process(command: str, request: dict) -> Any:
     """`python -E -s -m grader.judge <command>`: запрос JSON в stdin, ответ — последняя строка stdout."""
     argv = [sys.executable or "python3", "-E", "-s", "-m", "grader.judge", command]
     data = json.dumps(request, ensure_ascii=True, allow_nan=False, sort_keys=True).encode("ascii")
-    proc = subprocess.run(argv, input=data, stdout=subprocess.PIPE, stderr=None, cwd=str(ROOT), env=dict(os.environ),
+    env = {**os.environ, "AUDIT_GRADER_LOG": grader_log_path()}  # абсолютный: процесс работает из корня репозитория
+    proc = subprocess.run(argv, input=data, stdout=subprocess.PIPE, stderr=None, cwd=str(ROOT), env=env,
                           timeout=_JUDGE_TIMEOUT_S, check=False)
     lines = [line for line in proc.stdout.decode("utf-8", "replace").splitlines() if line.strip()]
     try:
@@ -132,9 +138,13 @@ def generate_episode(seed: int, config: dict, output_dir: str) -> None:
     _judge_process("generate", {"seed": _json_scalar(seed), "config": config, "output_dir": _abs_path(output_dir)})
 
 
+def grader_log_path() -> str:
+    """Абсолютный путь журнала оценщика, куда пишут make_env, generate_episode и score_episode."""
+    return os.path.abspath(os.environ.get("AUDIT_GRADER_LOG") or _team_env("constants").default_grader_log())
+
+
 def make_env():
-    log = os.environ.get("AUDIT_GRADER_LOG") or _team_env("constants").default_grader_log()
-    return _team_env("client").AuditEnv(grader_log=log)
+    return _team_env("client").AuditEnv(grader_log=grader_log_path())
 
 
 def score_episode(episode_dir: str, findings: dict, inspection_steps: int) -> dict:
