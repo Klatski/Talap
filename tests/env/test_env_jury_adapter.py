@@ -422,7 +422,6 @@ class AdapterEntryPoints(JuryAdapter):
 
     def test_bad_reset_raises_and_the_env_stays_usable(self):
         for config in ({"mode": "closed", "episode_dir": str(self.root / "нет такого каталога")},
-                       {"mode": "closed", "episode_dir": str(self.E), "split": "train"},
                        {"mode": "exam", "episode_dir": str(self.E)}):
             with self.subTest(config=sorted(config)):
                 with self.assertRaises(Exception):

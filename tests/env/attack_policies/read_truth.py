@@ -176,6 +176,30 @@ def _winapi():
     return _winapi.OpenProcess(0x0010, False, __import__("os").getppid())
 
 
+def _low_level_import():
+    """Модуль, созданный мимо sys.meta_path и события import: _imp.create_builtin (так берут _posixsubprocess,
+    _socket, _winapi, если они встроены в интерпретатор)."""
+    import importlib._bootstrap as bootstrap
+    import importlib.machinery
+
+    got = []
+    for name in ("_posixsubprocess", "_socket", "_winapi"):
+        try:
+            got.append(bootstrap._imp.create_builtin(importlib.machinery.ModuleSpec(name, None, origin="built-in")))
+        except ImportError:  # не встроен в эту сборку — этот путь недоступен и без песочницы
+            continue
+    return [m for m in got if m is not None] or None
+
+
+def _fork():
+    import os
+
+    pid = os.fork()
+    if pid == 0:  # pragma: no cover — дочерний процесс атакующего сразу выходит
+        os._exit(0)
+    return pid
+
+
 def _kill(pid):
     import os
     import signal
@@ -205,7 +229,8 @@ def steal(roots, episode_id, paths=()):
         _record("os.stat", lambda: _stat(path))
     for kind, fn in (("os.listdir", _listdir), ("os.scandir", _scandir), ("ctypes", _ctypes), ("socket", _socket),
                      ("code.replace", _code_object), ("/proc/self/environ", _proc_environ),
-                     ("/proc/<parent>/mem", _parent_memory), ("_winapi.OpenProcess", _winapi)):
+                     ("/proc/<parent>/mem", _parent_memory), ("_winapi.OpenProcess", _winapi),
+                     ("_imp.create_builtin", _low_level_import), ("os.fork", _fork)):
         _record(kind, fn)
     return None
 

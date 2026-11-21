@@ -68,7 +68,7 @@ class InProcessGrader:
 
 class SubprocessGrader:
     def __init__(self, episodes_root: str | Path | None = None, log_path: str | Path | None = None, salt: str | None = None) -> None:
-        argv = [sys.executable, "-m", "grader.service"]
+        argv = [sys.executable, "-E", "-s", "-m", "grader.service"]  # без PYTHONPATH/user site обвязки: только наш код
         if episodes_root:
             argv += ["--episodes-root", str(episodes_root)]
         if log_path:
@@ -160,6 +160,7 @@ class EnvService:
 
     # ------------------------------------------------------------------ API
     def reset(self, seed: Any = None, config: Any = None) -> tuple[dict, dict]:
+        started = time.monotonic()  # лимит 60 с — от начала reset, включая загрузку эпизода
         if self._closed:
             raise ResetError("environment is closed")
         if not is_json_value({"seed": seed, "config": config}):  # до abandon: текущий эпизод не трогаем
@@ -173,9 +174,10 @@ class EnvService:
                 data = load_public(loaded["public"])
             except (EpisodeDataError, KeyError, TypeError) as exc:
                 raise ResetError("episode public data does not follow the contract") from exc
-            self._started = time.monotonic()
-            obs, info = self.core.reset(data, env_cfg["mode"], env_cfg["max_steps"], env_cfg["time_limit_s"])
-            self._arm_timer(env_cfg["time_limit_s"])
+            self._started = started
+            obs, info = self.core.reset(data, env_cfg["mode"], env_cfg["max_steps"], env_cfg["time_limit_s"],
+                                        started_at=started)
+            self._arm_timer(started + env_cfg["time_limit_s"] - time.monotonic())
             return obs, info
 
     def step(self, action: Any, unsendable: Any = None) -> tuple[dict, float, bool, bool, dict]:

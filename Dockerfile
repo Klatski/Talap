@@ -2,7 +2,10 @@
 #   docker build -t audit-env .
 #   docker run --rm --network none --cpus 2 --memory 4g audit-env            # = python check.py
 #   docker run --rm --network none audit-env python -m env.demo              # демо
-FROM python:3.11-slim-bookworm
+# Базовый образ закреплён до патч-версии Python и выпуска Debian. Точный дайджест печатает CI (шаг base image digest);
+# собрать на ровно том же базовом образе: docker build --build-arg BASE_IMAGE=python@sha256:<дайджест> -t audit-env .
+ARG BASE_IMAGE=python:3.11.9-slim-bookworm
+FROM ${BASE_IMAGE}
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

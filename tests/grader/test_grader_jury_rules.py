@@ -310,8 +310,9 @@ class FixtureFormat(JuryFixtures):
 
     def test_reference_without_a_required_field_is_rejected_at_load(self):
         for key in ("no type", "string amount", "negative tolerance", "flat evidence"):
-            with self.subTest(fixture=key), self.assertRaises(EpisodeLoadError):
+            with self.subTest(fixture=key), self.assertRaises(ValueError) as ctx:  # EpisodeLoadError у жюри — ValueError
                 self.score(key, [])
+            self.assertIn("reference", str(ctx.exception))
 
 
 class GraderLog(unittest.TestCase):
@@ -327,7 +328,7 @@ class GraderLog(unittest.TestCase):
             err = io.StringIO()
             with contextlib.redirect_stderr(err):
                 out = session.finish({"episode_id": "ep-SUW6BEVZNR", "findings": []}, 0, 1, "submit")
-            self.assertEqual(out, {"reward": 0.0, "info": {}})
+            self.assertEqual(out, {"reward": 0.0, "info": {}, "submission": {"valid": True, "error": None}})
             self.assertEqual(len(session.records), 1)
             self.assertIn("grader log is not writable", err.getvalue())
             self.assertNotIn(tmp, err.getvalue())  # без путей

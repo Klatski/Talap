@@ -72,7 +72,7 @@ class GraderBoundary(unittest.TestCase):
         bad = [
             {"episode_dir": str(EPISODES / "stub")}, {"split": "../episodes"}, {"split": "stub/.."},
             {"split": "stub", "episode_id": "ep-NOTEXIST00"}, {"split": "nonexistent"}, {"split": "stub", "index": 5},
-            {"split": "stub", "truth": {"issues": []}}, {"generator": "../../etc/passwd"}, {"split": "stub", "generator": "stub"},
+            {"generator": "../../etc/passwd"}, {"split": "stub", "generator": "stub"},
             "split=stub", {"split": "stub", "index": True},
         ]
         for config in bad:
@@ -82,6 +82,14 @@ class GraderBoundary(unittest.TestCase):
                 msg = str(ctx.exception)
                 self.assertNotIn(str(ROOT), msg)
                 self.assertNotIn("private", msg)
+        # Лишний ключ config не мешает и не подменяет эталон: "truth" из config игнорируется (пишется в журнал),
+        # оценка — по настоящему truth.json эпизода.
+        obs, _ = env.reset(seed=0, config={"split": "stub", "truth": {"issues": []}})
+        obs, reward, term, trunc, info = env.step({"name": "submit", "args": {"findings": {
+            "episode_id": obs["episode_id"], "findings": []}}})
+        self.assertTrue(term)
+        self.assertGreater(info["fn"], 0)
+        self.assertEqual(env.grader_records[-1]["source"]["ignored_config_keys"], ["truth"])
         env.close()
 
     def test_isolated_env_rejects_grader_methods(self):

@@ -125,7 +125,9 @@ class HostileInput(unittest.TestCase):
             with self.subTest(case=label):
                 for name, (obs, reward, term, trunc, info), after in self.submit_both(make):
                     self.assertEqual((reward, term, trunc), (-1.0, True, False), name)
-                    self.assertIsNone(obs["error"])
+                    self.assertIsNone(obs["result"])
+                    self.assertEqual(obs["error"]["code"], "invalid_submission")
+                    self.assertEqual(obs["error"]["detail"], f"submit action: {MALFORMED_REASONS[reason]}")
                     self.assertFalse(info["valid"])
                     self.assertEqual(info["errors"], [f"submit action: {MALFORMED_REASONS[reason]}"], name)
                     self.assertEqual(info["inspection_steps"], 0)

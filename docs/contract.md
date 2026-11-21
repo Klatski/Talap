@@ -211,8 +211,10 @@ TP требует, чтобы `evidence_ids` агента **содержали �
     завершается: `grader_unavailable`, награда 0, `info` = `{}`.
   - Фаззинг (3000 случайных действий) не даёт ни одного `internal_error` (`tests/env/test_env_fault_tolerance.py`).
 * **Любой submit завершает эпизод.** `{"name": "submit", …}` или `{"action": "submit", …}`, в том числе
-  JSON-строкой, всегда даёт `terminated=true` и результат `{"accepted": true}`, без оценки правильности.
-  Строка больше 2 МБ узнаётся по началу.
+  JSON-строкой, всегда даёт `terminated=true`, без оценки правильности: при верной структуре результат
+  `{"accepted": true}`, при неверной — `result: null` и ограниченная ошибка структуры `invalid_submission`
+  (`detail` — первая причина, до 200 символов; правильность выводов она не раскрывает). Строка больше 2 МБ
+  узнаётся по началу.
   - Нет аргумента `findings` или `args` не объект (`wrapper`), нагрузка не JSON (`not_json`) или больше
     1 МБ (`too_large`) → неверная структура: награда −1, причина в журнале оценщика. Прочие аргументы
     submit игнорируются.
@@ -225,13 +227,14 @@ TP требует, чтобы `evidence_ids` агента **содержали �
   - Одинаково в `AuditEnv` и `LocalAuditEnv` (`tests/env/test_env_hostile_input.py`).
 * **Результаты действий:**
   - `list_records(table, cursor, limit)` → `{"records": [...], "next_cursor": null | "строка"}`.
-    Первый `cursor` = `null`; `limit` — целое ≥ 1, больше 50 → 50. Курсор `"<table>.<offset>.<tag>"`,
+    Первый `cursor` = `null`; `limit` — целое ≥ 1 или `null`; `null` и больше 50 → 50. Курсор `"<table>.<offset>.<tag>"`,
     tag = sha256(episode_id, table, offset): детерминирован, стабилен, привязан к таблице и эпизоду
     (после reset старые курсоры недействительны).
-  - `get_record(table, id)` → сам объект записи.
+  - `get_record(table, id)` → сам объект записи. Для `fx` ключ жюри `<date>:<src>:<dst>` — синоним `fx_id`
+    (так же в `evidence_ids`).
   - `get_document(doc_id)` → сам документ (объект счёта или платежа); бизнес-ID там не принимаются.
   - `calculator(expression)` → десятичная строка (`"0.1+0.2"` → `"0.3"`).
-  - `submit(findings)` → `{"accepted": true}`.
+  - `submit(findings)` → `{"accepted": true}` (неверная структура — ошибка `invalid_submission`, см. выше).
 * Таблицы и ключи: `ledger` (`row_id`), `invoices` (`invoice_id`), `payments` (`payment_id`),
   `fx` (`fx_id` = `FX:<src>:<dst>:<date>`, поле добавляется средой в каждую запись fx).
 * Записи: пустое поле CSV → `null`, суммы → int, курсы → строки; порядок строк = порядок файла.
@@ -261,15 +264,21 @@ TP требует, чтобы `evidence_ids` агента **содержали �
 * **`reset(seed, config)`** вызывает обвязка или жюри, не политика. Ключи config:
   - `episode_dir` — каталог эпизода с любым именем: раскладка `public/` + `private/` или плоская
     (шесть открытых файлов и `truth.json` в одном каталоге, `truth.json` можно и в `private/`).
-    Загружается как есть, без генерации и смены ID. Несовместим с `split`/`episode_id`/`index`/`generator`;
-    `team_config` при нём игнорируется.
+    Загружается как есть, без генерации и смены ID; `split`/`episode_id`/`index`/`generator`/`team_config`
+    при нём игнорируются. `truth.json` обязателен только в `train` (без него в `eval`/`closed` проверяется
+    лишь структура, метрики `null`, `reference: "missing"`). `episode_id` — из `manifest.json` (эталон
+    сопоставляется с ним). Текст читается с BOM и CRLF, колонки CSV — по заголовку в любом порядке.
   - `split` + (`episode_id` | `index` | ничего → `seed mod N`). Сплит — любой подкаталог корня данных
     (`index.json` или подкаталоги эпизодов); корень задаёт `AuditEnv(episodes_root=…)`.
   - `generator` или `team_config` (имя пресета, `{"preset": …, …переопределения}` или объект-конфиг) —
     эпизод генерируется в процессе оценщика по seed и соли `AUDIT_GRADER_SALT`. Два ключа сразу — ошибка.
   - `mode` (`train` | `eval` | `closed`), `max_steps` (1..100), `time_limit_s` (0..60], `config_version`.
+    Лимит времени считается от начала reset.
+  - Прочие ключи не мешают: игнорируются и пишутся в журнал (`source.ignored_config_keys`). Неизвестные ключи
+    верхнего уровня конфига генератора тоже игнорируются; вложенные имена типов ошибок и сценариев проверяются.
   - Неверный config → исключение reset; среда остаётся рабочей.
-* **Журнал оценщика** (`AuditEnv(grader_log=…)`, у адаптера — `AUDIT_GRADER_LOG`): одна JSON-строка на эпизод,
+* **Журнал оценщика** (`AuditEnv(grader_log=…)`, у адаптера — `AUDIT_GRADER_LOG`, иначе
+  `<tempdir>/talaps-grader-log/grader_log_judge.jsonl` вне репозитория, 0700/0600): одна JSON-строка на эпизод,
   дописывается сразу по его завершении. В строке: `environment` (python, реализация, платформа), `env_version`,
   `grader_version`, `seed`, `config` (вместе с `mode` и `episode_dir`), `episode_id`, `mode`, `end_reason`,
   `valid`, `errors`, TP/FP/FN/P/R/F1, `inspection_steps`, `reward`, `diagnostics`.
@@ -280,7 +289,8 @@ TP требует, чтобы `evidence_ids` агента **содержали �
     временном каталоге, окружение очищено, код политики приходит текстом и грузится из памяти.
   - До первой строки кода политики ставятся необратимые ограничения: аудит-хук (`open`, листинг каталогов,
     процессы, сеть, `ctypes`, субинтерпретаторы, импорт `grader`/`generator`/`env` → `PermissionError`)
-    и на Linux seccomp (открытие и `stat` по пути, exec, сокеты, ptrace, сигналы → `EPERM`).
+    и на Linux seccomp (открытие и `stat` по пути, exec, сокеты, ptrace, сигналы, новые процессы, смена
+    лимитов → `EPERM`; потоки разрешены) с лимитом адресного пространства 1 ГиБ.
   - Oracle — только на стороне оценщика.
 
 ## 9. Интерфейс политики (адаптеры базовых политик) — `policies/`
@@ -346,3 +356,9 @@ class Policy:
 
    Зона A: в `generator/attacks.py` ожидания шести атак переведены из «−1» в «FP» или «игнорируется»
    (`wrong_content_*`, `*_ignored`).
+8. **22.11 — устойчивость к вызову жюри (внешний разбор).** Зона B, разделы 7–8:
+   - неверная структура submit → `result: null` + `invalid_submission` (раньше `{"accepted": true}`); награда та же (−1);
+   - лишние ключи config и неизвестные ключи верхнего уровня конфига генератора игнорируются и пишутся в журнал;
+   - `closed`/`eval` без `truth.json`; `episode_id` — из manifest; BOM, CRLF, любой порядок колонок CSV;
+   - синоним ключа fx `<date>:<src>:<dst>`; `limit: null` = 50; лимит 60 с — от начала reset;
+   - журнал оценщика по умолчанию вне репозитория; адаптер не трогает `sys.path` и пакеты жюри.

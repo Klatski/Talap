@@ -13,13 +13,14 @@ seed, config, метрики, награда) дописывается в фай
 from __future__ import annotations
 
 import json
+import os
 import platform
 import sys
 from pathlib import Path
 from typing import Any
 
 from .episodes import EpisodeLoadError, EpisodeStore, LoadedEpisode
-from .scoring import empty_answer, score_submission
+from .scoring import check_structure_only, empty_answer, score_submission
 from .version import GRADER_VERSION
 
 try:  # версия среды — для журнала (пакет env лежит рядом; оценщик его не требует)
@@ -38,6 +39,17 @@ class GraderError(RuntimeError):
     pass
 
 
+def append_private_log(path: Path, text: str) -> None:
+    """Дописать текст в журнал оценщика: каталог создаётся с правами 0700, файл — 0600 (POSIX; на Windows
+    права наследуются от профиля пользователя). Журнал лежит вне каталогов эпизодов и кода политики."""
+    path = Path(path)
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_BINARY", 0), 0o600)
+    with os.fdopen(fd, "ab") as fh:
+        fh.write(text.encode("utf-8"))
+        fh.flush()
+
+
 class GraderSession:
     def __init__(self, episodes_root: str | Path | None = None, salt: str = "", log_path: str | Path | None = None) -> None:
         self.store = EpisodeStore(episodes_root, salt)
@@ -53,7 +65,7 @@ class GraderSession:
     def load(self, seed: Any, config: dict, mode: str) -> dict:
         if mode not in MODES:
             raise EpisodeLoadError("mode must be train, eval or closed")
-        episode = self.store.load(seed, config)
+        episode = self.store.load(seed, config, require_truth=(mode == "train"))  # train отдаёт награду политике
         self._current = episode
         self._config = {**config, "mode": mode} if isinstance(config, dict) else {"mode": mode}
         self._seed = seed
@@ -73,9 +85,13 @@ class GraderSession:
         self._finished = True
         truncated = end_reason != "submit"
         submission = payload if end_reason == "submit" else empty_answer(ep.episode_id)
-        result = score_submission(ep.truth, submission, inspection_steps, provenance=ep.provenance, truncated=truncated,
-                                  malformed_reason=malformed if end_reason == "submit" else None,
-                                  public_ids=ep.public_ids)
+        if ep.truth is None:  # eval/closed без truth.json: только структура, метрики — у жюри
+            result = check_structure_only(submission, ep.episode_id, inspection_steps, truncated=truncated,
+                                          malformed_reason=malformed if end_reason == "submit" else None)
+        else:
+            result = score_submission(ep.truth, submission, inspection_steps, provenance=ep.provenance,
+                                      truncated=truncated, malformed_reason=malformed if end_reason == "submit" else None,
+                                      public_ids=ep.public_ids)
         record = {
             "run_index": self._run_index,
             "grader_version": GRADER_VERSION,
@@ -91,19 +107,22 @@ class GraderSession:
             "truncated": truncated,
             "steps_used": steps_used,
             "elapsed_s": elapsed_s,
-            "issues_total": len(ep.truth["issues"]),
+            "issues_total": len(ep.truth["issues"]) if ep.truth is not None else None,
             **{k: result[k] for k in ("valid", "errors", "tp", "fp", "fn", "precision", "recall", "f1",
                                       "inspection_steps", "reward", "reward_experimental")},
             "diagnostics": result["diagnostics"],
         }
         self.records.append(record)
         self._append_to_log(record)
+        # Структура ответа (не правильность) сообщается среде во всех режимах: на неверный submit политика
+        # получает ограниченную ошибку invalid_submission вместо {"accepted": true} (правила жюри это разрешают).
+        submission_status = {"valid": bool(result["valid"]), "error": (result["errors"] or [None])[0]}
         if self._mode != "train":
-            return {"reward": 0.0, "info": {}}
+            return {"reward": 0.0, "info": {}, "submission": submission_status}
         info = {k: result[k] for k in INFO_KEYS}
         info["truncated_reason"] = end_reason if truncated else None
         info["reward_experimental"] = result["reward_experimental"]
-        return {"reward": result["reward"], "info": info}
+        return {"reward": result["reward"], "info": info, "submission": submission_status}
 
     def _append_to_log(self, record: dict) -> None:
         if self.log_path is not None:
@@ -118,10 +137,7 @@ class GraderSession:
             return
         text = "".join(json.dumps(rec, sort_keys=True, ensure_ascii=False) + "\n" for rec in self._unwritten)
         try:
-            self.log_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.log_path, "a", encoding="utf-8", newline="") as fh:
-                fh.write(text)
-                fh.flush()
+            append_private_log(self.log_path, text)
         except OSError as exc:
             print(f"grader log is not writable ({type(exc).__name__}); records are kept in memory", file=sys.stderr)
             return

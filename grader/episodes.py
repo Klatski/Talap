@@ -13,12 +13,19 @@
   episode_id   — имя каталога эпизода в сплите;  index — номер в сплите;
                  если не задано ни то ни другое — номер = seed mod N (seed=None -> 0);
   config_version — необязательная метка версии конфигурации (пишется в журнал).
+Прочие ключи (и с episode_dir — лишние селекторы split/episode_id/index/generator) не мешают: они
+игнорируются и записываются в журнал оценщика (source.ignored_config_keys). Неизвестные ключи верхнего
+уровня team_config — так же (генератору уходят только его ключи, docs/generator.md).
 Порядок эпизодов сплита — из <split>/index.json, иначе отсортированные имена каталогов (любые имена).
 
 Раскладка каталога эпизода (обе поддерживаются):
   <dir>/public/{manifest.json, policy.json, ledger.csv, invoices.jsonl, payments.jsonl, fx.csv}
   <dir>/private/{truth.json, provenance.json}                  — как пишет генератор (docs/contract.md, раздел 1);
   или плоско: <dir>/{шесть открытых файлов, truth.json, provenance.json} (truth/provenance можно и в private/).
+Файлы читаются терпимо: UTF-8 с BOM или без, переводы строк LF или CRLF, колонки CSV в любом порядке.
+episode_id эпизода — из manifest (его видит политика); truth без него или с другим значением приводится к
+manifest. В режимах eval/closed truth.json может отсутствовать: среде эталон не нужен, эпизод проводится,
+метрики в журнале — null (reference: "missing"); train и score_episode требуют эталон.
 Reset вызывает доверенная обвязка (процесс жюри или раннер), а не политика: политика работает в
 песочнице (env/sandbox.py) и канала к reset не имеет. Сообщения об ошибках — без путей и закрытых данных.
 """
@@ -55,7 +62,7 @@ class LoadedEpisode:
 
 
 def _read(path: Path) -> str:
-    with open(path, encoding="utf-8", newline="") as fh:
+    with open(path, encoding="utf-8-sig", newline="") as fh:  # BOM, если есть, снимается
         return fh.read()
 
 
@@ -102,34 +109,45 @@ def issue_follows_contract(issue: Any) -> bool:
             and (tolerance is None or (_int(tolerance) and tolerance >= 0)))
 
 
-def read_episode(episode_dir: Path) -> tuple[dict[str, str], dict, dict | None]:
+def read_episode(episode_dir: Path, require_truth: bool = True) -> tuple[dict[str, str], dict | None, dict | None]:
+    """(открытые тексты, truth, provenance). Без truth.json и с require_truth=False -> truth None."""
     layout = episode_layout(Path(episode_dir))
     if layout is None:
         raise EpisodeLoadError("episode files are missing or unreadable")
     public_dir, private_dir = layout
     try:
         public = {name: _read(public_dir / name) for name in PUBLIC_FILES}
-        truth = json.loads(_read(private_dir / "truth.json"))
         manifest = json.loads(public["manifest.json"])
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise EpisodeLoadError("episode files are missing or unreadable") from exc
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("episode_id"), str):
+        raise EpisodeLoadError("episode manifest does not follow the contract (episode_id)")
+    truth_path = private_dir / "truth.json"
+    truth = None
+    if require_truth or truth_path.is_file():
+        try:
+            truth = json.loads(_read(truth_path))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise EpisodeLoadError("episode files are missing or unreadable") from exc
+        if not isinstance(truth, dict) or not isinstance(truth.get("issues"), list):
+            raise EpisodeLoadError("episode reference does not follow the contract")
+        if not all(issue_follows_contract(i) for i in truth["issues"]):
+            raise EpisodeLoadError("episode reference does not follow the contract (truth.json issue fields)")
+        # главный — episode_id из manifest: его видит политика и пишет в submit (копия жюри может не обновить truth)
+        truth = {**truth, "episode_id": manifest["episode_id"]}
     prov_path = private_dir / "provenance.json"
     try:
         provenance = json.loads(_read(prov_path)) if prov_path.is_file() else None
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise EpisodeLoadError("episode files are missing or unreadable") from exc
-    if not isinstance(truth, dict) or not isinstance(truth.get("issues"), list) or not isinstance(manifest, dict):
-        raise EpisodeLoadError("episode reference does not follow the contract")
-    if not all(issue_follows_contract(i) for i in truth["issues"]):
-        raise EpisodeLoadError("episode reference does not follow the contract (truth.json issue fields)")
-    if "episode_id" not in truth:  # фикстура жюри может не повторять episode_id в truth
-        truth = {**truth, "episode_id": manifest.get("episode_id")}
-    if manifest.get("episode_id") != truth.get("episode_id"):
-        raise EpisodeLoadError("episode is inconsistent (manifest and reference disagree)")
     return public, truth, provenance
 
 
-def load_episode_dir(episode_dir: Any, source: dict | None = None) -> LoadedEpisode:
+def _episode_id(public: dict[str, str]) -> str:
+    return json.loads(public["manifest.json"])["episode_id"]
+
+
+def load_episode_dir(episode_dir: Any, source: dict | None = None, require_truth: bool = True) -> LoadedEpisode:
     """Загрузить каталог эпизода с любым именем (episode_dir жюри; score_episode)."""
     if isinstance(episode_dir, os.PathLike):
         episode_dir = os.fspath(episode_dir)
@@ -140,9 +158,11 @@ def load_episode_dir(episode_dir: Any, source: dict | None = None) -> LoadedEpis
         path = path.resolve()
     except (OSError, RuntimeError, ValueError) as exc:
         raise EpisodeLoadError("episode files are missing or unreadable") from exc
-    public, truth, provenance = read_episode(path)
+    public, truth, provenance = read_episode(path, require_truth)
     src = {"kind": "episode_dir", "episode_dir": str(path), **(source or {})}
-    return LoadedEpisode(truth["episode_id"], public, truth, provenance, src, public_ids(public))
+    if truth is None:
+        src["reference"] = "missing"
+    return LoadedEpisode(_episode_id(public), public, truth, provenance, src, public_ids(public))
 
 
 class EpisodeStore:
@@ -178,17 +198,15 @@ class EpisodeStore:
         return self.root / split / name
 
     # ------------------------------------------------------------------ загрузка
-    def load(self, seed: Any, config: dict) -> LoadedEpisode:
+    def load(self, seed: Any, config: dict, require_truth: bool = True) -> LoadedEpisode:
+        """require_truth=False (eval/closed): каталог episode_dir без truth.json тоже загружается."""
         if not isinstance(config, dict):
             raise EpisodeLoadError("config must be an object")
-        unknown = set(config) - GRADER_KEYS
-        if unknown:
-            raise EpisodeLoadError("config has unknown keys")
+        ignored = sorted(k for k in config if k not in GRADER_KEYS)  # не мешают: пишутся в журнал оценщика
         version = config.get("config_version")
-        if config.get("episode_dir") is not None:
-            if any(config.get(k) is not None for k in ("split", "episode_id", "index", "generator")):
-                raise EpisodeLoadError("episode_dir is used alone (team_config is ignored with it)")
-            return load_episode_dir(config["episode_dir"], {"seed": seed, "config_version": version})
+        if config.get("episode_dir") is not None:  # протокол жюри: загружается ровно этот каталог
+            ignored += sorted(k for k in ("split", "episode_id", "index", "generator") if config.get(k) is not None)
+            return load_episode_dir(config["episode_dir"], _source_extra(seed, version, ignored), require_truth)
         gen = config.get("generator")
         team = config.get("team_config")
         if "team_config" in config and team is None and all(
@@ -201,7 +219,7 @@ class EpisodeStore:
         if gen is not None:
             if any(config.get(k) is not None for k in ("split", "episode_id", "index")):
                 raise EpisodeLoadError("use either a generator config or split, not both")
-            return self._generate(seed, gen, version)
+            return self._generate(seed, gen, version, ignored)
         split = config.get("split", "train")
         names = self.split_episodes(split)
         if not names:
@@ -224,14 +242,15 @@ class EpisodeStore:
                     idx = seed % len(names)
             name = names[idx]
         public, truth, provenance = read_episode(self.root / split / name)
-        source = {"kind": "split", "split": split, "episode": name, "seed": seed, "config_version": version}
-        return LoadedEpisode(truth["episode_id"], public, truth, provenance, source, public_ids(public))
+        source = {"kind": "split", "split": split, "episode": name, **_source_extra(seed, version, ignored)}
+        return LoadedEpisode(_episode_id(public), public, truth, provenance, source, public_ids(public))
 
-    def _generate(self, seed: Any, gen_config: Any, config_version: Any) -> LoadedEpisode:
+    def _generate(self, seed: Any, gen_config: Any, config_version: Any, ignored: list | None = None) -> LoadedEpisode:
         if seed is None or isinstance(seed, bool) or not isinstance(seed, (int, str)):
             raise EpisodeLoadError("seed (int or string) is required for generated episodes")
+        ignored = list(ignored or [])
         try:
-            cfg = resolve_generator_config(gen_config)
+            cfg = resolve_generator_config(gen_config, ignored, prefix="team_config.")
             from generator.config import config_digest
             from generator.generate import generate_episode
         except ImportError as exc:  # pragma: no cover
@@ -239,17 +258,33 @@ class EpisodeStore:
         episode = generate_episode(seed, cfg, salt=self.salt)
         public = dict(episode.public)
         source = {"kind": "generated", "generator_config": cfg.get("name"), "config_digest": config_digest(cfg),
-                  "seed": seed, "salted": bool(self.salt), "config_version": config_version}
+                  "salted": bool(self.salt), **_source_extra(seed, config_version, ignored)}
         return LoadedEpisode(episode.episode_id, public, episode.truth, episode.provenance, source, public_ids(public))
 
 
-def resolve_generator_config(gen_config: Any) -> dict:
-    """Конфиг генератора команды: имя пресета, объект-конфиг или {"preset": имя, ...переопределения}."""
+def _source_extra(seed: Any, config_version: Any, ignored: list) -> dict:
+    out = {"seed": seed, "config_version": config_version}
+    if ignored:
+        out["ignored_config_keys"] = sorted(set(ignored))
+    return out
+
+
+def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefix: str = "") -> dict:
+    """Конфиг генератора команды: имя пресета, объект-конфиг или {"preset": имя, ...переопределения}.
+    Ключи верхнего уровня, которых генератор не знает (docs/generator.md), снимаются и дописываются в
+    `ignored` (с префиксом prefix) — для журнала оценщика; вложенные ключи (errors, scenarios, distractors)
+    генератор проверяет строго: опечатка в имени типа ошибки — ошибка конфига, а не молчаливо чистая компания."""
     try:
-        from generator.config import ConfigError, normalize_config
+        from generator.config import DEFAULT_CONFIG, ConfigError, normalize_config
         from generator.splits import resolve_config
     except ImportError as exc:  # pragma: no cover
         raise EpisodeLoadError("generator is not available") from exc
+    if isinstance(gen_config, dict):
+        known = set(DEFAULT_CONFIG) | {"preset"}
+        dropped = sorted(str(k) for k in gen_config if k not in known)
+        if ignored is not None:
+            ignored.extend(prefix + k for k in dropped)
+        gen_config = {k: v for k, v in gen_config.items() if k in known}
     try:
         if isinstance(gen_config, str):
             if not _PRESET_RE.fullmatch(gen_config):
@@ -263,5 +298,7 @@ def resolve_generator_config(gen_config: Any) -> dict:
         if isinstance(gen_config, dict):
             return normalize_config(gen_config)
         raise EpisodeLoadError("generator config must be a preset name or an object")
-    except (ConfigError, OSError, json.JSONDecodeError) as exc:
+    except ConfigError as exc:  # текст — о конфиге самой обвязки (без путей и эталона)
+        raise EpisodeLoadError(f"invalid generator config: {str(exc)[:300]}") from exc
+    except (OSError, json.JSONDecodeError) as exc:
         raise EpisodeLoadError("invalid generator config") from exc

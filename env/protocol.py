@@ -3,19 +3,91 @@
 Запрос:  {"id": n, "method": "...", "params": {...}}
 Ответ:   {"id": n, "ok": true, "result": ...} | {"id": n, "ok": false, "error": {"code", "message"}}
 Используется на обеих границах: агент <-> среда и среда <-> оценщик.
+Дочерние процессы не зависают при выходе: Channel регистрирует процесс, а при завершении интерпретатора
+(atexit) у всех сразу закрывается stdin (процесс сам закрывает эпизод и выходит), общее ожидание — не
+дольше GRACE_S, затем kill. Владельцы каналов (AuditEnv, SandboxedPolicy) вместо __del__ используют
+weakref.finalize(stop_process): брошенный без close() объект останавливает свой процесс так же.
 """
 
 from __future__ import annotations
 
+import atexit
 import json
 import queue
 import subprocess
 import threading
-from typing import Any, BinaryIO
+import time
+from typing import Any, BinaryIO, Callable
 
 from .jsonsafe import loads_text
 
 MAX_LINE_BYTES = 4 * 1024 * 1024  # ответ list_records на 50 строк — десятки КБ; эпизод целиком (load) — до ~3 МБ
+
+
+GRACE_S = 2.0  # сколько ждать выхода дочернего процесса после закрытия его stdin, затем kill
+
+_CHILDREN: dict = {}  # subprocess.Popen -> [действия после остановки (например, удалить временный каталог)]
+_CHILDREN_LOCK = threading.Lock()
+
+
+def _forget(proc) -> list:
+    with _CHILDREN_LOCK:
+        return _CHILDREN.pop(proc, [])
+
+
+def _close_stdin(proc) -> None:
+    try:
+        if proc.stdin is not None and not proc.stdin.closed:
+            proc.stdin.close()
+    except OSError:
+        pass
+
+
+def _wait_or_kill(proc, timeout: float) -> None:
+    try:
+        proc.wait(timeout=max(0.0, timeout))
+        return
+    except subprocess.TimeoutExpired:
+        pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+    try:
+        proc.wait(timeout=GRACE_S)
+    except subprocess.TimeoutExpired:  # pragma: no cover
+        pass
+
+
+def _run_callbacks(callbacks: list) -> None:
+    for callback in callbacks:
+        try:
+            callback()
+        except Exception:  # noqa: BLE001 — уборка не должна ронять выход
+            pass
+
+
+def stop_process(proc, grace: float = GRACE_S) -> None:
+    """Закрыть stdin, ждать выхода не дольше grace, затем kill; повторный вызов безопасен."""
+    callbacks = _forget(proc)
+    _close_stdin(proc)
+    _wait_or_kill(proc, grace)
+    _run_callbacks(callbacks)
+
+
+@atexit.register
+def _stop_all_children() -> None:
+    """При выходе интерпретатора: всем дочерним процессам сразу EOF, общее ожидание GRACE_S, затем kill."""
+    with _CHILDREN_LOCK:
+        items = list(_CHILDREN.items())
+        _CHILDREN.clear()
+    for proc, _ in items:
+        _close_stdin(proc)
+    deadline = time.monotonic() + GRACE_S
+    for proc, _ in items:
+        _wait_or_kill(proc, deadline - time.monotonic())
+    for _, callbacks in items:
+        _run_callbacks(callbacks)
 
 
 class ProtocolError(RuntimeError):
@@ -106,10 +178,13 @@ class RemoteError(RuntimeError):
 class Channel:
     """Клиентская сторона: дочерний процесс + поток-читатель + ожидание ответа с тайм-аутом."""
 
-    def __init__(self, argv: list[str], cwd: str, env: dict | None = None) -> None:
+    def __init__(self, argv: list[str], cwd: str, env: dict | None = None,
+                 on_stopped: Callable[[], None] | None = None) -> None:
         self.proc = subprocess.Popen(
             argv, cwd=cwd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None, bufsize=0,
         )
+        with _CHILDREN_LOCK:
+            _CHILDREN[self.proc] = [on_stopped] if on_stopped is not None else []
         self._queue: queue.Queue = queue.Queue()
         self._lock = threading.Lock()
         self._next_id = 0
@@ -153,17 +228,11 @@ class Channel:
                 raise RemoteError(str(err.get("code", "error")), str(err.get("message", "")))
 
     def close(self, timeout: float = 10.0) -> None:
-        try:
-            if self.proc.stdin and not self.proc.stdin.closed:
-                self.proc.stdin.close()
-        except OSError:
-            pass
-        try:
-            self.proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            self.proc.kill()
-            self.proc.wait()
-        self._reader.join(timeout=timeout)
+        callbacks = _forget(self.proc)
+        _close_stdin(self.proc)
+        _wait_or_kill(self.proc, timeout)
+        self._reader.join(timeout=GRACE_S)
+        _run_callbacks(callbacks)
         try:
             if self.proc.stdout:
                 self.proc.stdout.close()

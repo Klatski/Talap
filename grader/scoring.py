@@ -36,6 +36,20 @@ def _distractor_index(provenance: dict | None) -> dict[str, list[str]]:
     return index
 
 
+def check_structure_only(submission: Any, episode_id: str, inspection_steps: int, *, truncated: bool = False,
+                         malformed_reason: str | None = None) -> dict[str, Any]:
+    """Эпизод без эталона (episode_dir без truth.json в eval/closed): структура ответа проверяется так же,
+    а метрики и награда не вычисляются (None) — их считает жюри своим score_episode."""
+    if malformed_reason is not None:
+        errors = [malformed_message(malformed_reason)]
+    else:
+        errors = validate_submission(submission, episode_id)
+    n = len(submission["findings"]) if not errors and isinstance(submission, dict) else 0
+    return {"valid": not errors, "errors": errors, "tp": None, "fp": None, "fn": None, "precision": None,
+            "recall": None, "f1": None, "inspection_steps": inspection_steps, "truncated": truncated, "reward": None,
+            "reward_experimental": None, "diagnostics": {"reference": "missing", "findings": n}}
+
+
 def score_submission(
     truth: dict,
     submission: Any,

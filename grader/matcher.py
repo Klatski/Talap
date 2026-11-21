@@ -4,7 +4,8 @@
   * ID сравниваются как строки точно: с учётом регистра и пробелов, без снятия префиксов и поиска похожих;
   * affected_ids -> множество: порядок и повторы внутри списка не меняют множество (M01); для TP оно
     должно точно совпасть с каноническим набором ошибки (лишний существующий ID -> FP, M02);
-  * evidence_ids -> множество; TP требует полного включения хотя бы одного допустимого набора;
+  * evidence_ids -> множество (ключ курса в записи жюри <date>:<source>:<target> — синоним fx_id
+    FX:<source>:<target>:<date>); TP требует полного включения хотя бы одного допустимого набора;
     лишние СУЩЕСТВУЮЩИЕ доказательства допустимы (M03); если указан хотя бы один ID, которого нет в
     открытых данных эпизода, вывод не сопоставляется и даёт FP (M04). Существующие = доступные через
     инструменты: row_id, invoice_id, payment_id, fx_id и doc_id (env/records.py);
@@ -24,6 +25,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import AbstractSet
+
+from env.records import canonical_record_id
 
 from .validate import ISSUE_TYPES
 
@@ -60,7 +63,7 @@ def normalize_finding(f: dict, index: int) -> NormFinding:
         affected=frozenset(f["affected_ids"]),
         amount=f["claimed_amount_minor"],
         currency=f["currency"],
-        evidence=frozenset(f["evidence_ids"]),
+        evidence=frozenset(canonical_record_id(e) for e in f["evidence_ids"]),  # ключ курса жюри -> fx_id
     )
 
 

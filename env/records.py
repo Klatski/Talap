@@ -2,7 +2,11 @@
 
 Парсер написан независимо от generator/: среда знает только опубликованный формат
 (docs/contract.md, раздел 2). Пустое поле CSV -> JSON null, суммы -> int, курсы — строки.
-Каждой записи fx добавляется вычисляемый ключ fx_id = FX:<source>:<target>:<date>.
+Каждой записи fx добавляется вычисляемый ключ fx_id = FX:<source>:<target>:<date>; запись того же курса
+находится и по ключу в записи жюри <date>:<source>:<target> (синоним, canonical_record_id).
+Разбор терпимый к копиям, которые делает жюри: BOM в начале файла снимается, переводы строк LF или CRLF,
+колонки CSV читаются по именам заголовка в любом порядке (набор колонок — ровно контрактный); записи
+отдаются в каноническом порядке полей, поэтому наблюдения не зависят от порядка колонок в файле.
 Закрытых файлов (truth/provenance) этот модуль не знает и не принимает.
 """
 
@@ -11,6 +15,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from dataclasses import dataclass, field
 
 from .constants import FX_COLUMNS, LEDGER_COLUMNS, PUBLIC_FILES, TABLES
@@ -24,18 +29,37 @@ def fx_id(source: str, target: str, day: str) -> str:
     return f"FX:{source}:{target}:{day}"
 
 
-def _parse_ledger(text: str) -> list[dict]:
+_JURY_FX_KEY = re.compile(r"(\d{4}-\d{2}-\d{2}):([A-Z]{3}):([A-Z]{3})")
+
+
+def canonical_record_id(rid: object) -> object:
+    """Ключ курса в записи жюри <date>:<source>:<target> -> fx_id (FX:<source>:<target>:<date>); прочее как есть."""
+    if isinstance(rid, str):
+        m = _JURY_FX_KEY.fullmatch(rid)
+        if m:
+            return fx_id(m.group(2), m.group(3), m.group(1))
+    return rid
+
+
+def _csv_rows(text: str, columns: tuple, name: str):
+    """Строки CSV как {колонка: значение} в каноническом порядке колонок; заголовок — те же имена в любом порядке."""
     reader = csv.reader(io.StringIO(text, newline=""))
-    header = next(reader, None)
-    if tuple(header or ()) != LEDGER_COLUMNS:
-        raise EpisodeDataError("ledger.csv header mismatch")
-    rows = []
+    header = [h.strip() for h in (next(reader, None) or ())]
+    if sorted(header) != sorted(columns):
+        raise EpisodeDataError(f"{name} header mismatch")
+    position = [header.index(c) for c in columns]
     for raw in reader:
-        if not raw:
+        if not raw or (len(raw) == 1 and not raw[0].strip()):
             continue
-        if len(raw) != len(LEDGER_COLUMNS):
-            raise EpisodeDataError("ledger.csv row width mismatch")
-        row = {k: (v if v != "" else None) for k, v in zip(LEDGER_COLUMNS, raw)}
+        if len(raw) != len(header):
+            raise EpisodeDataError(f"{name} row width mismatch")
+        yield {c: raw[i] for c, i in zip(columns, position)}
+
+
+def _parse_ledger(text: str) -> list[dict]:
+    rows = []
+    for raw in _csv_rows(text, LEDGER_COLUMNS, "ledger.csv"):
+        row = {k: (v if v != "" else None) for k, v in raw.items()}
         try:
             row["debit_minor"] = int(row["debit_minor"])
             row["credit_minor"] = int(row["credit_minor"])
@@ -46,17 +70,8 @@ def _parse_ledger(text: str) -> list[dict]:
 
 
 def _parse_fx(text: str) -> list[dict]:
-    reader = csv.reader(io.StringIO(text, newline=""))
-    header = next(reader, None)
-    if tuple(header or ()) != FX_COLUMNS:
-        raise EpisodeDataError("fx.csv header mismatch")
     rows = []
-    for raw in reader:
-        if not raw:
-            continue
-        if len(raw) != len(FX_COLUMNS):
-            raise EpisodeDataError("fx.csv row width mismatch")
-        row = dict(zip(FX_COLUMNS, raw))
+    for row in _csv_rows(text, FX_COLUMNS, "fx.csv"):
         row["fx_id"] = fx_id(row["source_currency"], row["target_currency"], row["date"])
         rows.append(row)
     return rows
@@ -97,6 +112,9 @@ def load_public(texts: dict[str, str]) -> PublicEpisode:
     """Разобрать шесть открытых файлов. Лишние или закрытые файлы — ошибка."""
     if not isinstance(texts, dict) or set(texts) != set(PUBLIC_FILES):
         raise EpisodeDataError("expected exactly the six public files")
+    if not all(isinstance(t, str) for t in texts.values()):
+        raise EpisodeDataError("public files must be texts")
+    texts = {k: t[1:] if t.startswith("\ufeff") else t for k, t in texts.items()}  # BOM
     try:
         manifest = json.loads(texts["manifest.json"])
         policy = json.loads(texts["policy.json"])

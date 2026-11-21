@@ -17,11 +17,12 @@ from __future__ import annotations
 import json
 import os
 import sys
+import weakref
 from pathlib import Path
 from typing import Any
 
 from .jsonsafe import classify_action
-from .protocol import Channel, RemoteError
+from .protocol import Channel, RemoteError, stop_process
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -49,17 +50,24 @@ class AuditEnv:
         salt: str | None = None,
         response_timeout_s: float = 120.0,
     ) -> None:
-        argv = [sys.executable, "-m", "env.server"]
+        # -E -s: процессы среды и оценщика не берут PYTHONPATH/user site обвязки (у жюри могут быть свои пакеты
+        # env/grader/policies) — только код этого репозитория (cwd = корень).
+        argv = [sys.executable, "-E", "-s", "-m", "env.server"]
         if episodes_root:
             argv += ["--episodes-root", str(Path(episodes_root).resolve())]
-        if grader_log:
-            argv += ["--grader-log", str(Path(grader_log).resolve())]
+        self.grader_log = str(Path(grader_log).resolve()) if grader_log else None
+        if self.grader_log:
+            argv += ["--grader-log", self.grader_log]
         env = dict(os.environ)
         if salt is not None:
             env["AUDIT_GRADER_SALT"] = salt
         self._timeout = response_timeout_s
         self._channel = Channel(argv, cwd=str(ROOT), env=env)
         self._closed = False
+        # Брошенная без close() среда останавливает свой процесс (EOF -> эпизод закрыт как abandoned, журнал
+        # дописан; не дольше 2 с, затем kill). При выходе интерпретатора всех останавливает env/protocol.py.
+        self._finalizer = weakref.finalize(self, stop_process, self._channel.proc)
+        self._finalizer.atexit = False
 
     def reset(self, seed: Any = None, config: dict | None = None) -> tuple[dict, dict]:
         if isinstance(config, dict) and isinstance(config.get("episode_dir"), (str, os.PathLike)):
@@ -87,20 +95,15 @@ class AuditEnv:
         if self._closed:
             return
         self._closed = True
+        self._finalizer.detach()
         try:
-            self._channel.request("close", {}, timeout=60.0)
+            self._channel.request("close", {}, timeout=30.0)
         except Exception:  # noqa: BLE001
             pass
-        self._channel.close()
+        self._channel.close(timeout=5.0)
 
     def __enter__(self) -> "AuditEnv":
         return self
 
     def __exit__(self, *exc) -> None:
         self.close()
-
-    def __del__(self) -> None:  # pragma: no cover
-        try:
-            self.close()
-        except Exception:  # noqa: BLE001
-            pass

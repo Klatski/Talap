@@ -12,12 +12,17 @@
   close {}                          -> процесс завершается.
 Порядок запуска (до первой строки кода политики):
   1. заранее импортировать модули stdlib, нужные типичной политике (потом файлы открыть будет нельзя);
-  2. Linux: seccomp-фильтр (необратим, наследуется потоками и детьми): open/openat/exec/socket/ptrace/
-     kill/unlink/rename/... -> EPERM — граница ядра, её не обойти и подменой байт-кода;
+  2. Linux: лимиты ресурсов (адресное пространство MEMORY_LIMIT_BYTES, без core-файлов) и seccomp-фильтр
+     (необратим, наследуется потоками и детьми): open/openat/exec/socket/ptrace/kill/unlink/rename/... ->
+     EPERM; новые процессы тоже: fork/vfork и clone без CLONE_THREAD -> EPERM (потоки разрешены, clone3 ->
+     ENOSYS, и glibc переходит на clone), setrlimit и запись лимитов через prlimit64 -> EPERM — граница ядра,
+     её не обойти ни подменой байт-кода, ни модулем, полученным в обход импорта;
   3. аудит-хук без состояния (необратим): open, listdir/scandir, процессы, сокеты, ctypes, mmap, _winapi,
      субинтерпретаторы, байт-код (code.__new__, marshal), импорт проектных и опасных модулей -> PermissionError;
      запрещённые модули выгружаются из sys.modules, а первый искатель в sys.meta_path отказывает им и при
-     importlib.import_module;
+     importlib.import_module; _imp.create_builtin / _imp.create_dynamic (создание модуля мимо sys.meta_path)
+     тоже отказывают запрещённым именам. Это защита в глубину: на Windows ядерного фильтра нет, и граница там
+     мягкая (docs/design.md, «Честные ограничения»);
   4. загрузить политику из памяти и обслуживать запросы.
 """
 
@@ -47,6 +52,7 @@ BLOCKED_IMPORTS = frozenset({
     "_tkinter", "tkinter", "turtle", "idlelib", "ensurepip", "venv", "pip", "runpy", "pdb", "faulthandler",
 })
 BLOCKED_SUBMODULES = frozenset({"policies.oracle"})  # oracle — только на стороне жюри (ему нужен эталон)
+MEMORY_LIMIT_BYTES = 1 << 30  # адресное пространство процесса политики (Linux, RLIMIT_AS): машина жюри — 4 ГБ
 
 DENY_EVENTS = frozenset({
     "open", "builtins.input", "builtins.input/result", "code.__new__", "sys.addaudithook", "setopencodehook",
@@ -100,15 +106,61 @@ def _preimport(names) -> None:
             pass
 
 
+def _install_limits() -> str:
+    """Лимиты ресурсов (POSIX): адресное пространство MEMORY_LIMIT_BYTES и core-файлы 0. Ставятся до seccomp,
+    который потом запрещает их менять (setrlimit, prlimit64 с новым значением)."""
+    if sys.platform == "win32":
+        return "not available on windows"
+    try:
+        import resource
+    except ImportError:
+        return "resource module is not available"
+    try:
+        for name, value in (("RLIMIT_AS", MEMORY_LIMIT_BYTES), ("RLIMIT_CORE", 0)):
+            res = getattr(resource, name, None)
+            if res is None:
+                continue
+            _, hard = resource.getrlimit(res)
+            new = value if hard == resource.RLIM_INFINITY else min(value, hard)
+            resource.setrlimit(res, (new, new))
+        return f"address space {MEMORY_LIMIT_BYTES >> 20} MiB, no core files"
+    except (ValueError, OSError) as exc:
+        return f"limits not set ({type(exc).__name__})"
+    finally:
+        sys.modules.pop("resource", None)
+
+
+def _guard_low_level_import() -> None:
+    """_imp.create_builtin / create_dynamic создают модуль мимо sys.meta_path и аудит-события import:
+    запрещённым именам (_posixsubprocess, _socket, _winapi, ...) они отказывают так же, как импорт."""
+    import _imp
+
+    for attr in ("create_builtin", "create_dynamic"):
+        original = getattr(_imp, attr, None)
+        if original is None:  # pragma: no cover
+            continue
+
+        def guarded(spec, *args, _original=original):
+            name = getattr(spec, "name", None)
+            if not isinstance(name, str) or _blocked_module(name):
+                raise PermissionError(f"sandbox: import of {name} is not allowed for a policy")
+            return _original(spec, *args)
+
+        setattr(_imp, attr, guarded)
+
+
 def _install_seccomp() -> str:
     """Seccomp-фильтр запрета (Linux, x86_64/aarch64). Возвращает 'active' или причину, почему его нет."""
     if not sys.platform.startswith("linux"):
         return "not linux"
     machine = os.uname().machine
+    # (arch, запрет, x32, newfstatat, clone, clone3, setrlimit, prlimit64)
     if machine == "x86_64":
-        arch, numbers, x32, fstatat = 0xC000003E, _SYSCALLS_X86_64, True, 262
+        arch, numbers, x32, fstatat = 0xC000003E, _SYSCALLS_X86_64 + (57, 58), True, 262  # + fork, vfork
+        clone, clone3, setrlimit, prlimit64 = 56, 435, 160, 302
     elif machine in ("aarch64", "arm64"):
-        arch, numbers, x32, fstatat = 0xC00000B7, _SYSCALLS_AARCH64, False, 79
+        arch, numbers, x32, fstatat = 0xC00000B7, _SYSCALLS_AARCH64, False, 79  # fork/vfork на aarch64 нет
+        clone, clone3, setrlimit, prlimit64 = 220, 435, 164, 261
     else:
         return f"unsupported architecture {machine}"
     try:
@@ -132,8 +184,17 @@ def _install_seccomp() -> str:
         prog = [(ld_abs, 0, 0, 4), (jeq, 1, 0, arch), (ret, 0, 0, kill), (ld_abs, 0, 0, 0)]
         if x32:
             prog += [(jge, 0, 1, 0x40000000), (ret, 0, 0, errno_eperm)]
-        for nr in sorted(set(numbers)):
+        for nr in sorted(set(numbers) | {setrlimit}):
             prog += [(jeq, 0, 1, nr), (ret, 0, 0, errno_eperm)]
+        errno_enosys = 0x00050000 | 38
+        # clone3(args-struct): флаги не видны фильтру -> ENOSYS, glibc повторяет через clone (как профиль Docker)
+        prog += [(jeq, 0, 1, clone3), (ret, 0, 0, errno_enosys)]
+        # clone(flags, ...): флаги — args[0] (смещение 16); поток (CLONE_THREAD) можно, новый процесс -> EPERM
+        prog += [(jeq, 0, 4, clone), (ld_abs, 0, 0, 16), (jset, 1, 0, 0x00010000), (ret, 0, 0, errno_eperm),
+                 (ret, 0, 0, allow)]
+        # prlimit64(pid, resource, new, old): читать можно, задавать (new != NULL, args[2] — смещения 32/36) -> EPERM
+        prog += [(jeq, 0, 6, prlimit64), (ld_abs, 0, 0, 32), (jeq, 0, 3, 0), (ld_abs, 0, 0, 36), (jeq, 0, 1, 0),
+                 (ret, 0, 0, allow), (ret, 0, 0, errno_eperm)]
         # newfstatat(dirfd, path, buf, flags): флаги — args[3] (смещение 40 в seccomp_data); без AT_EMPTY_PATH -> EPERM
         prog += [(jeq, 0, 3, fstatat), (ld_abs, 0, 0, 40), (jset, 1, 0, 0x1000), (ret, 0, 0, errno_eperm)]
         prog.append((ret, 0, 0, allow))
@@ -241,8 +302,10 @@ def main() -> int:
             method, params = req.get("method"), req.get("params") or {}
             if method == "load" and not loaded:
                 _preimport(PREIMPORT + tuple(params.get("preimport") or ()))
+                limits = _install_limits()
                 seccomp = _install_seccomp()
                 _drop_blocked_modules()
+                _guard_low_level_import()
                 sys.addaudithook(_audit_hook)
                 _install_memory_importer({k: tuple(v) for k, v in params["sources"].items()})
                 entry = params["entry"]
@@ -252,7 +315,8 @@ def main() -> int:
                 state["policy"] = state["factory"]()
                 loaded = True
                 _reply(stdout, rid, True, {"isolation": {
-                    "process": "separate", "audit_hook": True, "seccomp": seccomp, "platform": sys.platform,
+                    "process": "separate", "audit_hook": True, "seccomp": seccomp, "limits": limits,
+                    "platform": sys.platform,
                     "python": sys.version.split()[0], "files_open": False}})
             elif not loaded:
                 _reply(stdout, rid, False, {"code": "not_loaded", "message": "load the policy first"})

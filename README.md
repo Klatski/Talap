@@ -44,7 +44,12 @@ docker run --rm --network none audit-env python -m env.runner --splits dev    # 
 ## Интерфейс жюри (`judge_adapter.py`)
 
 Рабочая директория — корень репозитория (в контейнере `/app`), нужен только Python 3.11 stdlib.
-Точки входа — модуль [`judge_adapter.py`](judge_adapter.py) в корне, адаптер ничего не выбирает за политику:
+Точки входа — модуль [`judge_adapter.py`](judge_adapter.py) в корне, адаптер ничего не выбирает за политику.
+Адаптер самодостаточен: он не меняет `sys.path` и не импортирует в процесс жюри пакеты `env`, `grader`,
+`generator`, `policies` под их именами (свои пакеты жюри с такими именами остаются его собственными).
+`generate_episode` и `score_episode` выполняет отдельный процесс `python -E -s -m grader.judge` из корня
+репозитория; клиентская часть среды грузится под частным именем `_talaps_team_env`. Среды и песочницы,
+брошенные без `close()`, останавливаются при выходе процесса жюри (не дольше 2 с).
 
 ```python
 import judge_adapter as ja
@@ -67,10 +72,10 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 
 | Вызов | Поведение |
 |---|---|
-| `generate_episode(seed, config, output_dir)` | `config` = `{"team_config": {...}}` или сам конфиг генератора: имя пресета (`"heavy"`), `{"preset": "…", …переопределения}` или объект из [`docs/generator.md`](docs/generator.md) (например `{"size": "small", "errors": {"duplicate_invoice": 1}}`). Ключи reset (`mode`, `episode_dir`, `max_steps`, `time_limit_s`) игнорируются. Пишет `output_dir/public/{manifest.json, ledger.csv, invoices.jsonl, payments.jsonl, fx.csv, policy.json}` и `output_dir/private/{truth.json, provenance.json, counterfactual/}`. Те же seed и config дают побайтово те же файлы. Соль закрытого прогона — переменная окружения `AUDIT_GRADER_SALT`. |
-| `reset(seed, config)` | `{"mode": "closed", "episode_dir": D, "team_config": {...}}` загружает ровно каталог `D`: имя любое, путь абсолютный или от рабочей директории жюри; раскладка `public/` + `private/` или плоская (шесть открытых файлов и `truth.json` в одном каталоге). ID не меняются, повторный reset начинает тот же эпизод заново, `team_config` при `episode_dir` не используется. `{"mode": "train", "team_config": {...}}` без `episode_dir` генерирует эпизод генератором команды с этим seed (тот же, что `generate_episode`). Режимы: `train` — терминальная награда и метрики политике; `closed` (синоним `eval`) — политика всегда получает `0.0` и `{}`. Необязательно: `max_steps` 1..100, `time_limit_s` (0, 60]. Неверный config — исключение, среда остаётся рабочей. |
+| `generate_episode(seed, config, output_dir)` | `config` = `{"team_config": {...}}` или сам конфиг генератора: имя пресета (`"heavy"`), `{"preset": "…", …переопределения}` или объект из [`docs/generator.md`](docs/generator.md) (например `{"size": "small", "errors": {"duplicate_invoice": 1}}`). Ключи reset (`mode`, `episode_dir`, `max_steps`, `time_limit_s`) и ключи, которых генератор не знает, игнорируются и пишутся в журнал оценщика; опечатка во вложенном имени типа ошибки или сценария — ошибка. Пишет `output_dir/public/{manifest.json, ledger.csv, invoices.jsonl, payments.jsonl, fx.csv, policy.json}` и `output_dir/private/{truth.json, provenance.json, counterfactual/}`. Те же seed и config дают побайтово те же файлы. Соль закрытого прогона — переменная окружения `AUDIT_GRADER_SALT`. |
+| `reset(seed, config)` | `{"mode": "closed", "episode_dir": D, "team_config": {...}}` загружает ровно каталог `D`: имя любое, путь абсолютный или от рабочей директории жюри; раскладка `public/` + `private/` или плоская (шесть открытых файлов и `truth.json` в одном каталоге). ID не меняются, повторный reset начинает тот же эпизод заново, `team_config` при `episode_dir` не используется. `truth.json` в каталоге `closed` не обязателен: без него эпизод проводится, а метрики жюри считает своим `score_episode` (в журнале `reference: "missing"`). `episode_id` берётся из `manifest.json`. Файлы читаются и с BOM, и с CRLF, колонки CSV — по заголовку в любом порядке. `{"mode": "train", "team_config": {...}}` без `episode_dir` генерирует эпизод генератором команды с этим seed (тот же, что `generate_episode`). Режимы: `train` — терминальная награда и метрики политике; `closed` (синоним `eval`) — политика всегда получает `0.0` и `{}`. Необязательно: `max_steps` 1..100, `time_limit_s` (0, 60]; 60 с считаются от начала reset. Лишние ключи config (и `split`/`index` рядом с `episode_dir`) игнорируются и пишутся в журнал оценщика (`source.ignored_config_keys`). Неверный config (неизвестный `mode`, нет каталога, неверные значения) — исключение, среда остаётся рабочей. |
 | `step(action)` | `{"name": "<действие>", "args": {...}}`; плоская форма `{"action": "…", …}` — то же действие. |
-| `score_episode(episode_dir, findings, inspection_steps)` | `{"tp", "fp", "fn", "precision", "recall", "f1", "return"}`; невалидный submit — `return = -1`, остальные поля `null`, ошибка в журнале оценщика. |
+| `score_episode(episode_dir, findings, inspection_steps)` | `{"tp", "fp", "fn", "precision", "recall", "f1", "return"}`; невалидный submit — `return = -1`, остальные поля `null`, ошибка в журнале оценщика. `findings` проходит через `json.dumps`/`json.loads`, как через `step`: кортежи — массивы, не-JSON значение (NaN, `set`) — неверная структура. |
 
 **Наблюдения и результаты.** Первое наблюдение: `task`, `manifest`, `policy`, `remaining_steps = 100`
 и справочные `episode_id`, `tables`, `issue_types`, `matching`, `actions`, `action_format`, `limits`,
@@ -80,15 +85,16 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 
 | Действие (`args`) | `result` |
 |---|---|
-| `list_records` (`table`, `cursor` — первый `null`, `limit` ≤ 50) | `{"records": [объекты], "next_cursor": null \| "строка"}`; порядок = порядок файла |
+| `list_records` (`table`, `cursor` — первый `null`, `limit` ≤ 50, `null` = 50) | `{"records": [объекты], "next_cursor": null \| "строка"}`; порядок = порядок файла |
 | `get_record` (`table`, `id`) | объект записи |
 | `get_document` (`doc_id`) | объект документа (счёт из `invoices.jsonl` или платёж из `payments.jsonl`) |
 | `calculator` (`expression`) | десятичная строка: `"0.1+0.2"` → `"0.3"` (Decimal, без eval) |
-| `submit` (`findings` — объект findings.json) | `{"accepted": true}`, `terminated = true`; оценка только у оценщика |
+| `submit` (`findings` — объект findings.json) | `{"accepted": true}`, `terminated = true`; оценка только у оценщика. Неверная структура ответа — `result: null` и ограниченная ошибка `invalid_submission` с первой причиной в `detail` (эпизод тоже завершён) |
 
 Таблицы и ключи (канонические имена жюри совпадают с нашими): `ledger` — `row_id`; `invoices` — `invoice_id`,
 документ `doc_id`; `payments` — `payment_id`, документ `doc_id`; `fx` — `fx_id` = `FX:<source>:<target>:<date>`.
-`fx_id` вычисляется средой из полей строки, это не surrogate ID. Поля записей — §03 кейса
+`fx_id` вычисляется средой из полей строки, это не surrogate ID. Ключ `<date>:<source>:<target>` (как в
+правилах жюри) — синоним: `get_record` и `evidence_ids` принимают обе формы. Поля записей — §03 кейса
 ([`docs/contract.md`](docs/contract.md), раздел 2).
 
 **Соответствие четырёх типов ошибок кейса** (подробно — `docs/contract.md`, раздел 4):
@@ -120,8 +126,9 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 * Паросочетание максимальной мощности. При равенстве выбирается лексикографически наименьшая
   последовательность пар (`issue_id`, индекс вывода); повторы — FP.
 
-**Журнал оценщика:** файл из `AUDIT_GRADER_LOG` (по умолчанию `reports/grader_log_judge.jsonl`), одна JSON-строка
-на эпизод или вызов `score_episode`. В строке: окружение (python, реализация, платформа), версии среды и
+**Журнал оценщика:** файл из `AUDIT_GRADER_LOG`, по умолчанию `<временная папка системы>/talaps-grader-log/
+grader_log_judge.jsonl` — вне репозитория, каталог 0700, файл 0600; путь — `env.grader_log`. Одна JSON-строка
+на эпизод или вызов `generate_episode` / `score_episode`. В строке: окружение (python, реализация, платформа), версии среды и
 оценщика, seed, config, `episode_id`, режим, причина завершения, ошибки структуры, TP/FP/FN/P/R/F1, шаги,
 награда и разбор по выводам. Строка дописывается сразу по завершении эпизода.
 
@@ -132,7 +139,10 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
   и грузится из памяти. До первой строки политики ставятся необратимые ограничения:
   - аудит-хук: `open`, перечисление каталогов, процессы, сеть, `ctypes`, субинтерпретаторы, импорт
     `grader`/`generator`/`env` → `PermissionError`;
-  - на Linux — seccomp-фильтр ядра: открытие и `stat` файлов по пути, exec, сокеты, ptrace, сигналы → `EPERM`.
+  - на Linux — seccomp-фильтр ядра: открытие и `stat` файлов по пути, exec, сокеты, ptrace, сигналы,
+    новые процессы (`fork`, `clone` без `CLONE_THREAD`; потоки можно) и смена лимитов → `EPERM`;
+  - на Linux — лимит адресного пространства 1 ГиБ (`RLIMIT_AS`) и без core-файлов;
+  - модули, созданные мимо импорта (`_imp.create_builtin`), тоже под запретом.
 * Oracle строится только на стороне оценщика.
 * Враждебная политика, которая знает точный путь к `truth.json`, в песочнице не получает ничего.
   Без песочницы она же получает 12/12 и 1.0 — это негативный контроль (`tests/env/test_env_sandbox.py`).
@@ -218,7 +228,7 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 ## Команды по частям
 
 ```bash
-python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница (124 теста)
+python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница (136 тестов)
 python tests/jury/scorecard.py [--salt S] [--out card.md]            # карточка жюри на своей соли (≈45 с)
 python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (68 тестов)
 python tests/grader/test_grader_handworked.py --show                 # ручные примеры: «вручную | программа»

@@ -23,17 +23,19 @@ Oracle в песочницу не попадает: ему нужен этало
 
 from __future__ import annotations
 
+import functools
 import os
 import shutil
 import sys
 import tempfile
 import time
+import weakref
 from pathlib import Path
 from typing import Any
 
 from .constants import POLICY_GRACE_S, TIME_LIMIT_S
 from .jsonsafe import loads_text
-from .protocol import Channel, ProtocolError, RemoteError
+from .protocol import Channel, ProtocolError, RemoteError, stop_process
 
 ROOT = Path(__file__).resolve().parent.parent
 CHILD = Path(__file__).resolve().parent / "sandbox_child.py"
@@ -99,6 +101,7 @@ class SandboxedPolicy:
         self._workdir = None
         self.restarts = 0
         self._deadline: float | None = None
+        self._finalizer = None
         self._spawn()
 
     def _spawn(self) -> None:
@@ -107,7 +110,14 @@ class SandboxedPolicy:
         # Копия скрипта во временном каталоге: процесс политики не узнаёт даже путь к репозиторию и эпизодам.
         shutil.copyfile(CHILD, os.path.join(self._workdir, CHILD.name))
         self._channel = Channel([_interpreter(), "-I", "-S", "-B", "-X", "utf8", CHILD.name], cwd=self._workdir,
-                                env=_child_env())
+                                env=_child_env(),
+                                on_stopped=functools.partial(shutil.rmtree, self._workdir, ignore_errors=True))
+        # Брошенная без close() песочница останавливает процесс (не дольше 2 с, затем kill) и удаляет каталог;
+        # при выходе интерпретатора — env/protocol.py, всех сразу.
+        if self._finalizer is not None:
+            self._finalizer.detach()
+        self._finalizer = weakref.finalize(self, stop_process, self._channel.proc)
+        self._finalizer.atexit = False
         try:
             out = self._call("load", self._load)
         except BaseException:
@@ -168,6 +178,8 @@ class SandboxedPolicy:
 
     def close(self) -> None:
         self._closed = True
+        if self._finalizer is not None:
+            self._finalizer.detach()
         self._kill()
 
     def _kill(self, hard: bool = False) -> None:
@@ -195,12 +207,6 @@ class SandboxedPolicy:
 
     def __exit__(self, *exc) -> None:
         self.close()
-
-    def __del__(self) -> None:  # pragma: no cover
-        try:
-            self.close()
-        except Exception:  # noqa: BLE001
-            pass
 
     # ------------------------------------------------------------------ внутреннее
     def _call(self, method: str, params: dict, timeout_s: float | None = None) -> dict:

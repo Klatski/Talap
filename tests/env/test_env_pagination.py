@@ -82,7 +82,9 @@ class PaginationTests(unittest.TestCase):
         self.assertEqual(len(obs["result"]["records"]), 50)
         obs = self.env.step({"action": "list_records", "table": "fx", "cursor": None, "limit": 3})[0]
         self.assertEqual(len(obs["result"]["records"]), 3)
-        for bad in (0, -1, "5", True, 1.5, None, [5]):
+        obs = self.env.step({"action": "list_records", "table": "ledger", "cursor": None, "limit": None})[0]
+        self.assertEqual(len(obs["result"]["records"]), 50)  # null — значение по умолчанию
+        for bad in (0, -1, "5", True, 1.5, [5]):
             with self.subTest(limit=bad):
                 obs = self.env.step({"action": "list_records", "table": "ledger", "limit": bad})[0]
                 assert_obs_shape(self, obs)

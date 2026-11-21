@@ -30,7 +30,8 @@ ATTACK = ROOT / "tests" / "env" / "attack_policies" / "read_truth.py"
 VICTIM = EPISODES / "train" / "ep-5C8KTAPXJA"  # 12 ошибок
 READ_ROUTES = {"open", "io.FileIO", "os.open", "io.open_code", "pathlib", "subprocess", "os.system", "import grader",
                "gc scan", "import policies.oracle", "os.listdir", "os.scandir", "ctypes", "socket", "code.replace",
-               "/proc/self/environ", "/proc/<parent>/mem", "_winapi.OpenProcess", "os.kill"}
+               "/proc/self/environ", "/proc/<parent>/mem", "_winapi.OpenProcess", "os.kill", "_imp.create_builtin",
+               "os.fork"}
 SECCOMP_EXPECTED = sys.platform.startswith("linux") and platform.machine() in ("x86_64", "AMD64", "aarch64", "arm64")
 
 FLAKY_POLICY = '''
@@ -217,6 +218,56 @@ class Sandbox(unittest.TestCase):
         recs = read_log(log)
         self.assertEqual([(r["end_reason"], r["truncated"], r["tp"], r["fp"]) for r in recs],
                          [("abandoned", True, 0, 0), ("submit", False, 0, 0)])
+
+
+KERNEL_PROBE = r"""
+import json, os, sys, threading
+sys.path.insert(0, sys.argv[1])
+import resource
+from env import sandbox_child as sc
+
+out = {"limits": sc._install_limits(), "seccomp": sc._install_seccomp()}
+try:
+    pid = os.fork()  # без аудит-хука: проверяется именно фильтр ядра
+    if pid == 0:
+        os._exit(0)
+    out["fork"] = "allowed"
+except OSError as exc:
+    out["fork"] = exc.errno
+t = threading.Thread(target=lambda: out.__setitem__("thread", "ran"))
+t.start()
+t.join()
+try:
+    resource.setrlimit(resource.RLIMIT_AS, (1 << 29, 1 << 29))
+except (OSError, ValueError):
+    pass
+out["as_limit"] = resource.getrlimit(resource.RLIMIT_AS)[0]
+try:
+    block = bytearray(2 << 30)
+    out["alloc_2gib"] = "allowed"
+except MemoryError:
+    out["alloc_2gib"] = "MemoryError"
+print(json.dumps(out))
+"""
+
+
+@unittest.skipUnless(SECCOMP_EXPECTED, "фильтр ядра и RLIMIT_AS — только Linux x86_64/aarch64")
+class KernelLimits(unittest.TestCase):
+    """Слой ядра песочницы сам по себе (без аудит-хука): новый процесс нельзя, поток можно, лимиты не меняются,
+    память ограничена. Через политику это не проверить — аудит-хук отказывает раньше (os.fork в READ_ROUTES)."""
+
+    def test_no_new_processes_threads_ok_memory_capped(self):
+        from env.sandbox_child import MEMORY_LIMIT_BYTES
+
+        proc = subprocess.run([sys.executable, "-c", KERNEL_PROBE, str(ROOT)], capture_output=True, text=True,
+                              timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr[-2000:])
+        out = json.loads(proc.stdout.strip().splitlines()[-1])
+        self.assertEqual(out["seccomp"], "active")
+        self.assertEqual(out["fork"], 1)  # EPERM
+        self.assertEqual(out["thread"], "ran")
+        self.assertEqual(out["as_limit"], MEMORY_LIMIT_BYTES)  # setrlimit / prlimit64 с новым значением -> EPERM
+        self.assertEqual(out["alloc_2gib"], "MemoryError")
 
 
 if __name__ == "__main__":

@@ -10,7 +10,9 @@ EnvCore никогда не видит эталон. На submit / усечен�
 Результаты (одинаковы для обоих форматов, «Определения проверок» жюри):
   list_records -> {"records": [...], "next_cursor": null | str};
   get_record / get_document -> объект записи / документа;  calculator -> десятичная строка;
-  submit -> {"accepted": true} (без оценки правильности; награда — только в train).
+  submit -> {"accepted": true} (без оценки правильности; награда — только в train); если структура ответа
+            неверна — result null и ограниченная ошибка invalid_submission (detail — что не так в структуре,
+            без сведений об эталоне; правила жюри разрешают так ответить).
 
 Контракт шага:
   * каждый вызов step() во время эпизода расходует шаг, в том числе ошибочный;
@@ -35,7 +37,7 @@ from .constants import ACTIONS, CALC_DETAILS, ERRORS, PAGE_LIMIT, TABLES
 from .cursor import CursorError, decode_cursor, encode_cursor
 from .jsonsafe import REASONS, TOO_LARGE, classify_action
 from .observation import initial_observation
-from .records import PublicEpisode
+from .records import PublicEpisode, canonical_record_id
 
 # finish_handler(findings_payload, inspection_steps, steps_used, end_reason) -> {"reward": float, "info": dict}
 FinishHandler = Callable[[Any, int, int, str, "str | None"], dict]  # payload, inspection, used, reason, malformed
@@ -75,6 +77,7 @@ class _Episode:
     terminal_info: dict = field(default_factory=dict)
     terminal_reward: float = 0.0
     finish_error: dict | None = None  # оценщик не ответил на finish (упал или недоступен)
+    submission_error: dict | None = None  # структура submit неверна: invalid_submission вместо {"accepted": true}
 
 
 class EnvCore:
@@ -85,12 +88,14 @@ class EnvCore:
         self.lock = threading.RLock()
 
     # ------------------------------------------------------------------ жизненный цикл
-    def reset(self, data: PublicEpisode, mode: str, max_steps: int, time_limit_s: float) -> tuple[dict, dict]:
+    def reset(self, data: PublicEpisode, mode: str, max_steps: int, time_limit_s: float,
+              started_at: float | None = None) -> tuple[dict, dict]:
+        """started_at — момент начала reset по тем же часам (загрузка эпизода входит в 60 с, правила жюри)."""
         with self.lock:
             self.abandon()
             self._ep = _Episode(
                 data=data, mode=mode, max_steps=max_steps, time_limit_s=time_limit_s,
-                deadline=self._clock() + time_limit_s,
+                deadline=(self._clock() if started_at is None else started_at) + time_limit_s,
             )
             obs = initial_observation(data, max_steps, time_limit_s)
             info = {"env_version": obs["env_version"], "mode": mode}
@@ -152,6 +157,8 @@ class EnvCore:
                 else:  # нужен аргумент findings; прочие ключи не входят в формат и игнорируются
                     payload = args["findings"] if "findings" in args else _MalformedSubmit("wrapper")
                 self._finish(ep, payload, ep.steps_used - 1, "submit", truncated=False)
+                if ep.submission_error is not None:
+                    return self._terminal(ep, None, ep.submission_error)
                 return self._terminal(ep, {"accepted": True}, None)
             try:
                 result = _json_copy(self._dispatch(ep, name, args))
@@ -194,6 +201,10 @@ class EnvCore:
         ep.terminal_reward = float(reward) if isinstance(reward, (int, float)) and not isinstance(reward, bool) else 0.0
         info = response.get("info", {})
         ep.terminal_info = info if isinstance(info, dict) else {}
+        status = response.get("submission")
+        if reason == "submit" and isinstance(status, dict) and status.get("valid") is False:
+            detail = status.get("error")
+            ep.submission_error = error_obj("invalid_submission", detail[:200] if isinstance(detail, str) else None)
 
     @staticmethod
     def _obs(result: Any, error: dict | None, remaining: int) -> dict:
@@ -246,7 +257,8 @@ class EnvCore:
 
     def _dispatch(self, ep: _Episode, name: str, args: dict) -> Any:
         if name == "list_records":
-            return self._list_records(ep, args.get("table"), args.get("cursor"), args.get("limit", PAGE_LIMIT))
+            limit = args.get("limit")
+            return self._list_records(ep, args.get("table"), args.get("cursor"), PAGE_LIMIT if limit is None else limit)
         if name == "get_record":
             return self._get_record(ep, args["table"], args["id"])
         if name == "get_document":
@@ -287,6 +299,8 @@ class EnvCore:
         if not isinstance(rid, str) or not rid:
             raise ActionError("invalid_argument", "id must be a non-empty string")
         record = ep.data.by_id[table].get(rid)
+        if record is None and table == "fx":  # ключ курса в записи жюри <date>:<source>:<target>
+            record = ep.data.by_id[table].get(canonical_record_id(rid))
         if record is None:
             raise ActionError("not_found")
         return record

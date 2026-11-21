@@ -69,11 +69,12 @@ MATCHING = (
 ACTIONS_HELP = {
     "list_records": {"args": {"table": "ledger | invoices | payments | fx",
                               "cursor": "null for the first page, then next_cursor from the previous page",
-                              "limit": f"1..{PAGE_LIMIT} (larger values are reduced to {PAGE_LIMIT})"},
+                              "limit": f"1..{PAGE_LIMIT} or null (null and larger values mean {PAGE_LIMIT})"},
                      "result": "{records: [record], next_cursor: null | string}",
                      "example": {"name": "list_records", "args": {"table": "ledger", "cursor": None, "limit": PAGE_LIMIT}}},
     "get_record": {"args": {"table": "ledger | invoices | payments | fx",
-                            "id": "row_id | invoice_id | payment_id | fx_id (FX:<source>:<target>:<date>)"},
+                            "id": "row_id | invoice_id | payment_id | fx_id (FX:<source>:<target>:<date>; "
+                                  "<date>:<source>:<target> finds the same rate)"},
                    "result": "the record object",
                    "example": {"name": "get_record", "args": {"table": "fx", "id": "FX:USD:KZT:2026-03-02"}}},
     "get_document": {"args": {"doc_id": "doc_id of an invoice or a payment"},
@@ -83,7 +84,8 @@ ACTIONS_HELP = {
                    "result": "a decimal string, e.g. \"0.3\" for 0.1+0.2",
                    "example": {"name": "calculator", "args": {"expression": "round_half_up(23208 * 516.3571)"}}},
     "submit": {"args": {"findings": "{episode_id, findings: [{type, affected_ids, claimed_amount_minor, currency, evidence_ids, explanation}]}"},
-               "result": "{accepted: true}; the episode ends (terminated=true)",
+               "result": "{accepted: true}, or result null with error invalid_submission if the findings object "
+                         "does not follow the format; the episode ends either way (terminated=true)",
                "example": {"name": "submit", "args": {"findings": {"episode_id": "<manifest.episode_id>", "findings": []}}}},
 }
 ACTION_FORMAT = ("An action is {\"name\": <action>, \"args\": {...}}; the flat form {\"action\": <action>, ...args} is "

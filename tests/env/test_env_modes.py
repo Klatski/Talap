@@ -69,7 +69,8 @@ class ModeTests(unittest.TestCase):
             with self.subTest(action=bad):
                 env.reset(seed=0, config=STUB)
                 obs, r, term, trunc, info = env.step(bad)
-                self.assertEqual((r, term, obs["result"]), (-1.0, True, {"accepted": True}))
+                self.assertEqual((r, term, obs["result"]), (-1.0, True, None))
+                self.assertEqual(obs["error"]["code"], "invalid_submission")  # ограниченная ошибка структуры
                 self.assertFalse(info["valid"])
         # аргументы сверх findings не входят в формат и игнорируются
         for extra in ({"action": "submit", "findings": oracle_findings(self.truth), "bonus": 1},

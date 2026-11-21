@@ -6,6 +6,10 @@
 
 from __future__ import annotations
 
+import os
+import sys
+import tempfile
+
 ENV_VERSION = "1.0.0"
 CONTRACT_VERSION = "1.0"
 
@@ -63,6 +67,7 @@ ERRORS: dict[str, str] = {
     "not_reset": "No active episode. Call reset() first.",
     "internal_error": "The environment could not process this action; the step was used.",
     "grader_unavailable": "The episode has ended, but the grader could not record the result.",
+    "invalid_submission": "The submission does not follow the findings format (see detail). The episode is over.",
 }
 
 # Детали калькулятора — тоже фиксированный набор.
@@ -85,3 +90,11 @@ CALC_DETAILS = {
 }
 
 END_REASONS = ("submit", "step_limit", "time_limit", "abandoned")
+
+
+def default_grader_log() -> str:
+    """Журнал оценщика по умолчанию (если не задан AUDIT_GRADER_LOG): вне репозитория и каталогов эпизодов —
+    личный каталог во временной папке системы (права 0700, файл 0600), чтобы разбор по выводам не лежал рядом
+    с кодом политики. Путь виден обвязке как env.grader_log (judge_adapter.make_env)."""
+    owner = f"-{os.getuid()}" if hasattr(os, "getuid") and sys.platform != "win32" else ""
+    return os.path.join(tempfile.gettempdir(), f"talaps-grader-log{owner}", "grader_log_judge.jsonl")
