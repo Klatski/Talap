@@ -3,7 +3,7 @@
   "checks_after_injection": {
     "entries_balanced": 620,
     "ledger_debit_equals_credit": true,
-    "ledger_rows": 1345,
+    "ledger_rows": 1347,
     "status": "passed"
   },
   "checks_before_injection": {
@@ -198,6 +198,16 @@
       "lag_minutes": 2325
     },
     {
+      "doc": "INV-7AEQE2K",
+      "kind": "posting_lag",
+      "lag_minutes": -3395
+    },
+    {
+      "doc": "INV-9VS46MT",
+      "kind": "posting_lag",
+      "lag_minutes": -972
+    },
+    {
       "doc": "INV-BYQ6ZG5",
       "kind": "posting_lag",
       "lag_minutes": 397
@@ -221,6 +231,11 @@
       "doc": "INV-GTJ4G3G",
       "kind": "posting_lag",
       "lag_minutes": 992
+    },
+    {
+      "doc": "INV-KBTG6F6",
+      "kind": "posting_lag",
+      "lag_minutes": -3421
     },
     {
       "doc": "INV-KCVPYBV",
@@ -273,6 +288,21 @@
       "lag_minutes": 3465
     },
     {
+      "doc": "PAY-G26KV5H",
+      "kind": "posting_lag",
+      "lag_minutes": -1109
+    },
+    {
+      "doc": "PAY-JK7C953",
+      "kind": "posting_lag",
+      "lag_minutes": -809
+    },
+    {
+      "doc": "PAY-MDX6MCV",
+      "kind": "posting_lag",
+      "lag_minutes": -1825
+    },
+    {
       "doc": "PAY-MZENKT2",
       "kind": "posting_lag",
       "lag_minutes": 2356
@@ -281,6 +311,11 @@
       "doc": "PAY-PFY5QKN",
       "kind": "posting_lag",
       "lag_minutes": 3348
+    },
+    {
+      "doc": "PAY-UBTSJ2B",
+      "kind": "posting_lag",
+      "lag_minutes": -3024
     },
     {
       "doc": "PAY-Z9GM4HV",
@@ -370,25 +405,25 @@
     },
     {
       "affected_doc_ids": [
-        "D-S8KRG9M6",
+        "D-HCA6XAYM",
         "D-XW3PHNPQ"
       ],
       "affected_ids": [
-        "INV-4NFHJ6Y",
-        "INV-EYJ9YKX"
+        "INV-EYJ9YKX",
+        "INV-TG95T9V"
       ],
       "after": {
         "documents_for_order_lines": 2,
         "duplicate": "INV-EYJ9YKX",
-        "original": "INV-4NFHJ6Y"
+        "original": "INV-TG95T9V"
       },
       "before": {
         "documents_for_order_lines": 1
       },
       "cause": "счёт повторно введён (те же клиент, время, заказ и строки) и проведён второй раз",
-      "currency": "GBP",
-      "expected_amount_minor": 1274415,
-      "issue_id": "ISS-58QRAHN5",
+      "currency": "KWD",
+      "expected_amount_minor": 1440000,
+      "issue_id": "ISS-EH3K25D4",
       "scenario": null,
       "scenario_group": null,
       "type": "duplicate_invoice",
@@ -452,21 +487,21 @@
         "PAY-G8T4ABT"
       ],
       "after": {
-        "allocated_minor": 0,
-        "unapplied_minor": 5730449
+        "allocated_minor": 4833007,
+        "unapplied_minor": 897442
       },
       "before": {
         "allocated_minor": 5730449,
         "unapplied_minor": 0
       },
-      "cause": "платёж не разнесён на указанный в invoice_refs счёт, сумма осталась на 2300",
+      "cause": "платёж разнесён на счёт частично, остаток осел на 2300",
       "currency": "GBP",
-      "expected_amount_minor": 1445792,
+      "expected_amount_minor": 226425,
       "issue_id": "ISS-2DK2PQEZ",
       "scenario": "fx_partial_boundary_payment",
       "scenario_group": "SCN-C8K7FC",
       "type": "unapplied_payment",
-      "variant": "missing_allocation"
+      "variant": "partial_allocation"
     }
   ],
   "params": {

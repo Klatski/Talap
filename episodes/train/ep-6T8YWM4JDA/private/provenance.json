@@ -170,6 +170,11 @@
       "lag_minutes": 1273
     },
     {
+      "doc": "INV-7Z5QZ58",
+      "kind": "posting_lag",
+      "lag_minutes": -2509
+    },
+    {
       "doc": "INV-892HKJM",
       "kind": "posting_lag",
       "lag_minutes": 1658
@@ -178,6 +183,11 @@
       "doc": "INV-AEHTNZ2",
       "kind": "posting_lag",
       "lag_minutes": 3225
+    },
+    {
+      "doc": "INV-CBF79RE",
+      "kind": "posting_lag",
+      "lag_minutes": -2051
     },
     {
       "doc": "INV-E9AAPG6",
@@ -225,9 +235,19 @@
       "lag_minutes": 727
     },
     {
+      "doc": "INV-W9DBMBS",
+      "kind": "posting_lag",
+      "lag_minutes": -2252
+    },
+    {
       "doc": "INV-WE94VNG",
       "kind": "posting_lag",
       "lag_minutes": 3592
+    },
+    {
+      "doc": "INV-WWM6Q99",
+      "kind": "posting_lag",
+      "lag_minutes": -1972
     },
     {
       "doc": "INV-XZA3HP4",
@@ -238,6 +258,26 @@
       "doc": "INV-Y2NNKDA",
       "kind": "posting_lag",
       "lag_minutes": 504
+    },
+    {
+      "doc": "PAY-32DB7W3",
+      "kind": "posting_lag",
+      "lag_minutes": -3106
+    },
+    {
+      "doc": "PAY-3MKXBPE",
+      "kind": "posting_lag",
+      "lag_minutes": -2530
+    },
+    {
+      "doc": "PAY-54VNEHQ",
+      "kind": "posting_lag",
+      "lag_minutes": -2564
+    },
+    {
+      "doc": "PAY-5EMKWXT",
+      "kind": "posting_lag",
+      "lag_minutes": -3363
     },
     {
       "doc": "PAY-6A3FSER",
@@ -263,6 +303,11 @@
       "doc": "PAY-Q92YAQK",
       "kind": "posting_lag",
       "lag_minutes": 2368
+    },
+    {
+      "doc": "PAY-RN29XYW",
+      "kind": "posting_lag",
+      "lag_minutes": -98
     },
     {
       "doc": "PAY-V9WR6DE",

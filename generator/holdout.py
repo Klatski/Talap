@@ -36,6 +36,7 @@ from .config import (
     SCENARIO_TYPES,
     SIZE_PROFILES,
     SUPPORTED_BASE,
+    VARIANTS,
     config_digest,
     normalize_config,
 )
@@ -219,6 +220,20 @@ def build_holdout(salt: str, n: int = 20, out: str | Path | None = None) -> dict
     return report
 
 
+def _with_random_variants(cfg: dict[str, Any], rng: random.Random) -> dict[str, Any]:
+    """Половине стресс-конфигов — заказанные варианты ошибок (config.variants): строка или весь список.
+    Отдельный rng: конфиги и эпизоды holdout от этого не меняются."""
+    if rng.random() < 0.5:
+        return cfg
+    variants: dict[str, Any] = {}
+    for t in ERROR_TYPES:
+        count = cfg["errors"][t]
+        if (count if isinstance(count, int) else count[1]) and rng.random() < 0.7:
+            names = [n for n in VARIANTS[t] if n not in ("document_offset_date", "utc_date")]  # редкие: не всегда есть
+            variants[t] = rng.choice(names) if rng.random() < 0.5 else names
+    return normalize_config({**cfg, "variants": variants}) if variants else cfg
+
+
 def stress(n: int, salt: str = "stress") -> dict[str, Any]:
     """n случайных конфигов (все виды) в памяти: сколько эпизодов не прошли проверки, худшее время."""
     rng = random.Random(f"stress-configs|{salt}")
@@ -226,6 +241,7 @@ def stress(n: int, salt: str = "stress") -> dict[str, Any]:
     for i in range(n):
         kind = KINDS[i % len(KINDS)]
         cfg = sample_config(rng, kind, f"stress_{i}")
+        cfg = _with_random_variants(cfg, random.Random(f"stress-variants|{salt}|{i}"))
         seed = _seed_from(salt, i)
         t0 = time.perf_counter()
         try:

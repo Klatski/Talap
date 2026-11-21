@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-AHTQZBU"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -27,7 +27,7 @@
       "affected_ids": [
         "INV-FTTBK8N"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -49,7 +49,7 @@
       "affected_ids": [
         "INV-S5P54NF"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -72,7 +72,7 @@
         "INV-7AYB5DZ",
         "INV-AKCNSEJ"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -139,7 +139,7 @@
         "INV-4F76SEP",
         "PAY-VBW89NT"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [

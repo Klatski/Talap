@@ -175,6 +175,11 @@
       "lag_minutes": 1567
     },
     {
+      "doc": "INV-BQUJCZP",
+      "kind": "posting_lag",
+      "lag_minutes": -2700
+    },
+    {
       "doc": "INV-F9EME3V",
       "kind": "posting_lag",
       "lag_minutes": 3952
@@ -188,6 +193,16 @@
       "doc": "INV-RNYQ8ZA",
       "kind": "posting_lag",
       "lag_minutes": 3652
+    },
+    {
+      "doc": "INV-TG52ZM5",
+      "kind": "posting_lag",
+      "lag_minutes": -1634
+    },
+    {
+      "doc": "INV-UQFU6PG",
+      "kind": "posting_lag",
+      "lag_minutes": -2588
     },
     {
       "doc": "INV-VNGB9ZJ",
@@ -337,7 +352,7 @@
         "INV-WDU5MFS"
       ],
       "after": {
-        "ledger_timestamp_variant": "same_instant",
+        "ledger_timestamp_variant": "entered_in_period",
         "posted_in_period": true
       },
       "before": {
@@ -351,7 +366,7 @@
       "scenario": null,
       "scenario_group": null,
       "type": "cutoff_error",
-      "variant": "same_instant"
+      "variant": "entered_in_period"
     },
     {
       "affected_doc_ids": [

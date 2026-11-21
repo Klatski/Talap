@@ -691,7 +691,7 @@ class History:
         if have < need:
             raise GenerationShortfall("not enough payments for unapplied_payment errors")
 
-    def default_postings(self, rng: random.Random) -> None:
+    def default_postings(self, rng: random.Random, aux: random.Random | None = None) -> None:
         lag_on = self.p.distractors["posting_lag"]
         latest = self.end - timedelta(minutes=1)
         for doc in [*self.invoices.values(), *self.payments.values()]:
@@ -704,6 +704,24 @@ class History:
                     ts = ts + lag
                     self.distractors.append({"kind": "posting_lag", "doc": doc.key, "lag_minutes": int(lag.total_seconds() // 60)})
             doc.posting = PostingSpec(posted=posted, ts=ts if posted else None, offset=offset)
+        if lag_on and aux is not None:
+            self.early_postings(aux)
+
+    def early_postings(self, rng: random.Random) -> None:
+        """Корректный отвлекающий случай: проводка введена РАНЬШЕ метки времени документа (документ
+        датирован временем отправки/зачисления, проводка — временем ввода) в том же периоде. Без него
+        «проводка раньше документа» встречалась бы только у ошибок cut-off (документ следующего периода,
+        проведённый в текущем). Отдельный поток rng: прочие проводки истории не меняются."""
+        floor = self.start + timedelta(minutes=1)
+        for doc in [*self.invoices.values(), *self.payments.values()]:
+            spec = doc.posting
+            if not spec.posted or spec.ts != doc.ts or "boundary" in doc.tags or rng.random() >= 0.12:
+                continue
+            lead = timedelta(minutes=rng.randint(20, 3 * 24 * 60), seconds=rng.randint(0, 59))
+            if doc.ts - lead >= floor:
+                spec.ts = doc.ts - lead
+                doc.tags.add("posted_early")
+                self.distractors.append({"kind": "posting_lag", "doc": doc.key, "lag_minutes": -int(lead.total_seconds() // 60)})
 
     # ------------------------------------------------------------------ проводки
     def invoice_rate(self, inv: Invoice) -> Decimal:
@@ -815,7 +833,7 @@ class History:
         return [*self.entries, *self.expense_entries]
 
 
-def build_history(p: Params, rng: random.Random) -> History:
+def build_history(p: Params, rng: random.Random, aux: random.Random | None = None) -> History:
     h = History(p)
     h.build_fx(rng)
     h.build_entities(rng)
@@ -824,5 +842,5 @@ def build_history(p: Params, rng: random.Random) -> History:
     h.build_boundary_docs(rng)
     h.plan_payments(rng)
     h.ensure_supply(rng)
-    h.default_postings(rng)
+    h.default_postings(rng, aux)
     return h

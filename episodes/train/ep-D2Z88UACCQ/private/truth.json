@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-28RN6TQ"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KWD",
       "evidence_sets": [
         [
@@ -25,19 +25,19 @@
     },
     {
       "affected_ids": [
-        "INV-4NFHJ6Y",
-        "INV-EYJ9YKX"
+        "INV-EYJ9YKX",
+        "INV-TG95T9V"
       ],
-      "amount_tolerance_minor": 1,
-      "currency": "GBP",
+      "amount_tolerance_minor": 0,
+      "currency": "KWD",
       "evidence_sets": [
         [
-          "D-S8KRG9M6",
+          "D-HCA6XAYM",
           "D-XW3PHNPQ"
         ]
       ],
-      "expected_amount_minor": 1274415,
-      "issue_id": "ISS-58QRAHN5",
+      "expected_amount_minor": 1440000,
+      "issue_id": "ISS-EH3K25D4",
       "scenario": null,
       "scenario_group": null,
       "type": "duplicate_invoice"
@@ -90,7 +90,7 @@
         "INV-X7V3NDS",
         "PAY-G8T4ABT"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -98,7 +98,7 @@
           "L-BSR96DW2"
         ]
       ],
-      "expected_amount_minor": 1445792,
+      "expected_amount_minor": 226425,
       "issue_id": "ISS-2DK2PQEZ",
       "scenario": "fx_partial_boundary_payment",
       "scenario_group": "SCN-C8K7FC",

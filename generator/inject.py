@@ -6,6 +6,15 @@
 
 Сумма каждой ошибки вычисляется ПОСЛЕ перестроения проводок (finalize_issues) из
 фактических строк книги — один источник правды для эталона.
+
+Проводка ошибки всегда датирована внутри периода (invariants.check_after): документ соседнего
+периода «попадает в книгу» текущего, а не в книгу с чужими датами. Поэтому cut-off не виден по одной
+книге — нужен сам документ (его дата) — и «проводка раньше документа» встречается и у корректных
+документов (history.early_postings).
+
+Вариант ошибки можно заказать (config.variants, Params.variant_for); без заказа он случайный.
+Новая случайность (время проводки «entered_in_period») берётся из отдельного потока aux, поэтому
+эпизоды без этих вариантов совпадают с прежними побайтово.
 """
 
 from __future__ import annotations
@@ -42,9 +51,10 @@ def _doc_amount(doc: Invoice | Payment) -> int:
 
 
 class Injector:
-    def __init__(self, h: History, rng: random.Random) -> None:
+    def __init__(self, h: History, rng: random.Random, aux: random.Random | None = None) -> None:
         self.h = h
         self.rng = rng
+        self.aux = aux if aux is not None else random.Random("inject-aux")
         self.used: set[str] = set()
         self.issues: list[IssueSpec] = []
         self._group = 0
@@ -137,7 +147,7 @@ class Injector:
             )
         )
 
-    def fx(self) -> None:
+    def fx(self, variant: str | None = None) -> None:
         h = self.h
         cands: list[Invoice | Payment] = [
             inv
@@ -154,26 +164,41 @@ class Injector:
         self.rng.shuffle(cands)
         for doc in cands:
             options = self.fx_options(doc)
+            if variant is not None:
+                options = [o for o in options if o[0] == variant]
             if options:
                 self._apply_fx(doc, self.rng.choice(options))
                 self.take(doc.key)
                 return
-        raise GenerationShortfall("no candidate for fx_rate_error")
+        raise GenerationShortfall(f"no candidate for fx_rate_error{f' ({variant})' if variant else ''}")
 
     # ------------------------------------------------------------------ разнесение
-    def _apply_shortfall(self, pay: Payment, scenario=None, group=None) -> bool:
+    def _apply_shortfall(self, pay: Payment, scenario=None, group=None, variant: str | None = None) -> bool:
+        """variant: None — случайно (45% полный пропуск), "missing_allocation" — счёт не получил ничего,
+        "partial_allocation" — счёт получил часть (15–85%), остаток на 2300. False — у этого платежа
+        заказанный вариант невозможен (слишком малая сумма), вызывающий берёт другого кандидата."""
         h = self.h
         rng = self.rng
         k = rng.randrange(len(pay.allocations))
         alloc = pay.allocations[k]
         a = alloc.amount_minor
-        full = a < 50 or rng.random() < 0.45
+        if variant is None:
+            full = a < 50 or rng.random() < 0.45
+        elif variant == "missing_allocation":
+            full = True
+        else:
+            if a < 50:
+                return False
+            rng.random()  # тот же расход случайности, что у случайного выбора: прежние частичные случаи те же
+            full = False
         u = a if full else rng.randint(max(1, a * 15 // 100), max(1, a * 85 // 100))
         rate_p = pay.posting.rate_override[1] if pay.posting.rate_override else h.policy_rate(pay.currency, pay.ts)[1]
         inv_rate = h.invoice_rate(h.invoices[alloc.invoice])
         if h.conv(u, pay.currency, rate_p) < 10 or (
             not full and h.conv(a - u, pay.currency, inv_rate) >= h.conv(a, pay.currency, inv_rate)
         ):
+            if variant == "partial_allocation":
+                return False
             u, full = a, True
             if h.conv(u, pay.currency, rate_p) < 10:
                 return False
@@ -200,7 +225,7 @@ class Injector:
         )
         return True
 
-    def unapplied(self) -> None:
+    def unapplied(self, variant: str | None = None) -> None:
         h = self.h
         cands = [
             pay
@@ -211,9 +236,9 @@ class Injector:
         ]
         self.rng.shuffle(cands)
         for pay in cands:
-            if self._apply_shortfall(pay):
+            if self._apply_shortfall(pay, variant=variant):
                 return
-        raise GenerationShortfall("no candidate for unapplied_payment")
+        raise GenerationShortfall(f"no candidate for unapplied_payment{f' ({variant})' if variant else ''}")
 
     # ------------------------------------------------------------------ дубль
     def duplicate(self) -> None:
@@ -260,15 +285,28 @@ class Injector:
 
     # ------------------------------------------------------------------ период
     def _post_out_of_period(self, doc: Invoice | Payment, variant: str, offset: int | None = None) -> None:
+        """Провести документ соседнего периода в текущем. Момент проводки всегда внутри периода:
+        shifted_into_period — у самой границы (до 6 ч до конца / 12 ч после начала);
+        entered_in_period — в любой момент последних 7 дней (документ следующего периода, «задним
+        числом») или первых 10 дней (документ прошлого периода, введён с опозданием);
+        document_offset_misread — цифры времени документа в ЕГО смещении прочитаны как время компании."""
         h = self.h
         rng = self.rng
         side = h.period_of(doc.ts)
-        if variant == "same_instant":
-            ts = doc.ts
+        if variant == "entered_in_period":
+            if side == "next":
+                lo, hi = max(h.start, h.end - timedelta(days=7)), h.end - timedelta(minutes=1)
+            else:
+                lo, hi = h.start + timedelta(minutes=1), min(h.end - timedelta(minutes=1), h.start + timedelta(days=10))
+            ts = h.random_instant(self.aux, lo, hi)
+        elif variant == "document_offset_misread":
+            ts = doc.ts + timedelta(minutes=doc.offset - h.offset)
         elif side == "next":
             ts = h.end - timedelta(minutes=rng.randint(1, 360), seconds=rng.randint(0, 59))
         else:
             ts = h.start + timedelta(minutes=rng.randint(1, 720), seconds=rng.randint(0, 59))
+        if not h.start <= ts < h.end:
+            raise AssertionError(f"cutoff posting of {doc.key} outside the period ({variant})")
         doc.posting = PostingSpec(posted=True, ts=ts, offset=h.ledger_offset(rng) if offset is None else offset)
 
     def _cutoff_issue(self, doc: Invoice | Payment, variant: str, scenario=None, group=None) -> None:
@@ -293,7 +331,7 @@ class Injector:
             )
         )
 
-    def cutoff(self) -> None:
+    def cutoff(self, variant: str | None = None) -> None:
         h = self.h
         rng = self.rng
         pool: list[Invoice | Payment] = [
@@ -313,7 +351,8 @@ class Injector:
         if not pool:
             raise GenerationShortfall("no candidate for cutoff_error")
         doc = rng.choice(pool)
-        variant = rng.choice(["same_instant", "shifted_into_period"])
+        chosen = rng.choice(["entered_in_period", "shifted_into_period"])
+        variant = variant or chosen
         self._post_out_of_period(doc, variant)
         self.take(doc.key)
         self._cutoff_issue(doc, variant)
@@ -337,7 +376,8 @@ class Injector:
                 continue
             group = self.next_group()
             self._apply_fx(pay, option, name, group)
-            if not self._apply_shortfall(pay, name, group):
+            # сценарий — именно частичное разнесение (полный пропуск был бы просто unapplied + курс)
+            if not self._apply_shortfall(pay, name, group, variant="partial_allocation"):
                 pay.posting.rate_override = None
                 self.issues.pop()
                 continue
@@ -356,8 +396,9 @@ class Injector:
             if option is None:
                 continue
             group = self.next_group()
-            # бухгалтер переписал время документа как есть (в его смещении)
-            self._post_out_of_period(inv, "same_instant", offset=inv.offset)
+            # бухгалтер переписал цифры времени документа (в его смещении) как время компании:
+            # проводка внутри периода, в поясе компании, а сам документ — соседнего периода
+            self._post_out_of_period(inv, "document_offset_misread", offset=h.offset)
             self._cutoff_issue(inv, "document_offset_misread", name, group)
             self._apply_fx(inv, option, name, group)
             self.take(inv.key)
@@ -375,21 +416,21 @@ def _scenario_option(options: list[tuple[str, date, Decimal]]):
     return None
 
 
-def inject_all(h: History, rng: random.Random) -> list[IssueSpec]:
-    inj = Injector(h, rng)
+def inject_all(h: History, rng: random.Random, aux: random.Random | None = None) -> list[IssueSpec]:
+    inj = Injector(h, rng, aux)
     p = h.p
     for _ in range(p.scenarios["fx_partial_boundary_payment"]):
         inj.scenario_fx_partial()
     for _ in range(p.scenarios["cutoff_fx_boundary_invoice"]):
         inj.scenario_cutoff_fx()
-    for _ in range(p.errors["cutoff_error"]):
-        inj.cutoff()
+    for i in range(p.errors["cutoff_error"]):
+        inj.cutoff(p.variant_for("cutoff_error", i))
     for _ in range(p.errors["duplicate_invoice"]):
-        inj.duplicate()
-    for _ in range(p.errors["unapplied_payment"]):
-        inj.unapplied()
-    for _ in range(p.errors["fx_rate_error"]):
-        inj.fx()
+        inj.duplicate()  # единственный вариант reentered_document
+    for i in range(p.errors["unapplied_payment"]):
+        inj.unapplied(p.variant_for("unapplied_payment", i))
+    for i in range(p.errors["fx_rate_error"]):
+        inj.fx(p.variant_for("fx_rate_error", i))
     return inj.issues
 
 

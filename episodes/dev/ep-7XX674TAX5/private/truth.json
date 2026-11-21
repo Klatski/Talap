@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-KDPKTEN"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "TRY",
       "evidence_sets": [
         [
@@ -28,7 +28,7 @@
         "INV-2QJ2VXF",
         "INV-38CY2ZS"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "TRY",
       "evidence_sets": [
         [
@@ -90,7 +90,7 @@
         "INV-5WZCZU5",
         "PAY-4E5F37Z"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [

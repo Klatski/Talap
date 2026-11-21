@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-WDU5MFS"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "CNY",
       "evidence_sets": [
         [
@@ -28,7 +28,7 @@
         "INV-DU77SHG",
         "INV-GXWB8FM"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -66,7 +66,7 @@
         "INV-N78SMH3",
         "PAY-UQPYVVV"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [

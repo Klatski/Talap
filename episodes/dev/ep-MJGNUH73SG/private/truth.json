@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-8RXX2JM"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "RUB",
       "evidence_sets": [
         [
@@ -76,7 +76,7 @@
         "INV-H9BNZFZ",
         "PAY-SPA4RRR"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [

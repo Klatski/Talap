@@ -143,6 +143,11 @@
       "lag_minutes": 992
     },
     {
+      "doc": "INV-RVTXAA8",
+      "kind": "posting_lag",
+      "lag_minutes": -1471
+    },
+    {
       "doc": "INV-VCDBHXS",
       "kind": "posting_lag",
       "lag_minutes": 839
@@ -151,6 +156,16 @@
       "doc": "INV-VXCZTCX",
       "kind": "posting_lag",
       "lag_minutes": 3771
+    },
+    {
+      "doc": "INV-Z6PQCM4",
+      "kind": "posting_lag",
+      "lag_minutes": -2312
+    },
+    {
+      "doc": "PAY-CPPV3GW",
+      "kind": "posting_lag",
+      "lag_minutes": -3729
     },
     {
       "doc": "PAY-RG329WS",

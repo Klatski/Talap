@@ -79,12 +79,12 @@ def generate_episode(seed: int | str, config: dict[str, Any], salt: str = "") ->
         order_material = f"{material}|order"
         try:
             params = resolve_params(cfg, stream("params"))
-            h = build_history(params, stream("history"))
+            h = build_history(params, stream("history"), stream("history_aux"))
             h.build_doc_entries()
             h.pad_expenses(stream("expenses"))
             checks_before = check_clean(h)
             clean = render(h, [], id_material, order_material, {})
-            issues = inject_all(h, stream("inject"))
+            issues = inject_all(h, stream("inject"), stream("inject_aux"))
             h.build_doc_entries()
             finalize_issues(h, issues)
             checks_after = check_after(h)

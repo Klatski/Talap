@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-VGUGUXF"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -71,7 +71,7 @@
         "INV-AHSH7YV",
         "PAY-NBVG9JF"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [

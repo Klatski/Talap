@@ -5,19 +5,19 @@ Values are means over episodes; `micro F1` pools TP/FP/FN over all episodes. `re
 
 | policy | P | R | F1 | micro F1 | return | return_exp | return on clean | steps | time, s (mean / max) | TP | FP | FN | truncated | invalid |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| random | 0.000 | 0.000 | 0.100 | 0.000 | -0.814 | -0.904 | -0.257 | 36.6 | 0.184 / 0.285 | 0 | 47 | 94 | 1 | 1 |
-| reconcile | 0.154 | 0.452 | 0.223 | 0.226 | -0.584 | -0.584 | -1.000 | 19.9 | 0.180 / 0.349 | 55 | 337 | 39 | 0 | 0 |
-| flag_all | 0.000 | 0.000 | 0.000 | 0.000 | -1.000 | -1.000 | -1.000 | 3.7 | 0.090 / 0.220 | 0 | 600 | 94 | 0 | 0 |
-| oracle | 0.750 | 0.750 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.0 | 0.073 / 0.364 | 94 | 0 | 0 | 0 | 0 |
-| auditor | 0.750 | 0.750 | 1.000 | 1.000 | 0.962 | 0.962 | 0.972 | 19.9 | 0.170 / 0.333 | 94 | 0 | 0 | 0 | 0 |
+| random | 0.000 | 0.000 | 0.100 | 0.000 | -0.814 | -0.904 | -0.257 | 36.6 | 0.118 / 0.194 | 0 | 47 | 94 | 1 | 1 |
+| reconcile | 0.154 | 0.452 | 0.223 | 0.226 | -0.584 | -0.584 | -1.000 | 19.9 | 0.134 / 0.253 | 55 | 337 | 39 | 0 | 0 |
+| flag_all | 0.000 | 0.000 | 0.000 | 0.000 | -1.000 | -1.000 | -1.000 | 3.7 | 0.072 / 0.165 | 0 | 600 | 94 | 0 | 0 |
+| oracle | 0.750 | 0.750 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.0 | 0.059 / 0.254 | 94 | 0 | 0 | 0 | 0 |
+| auditor | 0.750 | 0.750 | 1.000 | 1.000 | 0.962 | 0.962 | 0.972 | 19.9 | 0.135 / 0.253 | 94 | 0 | 0 | 0 | 0 |
 
 ## Failure analysis (measured)
 
 | policy | FP reasons | FP on correct distractors | FN by type |
 |---|---|---|---|
-| random | no_such_issue: 46, wrong_type+currency+amount+evidence: 1 | batch_payment: 1, boundary_document: 1, on_account_payment: 1, overpayment: 3, partial_payment: 8, partial_shipments: 1, posting_lag: 5, recurring_invoices: 4, split_payments: 4 | cutoff_error: 23, duplicate_invoice: 13, fx_rate_error: 25, unapplied_payment: 22 |
-| reconcile | no_such_issue: 321, wrong_affected_ids+evidence: 4, wrong_amount+evidence: 7, wrong_type+currency+amount: 1, wrong_type+currency+amount+evidence: 4 | batch_payment: 2, boundary_document: 90, on_account_payment: 2, overpayment: 11, partial_payment: 18, partial_shipments: 11, posting_lag: 49, recurring_invoices: 76, split_payments: 15 | cutoff_error: 7, fx_rate_error: 21, unapplied_payment: 11 |
-| flag_all | no_such_issue: 582, wrong_affected_ids+amount+evidence: 1, wrong_amount+evidence: 1, wrong_currency+amount+evidence: 2, wrong_evidence: 4, wrong_type+currency+amount+evidence: 2, wrong_type+evidence: 8 | batch_payment: 14, boundary_document: 26, on_account_payment: 2, overpayment: 18, partial_payment: 57, partial_shipments: 2, posting_lag: 22, recurring_invoices: 10, split_payments: 55 | cutoff_error: 26, duplicate_invoice: 15, fx_rate_error: 29, unapplied_payment: 24 |
+| random | no_such_issue: 46, wrong_type+currency+amount+evidence: 1 | batch_payment: 1, boundary_document: 1, on_account_payment: 1, overpayment: 3, partial_payment: 8, partial_shipments: 1, posting_lag: 7, recurring_invoices: 4, split_payments: 4 | cutoff_error: 23, duplicate_invoice: 13, fx_rate_error: 25, unapplied_payment: 22 |
+| reconcile | no_such_issue: 323, wrong_affected_ids+evidence: 2, wrong_amount+evidence: 7, wrong_type+currency+amount: 1, wrong_type+currency+amount+evidence: 4 | batch_payment: 2, boundary_document: 90, on_account_payment: 2, overpayment: 11, partial_payment: 18, partial_shipments: 11, posting_lag: 69, recurring_invoices: 76, split_payments: 15 | cutoff_error: 7, fx_rate_error: 21, unapplied_payment: 11 |
+| flag_all | no_such_issue: 583, wrong_affected_ids+evidence: 2, wrong_amount+evidence: 1, wrong_currency+amount+evidence: 2, wrong_evidence: 4, wrong_type+currency+amount+evidence: 2, wrong_type+evidence: 6 | batch_payment: 14, boundary_document: 26, on_account_payment: 2, overpayment: 18, partial_payment: 57, partial_shipments: 2, posting_lag: 24, recurring_invoices: 10, split_payments: 55 | cutoff_error: 26, duplicate_invoice: 15, fx_rate_error: 29, unapplied_payment: 24 |
 | oracle | - | - | - |
 | auditor | - | - | - |
 

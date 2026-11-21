@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-F532PUS"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "AED",
       "evidence_sets": [
         [
@@ -27,7 +27,7 @@
       "affected_ids": [
         "INV-M5THTH7"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -49,7 +49,7 @@
       "affected_ids": [
         "PAY-E285PPT"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -72,7 +72,7 @@
         "INV-FDNWU36",
         "INV-VXZXYHB"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -91,7 +91,7 @@
         "INV-VA3FZ32",
         "INV-YSANNKP"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "AED",
       "evidence_sets": [
         [
@@ -201,7 +201,7 @@
         "INV-4JPCF4R",
         "PAY-2U2KAFC"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -220,7 +220,7 @@
         "INV-ENVHCAG",
         "PAY-6JCX9SC"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -239,7 +239,7 @@
         "INV-JQ9M5YU",
         "PAY-ZJV95TU"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [

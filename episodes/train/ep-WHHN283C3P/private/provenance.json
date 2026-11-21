@@ -184,6 +184,11 @@
       "lag_minutes": 874
     },
     {
+      "doc": "INV-9Z22YPZ",
+      "kind": "posting_lag",
+      "lag_minutes": -1833
+    },
+    {
       "doc": "INV-AAFPMMY",
       "kind": "posting_lag",
       "lag_minutes": 467
@@ -194,6 +199,11 @@
       "lag_minutes": 1311
     },
     {
+      "doc": "INV-GG64HBF",
+      "kind": "posting_lag",
+      "lag_minutes": -393
+    },
+    {
       "doc": "INV-H333PP8",
       "kind": "posting_lag",
       "lag_minutes": 1912
@@ -202,6 +212,16 @@
       "doc": "INV-KE6BJXD",
       "kind": "posting_lag",
       "lag_minutes": 3164
+    },
+    {
+      "doc": "INV-KWMBKJ8",
+      "kind": "posting_lag",
+      "lag_minutes": -2649
+    },
+    {
+      "doc": "INV-VWYF9B7",
+      "kind": "posting_lag",
+      "lag_minutes": -1906
     },
     {
       "doc": "INV-Y2B2ZD9",
@@ -229,6 +249,11 @@
       "lag_minutes": 1895
     },
     {
+      "doc": "PAY-ADZ3G4H",
+      "kind": "posting_lag",
+      "lag_minutes": -3535
+    },
+    {
       "doc": "PAY-CUHNKUH",
       "kind": "posting_lag",
       "lag_minutes": 2911
@@ -242,6 +267,16 @@
       "doc": "PAY-PZ9HZ7X",
       "kind": "posting_lag",
       "lag_minutes": 2637
+    },
+    {
+      "doc": "PAY-T8JA2SP",
+      "kind": "posting_lag",
+      "lag_minutes": -1845
+    },
+    {
+      "doc": "PAY-TVD5G4X",
+      "kind": "posting_lag",
+      "lag_minutes": -3479
     },
     {
       "doc": "PAY-XGXC837",

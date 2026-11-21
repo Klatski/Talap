@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-KMYFCH2"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [
@@ -27,7 +27,7 @@
       "affected_ids": [
         "INV-KVZMP4H"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [
@@ -49,7 +49,7 @@
       "affected_ids": [
         "INV-UM5RTN8"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -72,7 +72,7 @@
         "INV-3GUYFYA",
         "INV-NVJ8B7H"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [
@@ -91,7 +91,7 @@
         "INV-FF9AX4X",
         "INV-MT43D54"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [
@@ -201,7 +201,7 @@
         "INV-AS8XR43",
         "PAY-WJWZSHR"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -220,7 +220,7 @@
         "INV-T33FRQ3",
         "PAY-UWQ7H33"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -239,7 +239,7 @@
         "INV-ZT7JQRD",
         "PAY-JQ3HK43"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [

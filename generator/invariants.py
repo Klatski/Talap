@@ -90,7 +90,7 @@ def check_clean(h: History) -> dict:
             problems.append(f"{doc.key}: posted={spec.posted} but in_period={in_period}")
         if spec.posted:
             posted += 1
-            if not h.start <= spec.ts < h.end or spec.ts < doc.ts:
+            if not h.start <= spec.ts < h.end or (spec.ts < doc.ts and "posted_early" not in doc.tags):
                 problems.append(f"{doc.key}: posting timestamp outside period or before document")
         if spec.rate_override or spec.shortfall:
             problems.append(f"{doc.key}: clean history has an error modifier")
@@ -135,6 +135,9 @@ def check_after(h: History) -> dict:
     for doc in [*h.invoices.values(), *h.payments.values()]:
         if doc.posting.posted and doc.posting.ts is None:
             problems.append(f"{doc.key}: posted without timestamp")
+        elif doc.posting.posted and not h.start <= doc.posting.ts < h.end:
+            # и у ошибок: книга периода не содержит строк с чужими датами (cut-off виден только по документу)
+            problems.append(f"{doc.key}: posting timestamp outside the period")
     if problems:
         raise InvariantError("; ".join(problems[:20]))
     rows = sum(len(e.lines) for e in h.all_entries())

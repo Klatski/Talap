@@ -251,6 +251,114 @@
       },
       "required": [],
       "additionalProperties": false
+    },
+    "variants": {
+      "description": "optional: variant of each error type (string = all errors of the type; list = the i-th error takes list[i % len])",
+      "type": "object",
+      "properties": {
+        "duplicate_invoice": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "reentered_document"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "enum": [
+                  "reentered_document"
+                ]
+              }
+            }
+          ]
+        },
+        "unapplied_payment": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "missing_allocation",
+                "partial_allocation"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "missing_allocation",
+                  "partial_allocation"
+                ]
+              }
+            }
+          ]
+        },
+        "fx_rate_error": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "adjacent_date",
+                "other_rule",
+                "due_date",
+                "document_offset_date",
+                "utc_date"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 5,
+              "items": {
+                "enum": [
+                  "adjacent_date",
+                  "other_rule",
+                  "due_date",
+                  "document_offset_date",
+                  "utc_date"
+                ]
+              }
+            }
+          ]
+        },
+        "cutoff_error": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "shifted_into_period",
+                "entered_in_period"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "shifted_into_period",
+                  "entered_in_period"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
     }
   },
   "required": [],

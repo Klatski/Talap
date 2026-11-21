@@ -193,6 +193,21 @@
       "lag_minutes": 3042
     },
     {
+      "doc": "INV-DGCHAMD",
+      "kind": "posting_lag",
+      "lag_minutes": -4122
+    },
+    {
+      "doc": "INV-G6KUZB7",
+      "kind": "posting_lag",
+      "lag_minutes": -277
+    },
+    {
+      "doc": "INV-HKAM8T5",
+      "kind": "posting_lag",
+      "lag_minutes": -209
+    },
+    {
       "doc": "INV-JFAVHED",
       "kind": "posting_lag",
       "lag_minutes": 743
@@ -213,9 +228,24 @@
       "lag_minutes": 4132
     },
     {
+      "doc": "INV-V9F2K7N",
+      "kind": "posting_lag",
+      "lag_minutes": -3605
+    },
+    {
+      "doc": "INV-Y6UT4YX",
+      "kind": "posting_lag",
+      "lag_minutes": -4217
+    },
+    {
       "doc": "PAY-68VVRHN",
       "kind": "posting_lag",
       "lag_minutes": 561
+    },
+    {
+      "doc": "PAY-7AN6F6C",
+      "kind": "posting_lag",
+      "lag_minutes": -3704
     },
     {
       "doc": "PAY-7AW8P5E",

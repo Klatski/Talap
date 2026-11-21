@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-UHNMFMS"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [
@@ -27,7 +27,7 @@
       "affected_ids": [
         "PAY-RY46ASU"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [

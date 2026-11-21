@@ -3,7 +3,7 @@
   "checks_after_injection": {
     "entries_balanced": 220,
     "ledger_debit_equals_credit": true,
-    "ledger_rows": 481,
+    "ledger_rows": 483,
     "status": "passed"
   },
   "checks_before_injection": {
@@ -181,9 +181,19 @@
       "kind": "partial_shipments"
     },
     {
+      "doc": "INV-5AWSYHM",
+      "kind": "posting_lag",
+      "lag_minutes": -1683
+    },
+    {
       "doc": "INV-7249TXQ",
       "kind": "posting_lag",
       "lag_minutes": 1781
+    },
+    {
+      "doc": "INV-83N3RBN",
+      "kind": "posting_lag",
+      "lag_minutes": -1295
     },
     {
       "doc": "INV-B8DWBSG",
@@ -201,6 +211,11 @@
       "lag_minutes": 2637
     },
     {
+      "doc": "INV-JCWDGJV",
+      "kind": "posting_lag",
+      "lag_minutes": -3179
+    },
+    {
       "doc": "INV-JTBZ7H5",
       "kind": "posting_lag",
       "lag_minutes": 2247
@@ -209,6 +224,21 @@
       "doc": "INV-KXZGNA9",
       "kind": "posting_lag",
       "lag_minutes": 3941
+    },
+    {
+      "doc": "INV-MEDD8GP",
+      "kind": "posting_lag",
+      "lag_minutes": -1290
+    },
+    {
+      "doc": "INV-NB3ET28",
+      "kind": "posting_lag",
+      "lag_minutes": -1573
+    },
+    {
+      "doc": "INV-PFYCFKU",
+      "kind": "posting_lag",
+      "lag_minutes": -1669
     },
     {
       "doc": "INV-Q9BGHJK",
@@ -221,6 +251,16 @@
       "lag_minutes": 1595
     },
     {
+      "doc": "INV-U4RQ3D2",
+      "kind": "posting_lag",
+      "lag_minutes": -1086
+    },
+    {
+      "doc": "INV-V6YR7BE",
+      "kind": "posting_lag",
+      "lag_minutes": -273
+    },
+    {
       "doc": "INV-XQPYUM5",
       "kind": "posting_lag",
       "lag_minutes": 509
@@ -231,9 +271,24 @@
       "lag_minutes": 553
     },
     {
+      "doc": "PAY-5CJAMCD",
+      "kind": "posting_lag",
+      "lag_minutes": -25
+    },
+    {
       "doc": "PAY-5VH8QZ5",
       "kind": "posting_lag",
       "lag_minutes": 27
+    },
+    {
+      "doc": "PAY-A9E4SCP",
+      "kind": "posting_lag",
+      "lag_minutes": -3536
+    },
+    {
+      "doc": "PAY-BHAQ4BT",
+      "kind": "posting_lag",
+      "lag_minutes": -4059
     },
     {
       "doc": "PAY-C6YVYP5",
@@ -244,6 +299,11 @@
       "doc": "PAY-JK76P85",
       "kind": "posting_lag",
       "lag_minutes": 474
+    },
+    {
+      "doc": "PAY-MJWBMJK",
+      "kind": "posting_lag",
+      "lag_minutes": -1180
     },
     {
       "doc": "PAY-P85ZZMG",
@@ -331,10 +391,10 @@
   "injections": [
     {
       "affected_doc_ids": [
-        "D-KG8W2XB2"
+        "D-HGCSQRMX"
       ],
       "affected_ids": [
-        "INV-GN96W3S"
+        "INV-BUYQWSY"
       ],
       "after": {
         "ledger_timestamp_variant": "shifted_into_period",
@@ -345,9 +405,9 @@
         "posted_in_period": false
       },
       "cause": "документ прошлого периода проведён в текущем",
-      "currency": "KZT",
-      "expected_amount_minor": 80987320,
-      "issue_id": "ISS-BUFJJ43V",
+      "currency": "JPY",
+      "expected_amount_minor": 912858,
+      "issue_id": "ISS-389WBS73",
       "scenario": null,
       "scenario_group": null,
       "type": "cutoff_error",
@@ -413,21 +473,21 @@
         "PAY-NKX7N6P"
       ],
       "after": {
-        "allocated_minor": 0,
-        "unapplied_minor": 1182760
+        "allocated_minor": 719231,
+        "unapplied_minor": 463529
       },
       "before": {
         "allocated_minor": 1182760,
         "unapplied_minor": 0
       },
-      "cause": "платёж не разнесён на указанный в invoice_refs счёт, сумма осталась на 2300",
+      "cause": "платёж разнесён на счёт частично, остаток осел на 2300",
       "currency": "JPY",
-      "expected_amount_minor": 257444,
+      "expected_amount_minor": 100894,
       "issue_id": "ISS-TBYDPJMP",
       "scenario": "fx_partial_boundary_payment",
       "scenario_group": "SCN-2PGS3S",
       "type": "unapplied_payment",
-      "variant": "missing_allocation"
+      "variant": "partial_allocation"
     }
   ],
   "params": {

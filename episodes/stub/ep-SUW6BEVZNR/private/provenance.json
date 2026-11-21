@@ -182,6 +182,16 @@
       "kind": "partial_shipments"
     },
     {
+      "doc": "INV-44732QR",
+      "kind": "posting_lag",
+      "lag_minutes": -1241
+    },
+    {
+      "doc": "INV-ES988SE",
+      "kind": "posting_lag",
+      "lag_minutes": -1019
+    },
+    {
       "doc": "INV-HD65G9X",
       "kind": "posting_lag",
       "lag_minutes": 2820
@@ -200,6 +210,11 @@
       "doc": "INV-TAEPFUA",
       "kind": "posting_lag",
       "lag_minutes": 4064
+    },
+    {
+      "doc": "INV-THAXVBM",
+      "kind": "posting_lag",
+      "lag_minutes": -294
     },
     {
       "doc": "INV-VMAJARW",
@@ -222,6 +237,11 @@
       "lag_minutes": 3887
     },
     {
+      "doc": "PAY-4WM2SXM",
+      "kind": "posting_lag",
+      "lag_minutes": -655
+    },
+    {
       "doc": "PAY-73577S3",
       "kind": "posting_lag",
       "lag_minutes": 861
@@ -242,9 +262,19 @@
       "lag_minutes": 2864
     },
     {
+      "doc": "PAY-HZSSRPJ",
+      "kind": "posting_lag",
+      "lag_minutes": -1572
+    },
+    {
       "doc": "PAY-MG6KYPH",
       "kind": "posting_lag",
       "lag_minutes": 2690
+    },
+    {
+      "doc": "PAY-QNCTJTJ",
+      "kind": "posting_lag",
+      "lag_minutes": -1410
     },
     {
       "invoices": [
@@ -313,7 +343,7 @@
         "INV-JM96D6D"
       ],
       "after": {
-        "ledger_timestamp_variant": "same_instant",
+        "ledger_timestamp_variant": "entered_in_period",
         "posted_in_period": true
       },
       "before": {
@@ -327,7 +357,7 @@
       "scenario": null,
       "scenario_group": null,
       "type": "cutoff_error",
-      "variant": "same_instant"
+      "variant": "entered_in_period"
     },
     {
       "affected_doc_ids": [

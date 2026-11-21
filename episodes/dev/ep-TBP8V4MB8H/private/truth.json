@@ -6,7 +6,7 @@
         "INV-KAJUZEE",
         "INV-YJEPGZH"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [
@@ -25,7 +25,7 @@
         "INV-MS9JX9M",
         "PAY-T4RBFHG"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [

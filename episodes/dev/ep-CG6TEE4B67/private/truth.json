@@ -5,7 +5,7 @@
       "affected_ids": [
         "PAY-HGTTEC5"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -28,7 +28,7 @@
         "INV-KZVV3UB",
         "INV-MNW8JW9"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "JPY",
       "evidence_sets": [
         [
@@ -109,7 +109,7 @@
         "INV-CZVQ9WH",
         "PAY-KW7RHF3"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -128,7 +128,7 @@
         "INV-F8Y3Y4A",
         "PAY-TKVBWB6"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [
@@ -147,7 +147,7 @@
         "INV-ZFET3M9",
         "PAY-G5RH3NT"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "GBP",
       "evidence_sets": [
         [

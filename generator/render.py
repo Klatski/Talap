@@ -20,7 +20,10 @@ from .money import format_rate
 from .timeutil import format_offset, to_iso
 from .version import GENERATOR_VERSION, SCHEMA_VERSION
 
-AMOUNT_TOLERANCE_MINOR = 1
+# Допуск суммы τ по типу (truth.amount_tolerance_minor). Точные суммы — 0: дубль и cut-off — total документа,
+# неразнесённый платёж — строка 2300 книги. Курсовая разница — 1: пересчёт по курсу с округлением
+# (policy.json) — единственное место, где агент может разойтись с эталоном на единицу из-за округления.
+AMOUNT_TOLERANCE_MINOR = {"duplicate_invoice": 0, "unapplied_payment": 0, "cutoff_error": 0, "fx_rate_error": 1}
 
 
 @dataclass
@@ -290,7 +293,7 @@ def render(
             "affected_ids": sorted(maps.business_id(k) for k in issue.affected),
             "expected_amount_minor": issue.amount_minor,
             "currency": issue.currency,
-            "amount_tolerance_minor": AMOUNT_TOLERANCE_MINOR,
+            "amount_tolerance_minor": AMOUNT_TOLERANCE_MINOR[issue.type],
             "evidence_sets": [list(s) for s in sorted(sets)],
             "scenario": issue.scenario,
             "scenario_group": group,

@@ -19,7 +19,7 @@ Closed set emulated by `generator.holdout`: 20 salted episodes with new paramete
 | C01 | PASS | first observation: task, manifest, policy, budget |
 | C02 | PASS | step -> (observation, reward, terminated, truncated, info); observation = result/error/budget |
 | C03 | PASS | no seed/paths/truth in reset output (0 hits) |
-| C04 | PASS | 256 ledger rows in 6 pages of <= 50, file order, limit 500 -> 50 |
+| C04 | PASS | 258 ledger rows in 6 pages of <= 50, file order, limit 500 -> 50 |
 | C05 | PASS | same cursor -> same page; bound to table/episode; deterministic |
 | C06 | PASS | get_record/get_document return exactly the public record object (jury envelope) |
 | C07 | PASS | exact decimal arithmetic and rounding (7/7) |
@@ -46,11 +46,11 @@ Closed set emulated by `generator.holdout`: 20 salted episodes with new paramete
 | ep-BQT3JZPMKG (clean) | PASS | 0 issues re-derived with evidence; books balance before and after; 284 rows |
 | ep-QDS5JVZJTU (clean) | PASS | 0 issues re-derived with evidence; books balance before and after; 224 rows |
 | ep-2ERTJDPP8W (clean) | PASS | 0 issues re-derived with evidence; books balance before and after; 711 rows |
-| ep-HJ732WN98H (interacting) | PASS | 5 issues re-derived with evidence; books balance before and after; 256 rows |
+| ep-HJ732WN98H (interacting) | PASS | 5 issues re-derived with evidence; books balance before and after; 258 rows |
 | ep-X2HHPCC8MK (interacting) | PASS | 11 issues re-derived with evidence; books balance before and after; 1364 rows |
-| ep-JGM6XVN2HZ (interacting) | PASS | 9 issues re-derived with evidence; books balance before and after; 278 rows |
+| ep-JGM6XVN2HZ (interacting) | PASS | 9 issues re-derived with evidence; books balance before and after; 279 rows |
 | ep-VKECDDHZ69 (interacting) | PASS | 11 issues re-derived with evidence; books balance before and after; 287 rows |
-| ep-N85UJST2TC (interacting) | PASS | 12 issues re-derived with evidence; books balance before and after; 224 rows |
+| ep-N85UJST2TC (interacting) | PASS | 12 issues re-derived with evidence; books balance before and after; 225 rows |
 | ep-MPQQGE4JY6 (mixed) | PASS | 6 issues re-derived with evidence; books balance before and after; 330 rows |
 | ep-DPXQWCHGJ9 (mixed) | PASS | 4 issues re-derived with evidence; books balance before and after; 212 rows |
 | ep-UHMXQ8NF2Q (mixed) | PASS | 7 issues re-derived with evidence; books balance before and after; 1499 rows |

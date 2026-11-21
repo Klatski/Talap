@@ -2,6 +2,10 @@
 
 Конфиг — это JSON-объект. Любое поле можно опустить (будет значение по умолчанию).
 Числа ошибок задаются целым числом или диапазоном [lo, hi] (сэмплируется по seed).
+Необязательный ключ variants заказывает вариант ошибки типа (VARIANTS): строка — все ошибки
+типа этого варианта, список — i-я ошибка типа берёт variants[i % len] (при числе ошибок >= длины
+списка каждый вариант встретится). Без ключа вариант выбирается случайно. Ключа нет в
+DEFAULT_CONFIG, поэтому конфиги без него сохраняют прежний дайджест (и прежние эпизоды).
 """
 
 from __future__ import annotations
@@ -31,6 +35,16 @@ SCENARIO_TYPES: dict[str, tuple[str, ...]] = {
     "cutoff_fx_boundary_invoice": ("cutoff_error", "fx_rate_error"),
 }
 
+# Варианты ошибки каждого типа (provenance.injections[].variant), которые можно заказать в config.variants.
+VARIANTS: dict[str, tuple[str, ...]] = {
+    "duplicate_invoice": ("reentered_document",),
+    # полный пропуск разнесения на счёт / частичное разнесение (остаток на 2300)
+    "unapplied_payment": ("missing_allocation", "partial_allocation"),
+    "fx_rate_error": ("adjacent_date", "other_rule", "due_date", "document_offset_date", "utc_date"),
+    # проводка документа соседнего периода датирована внутри периода: у самой границы / в любой день у неё
+    "cutoff_error": ("shifted_into_period", "entered_in_period"),
+}
+
 DISTRACTOR_TYPES = (
     "recurring_invoices",
     "partial_shipments",
@@ -56,6 +70,8 @@ SIZE_PROFILES: dict[str, dict[str, tuple[int, int]]] = {
 }
 
 MAX_ISSUES = 12
+
+OPTIONAL_CONFIG_KEYS = ("variants",)  # не входят в DEFAULT_CONFIG: без них дайджест прежний
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "config_version": CONFIG_VERSION,
@@ -99,16 +115,46 @@ def _count_bounds(name: str, value: Any) -> tuple[int, int]:
     return lo, hi
 
 
+def _normalize_variants(value: Any) -> dict[str, list[str]]:
+    """{тип: вариант | [варианты]} -> {тип: [варианты]}; null и пустые значения снимаются."""
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ConfigError("variants must be an object {error type: variant or list of variants}")
+    bad = set(value) - set(VARIANTS)
+    if bad:
+        raise ConfigError(f"unknown variants types: {sorted(bad)}")
+    out: dict[str, list[str]] = {}
+    for t in ERROR_TYPES:
+        v = value.get(t)
+        if v is None:
+            continue
+        names = [v] if isinstance(v, str) else v
+        if not isinstance(names, list) or not names or not all(isinstance(n, str) for n in names):
+            raise ConfigError(f"variants.{t} must be a variant name or a non-empty list of names")
+        unknown = [n for n in names if n not in VARIANTS[t]]
+        if unknown:
+            raise ConfigError(f"variants.{t}: unknown variant {unknown[0]!r}; one of {list(VARIANTS[t])}")
+        if len(set(names)) != len(names):
+            raise ConfigError(f"variants.{t}: repeated variant")
+        out[t] = list(names)
+    return out
+
+
 def normalize_config(raw: dict[str, Any]) -> dict[str, Any]:
     """Слить с умолчаниями и строго проверить. Неизвестные ключи — ошибка."""
     if not isinstance(raw, dict):
         raise ConfigError("config must be a JSON object")
-    unknown = set(raw) - set(DEFAULT_CONFIG)
+    unknown = set(raw) - set(DEFAULT_CONFIG) - set(OPTIONAL_CONFIG_KEYS)
     if unknown:
         raise ConfigError(f"unknown config keys: {sorted(unknown)}")
     cfg = copy.deepcopy(DEFAULT_CONFIG)
     for key, value in raw.items():
-        if key in ("errors", "scenarios", "distractors"):
+        if key == "variants":
+            variants = _normalize_variants(value)
+            if variants:
+                cfg["variants"] = variants
+        elif key in ("errors", "scenarios", "distractors"):
             if not isinstance(value, dict):
                 raise ConfigError(f"{key} must be an object")
             bad = set(value) - set(cfg[key])
@@ -179,6 +225,9 @@ def normalize_config(raw: dict[str, Any]) -> dict[str, Any]:
     return cfg
 
 
+CONFIG_KEYS = tuple(DEFAULT_CONFIG) + OPTIONAL_CONFIG_KEYS  # все ключи верхнего уровня конфига
+
+
 def config_digest(cfg: dict[str, Any]) -> str:
     canonical = json.dumps(cfg, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -206,8 +255,14 @@ class Params:
     errors: dict[str, int]
     scenarios: dict[str, int]
     distractors: dict[str, bool] = field(default_factory=dict)
+    variants: dict[str, list[str]] = field(default_factory=dict)  # config.variants (пусто — случайный вариант)
+
+    def variant_for(self, error_type: str, index: int) -> str | None:
+        names = self.variants.get(error_type)
+        return names[index % len(names)] if names else None
 
     def to_json(self) -> dict[str, Any]:
+        extra = {"variants": {t: list(v) for t, v in self.variants.items()}} if self.variants else {}
         return {
             "base_currency": self.base,
             "foreign_currencies": list(self.foreign),
@@ -221,6 +276,7 @@ class Params:
             "errors": dict(self.errors),
             "scenarios": dict(self.scenarios),
             "distractors": dict(self.distractors),
+            **extra,
         }
 
 
@@ -274,4 +330,5 @@ def resolve_params(cfg: dict[str, Any], rng: random.Random) -> Params:
         errors=errors,
         scenarios=scenarios,
         distractors=dict(cfg["distractors"]),
+        variants={t: list(v) for t, v in (cfg.get("variants") or {}).items()},
     )

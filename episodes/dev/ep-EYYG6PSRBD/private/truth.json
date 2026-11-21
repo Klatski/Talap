@@ -5,7 +5,7 @@
       "affected_ids": [
         "PAY-JX3FC8M"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -32,7 +32,7 @@
         "INV-SBAYV25",
         "INV-VQS8H68"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "USD",
       "evidence_sets": [
         [
@@ -70,7 +70,7 @@
         "INV-MHFVEG8",
         "PAY-2SVRXQU"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [

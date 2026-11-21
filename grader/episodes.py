@@ -328,12 +328,13 @@ def _source_extra(seed: Any, config_version: Any, ignored: list) -> dict:
 
 
 def generator_keys() -> frozenset:
-    """Ключи верхнего уровня конфига генератора (generator/config.py::DEFAULT_CONFIG) и "preset"."""
+    """Ключи верхнего уровня конфига генератора (generator/config.py::CONFIG_KEYS, включая необязательный
+    variants) и "preset"."""
     try:
-        from generator.config import DEFAULT_CONFIG
+        from generator.config import CONFIG_KEYS
     except ImportError as exc:  # pragma: no cover
         raise EpisodeLoadError("generator is not available") from exc
-    return frozenset(DEFAULT_CONFIG) | {"preset"}
+    return frozenset(CONFIG_KEYS) | {"preset"}
 
 
 def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefix: str = "",
@@ -344,12 +345,12 @@ def resolve_generator_config(gen_config: Any, ignored: list | None = None, prefi
     also_known ({"Errors": ...}, {"error": ...}, "team_confg"), — ошибка конфига; вложенные ключи (errors,
     scenarios, distractors) генератор проверяет строго. Иначе опечатка молча дала бы чистую компанию."""
     try:
-        from generator.config import DEFAULT_CONFIG, ConfigError, normalize_config
+        from generator.config import CONFIG_KEYS, ConfigError, normalize_config
         from generator.splits import resolve_config
     except ImportError as exc:  # pragma: no cover
         raise EpisodeLoadError("generator is not available") from exc
     if isinstance(gen_config, dict):
-        known = set(DEFAULT_CONFIG) | {"preset"}
+        known = set(CONFIG_KEYS) | {"preset"}
         reject_misspelled_keys(gen_config, known | set(also_known), prefix)
         dropped = sorted(str(k) for k in gen_config if k not in known)
         if ignored is not None:

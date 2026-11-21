@@ -5,7 +5,7 @@
       "affected_ids": [
         "INV-JM96D6D"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -28,7 +28,7 @@
         "INV-PK57H2Q",
         "INV-VANY3VP"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "EUR",
       "evidence_sets": [
         [
@@ -85,7 +85,7 @@
         "INV-44732QR",
         "PAY-5E9N2JR"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [
@@ -104,7 +104,7 @@
         "INV-JMVF2Y3",
         "PAY-9TVBEWA"
       ],
-      "amount_tolerance_minor": 1,
+      "amount_tolerance_minor": 0,
       "currency": "KZT",
       "evidence_sets": [
         [
