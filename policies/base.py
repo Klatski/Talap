@@ -12,28 +12,22 @@ class BasePolicy(ABC):
         self.step_count = 0
         self.episode_id: str = ""
         self.seen_records: dict[str, list[dict[str, Any]]] = {
-            "ledger": [],
-            "invoices": [],
-            "payments": [],
-            "fx": [],
+            "ledger": [], "invoices": [], "payments": [], "fx": []
         }
         self._seen_ids: dict[str, set[str]] = {
-            "ledger": set(),
-            "invoices": set(),
-            "payments": set(),
-            "fx": set(),
+            "ledger": set(), "invoices": set(), "payments": set(), "fx": set()
         }
 
     def reset(self, obs: dict[str, Any], info: dict[str, Any] | None = None) -> None:
         self.step_count = 0
-        manifest = obs.get("manifest") if isinstance(obs.get("manifest"), dict) else {}
+        manifest = obs.get("manifest") if isinstance(obs, dict) and isinstance(obs.get("manifest"), dict) else {}
         self.episode_id = str(
             manifest.get("episode_id")
             or (info or {}).get("episode_id")
             or "unknown_episode"
         )
         self.seen_records = {"ledger": [], "invoices": [], "payments": [], "fx": []}
-        self._seen_ids = {"ledger": set(), "invoices": set(), "payments": set(), "fx": []}
+        self._seen_ids = {"ledger": set(), "invoices": set(), "payments": set(), "fx": set()}
         self.ingest_obs(obs)
 
     def ingest_obs(self, obs: dict[str, Any]) -> None:
@@ -50,16 +44,12 @@ class BasePolicy(ABC):
 
         records = obs.get("records")
         table_hint = obs.get("table")
-        if isinstance(records, list) and isinstance(table_hint, str) and table_hint in self.seen_records:
-            self._add_rows(table_hint, records)
+        if isinstance(records, list) and table_hint in self.seen_records:
+            self._add_rows(str(table_hint), records)
 
     def _add_rows(self, table: str, rows: list[Any]) -> None:
         bucket = self.seen_records.setdefault(table, [])
-        raw_seen = self._seen_ids.get(table)
-        if not isinstance(raw_seen, set):
-            raw_seen = set(raw_seen) if raw_seen else set()
-            self._seen_ids[table] = raw_seen
-        seen = raw_seen
+        seen = self._seen_ids.setdefault(table, set())
         for idx, item in enumerate(rows):
             if not isinstance(item, dict):
                 continue
@@ -69,6 +59,7 @@ class BasePolicy(ABC):
                 or item.get("invoice_id")
                 or item.get("payment_id")
                 or item.get("id")
+                or item.get("doc_id")
                 or f"{table}_{len(bucket)}_{idx}"
             )
             if row_id not in seen:
