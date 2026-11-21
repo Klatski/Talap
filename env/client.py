@@ -62,6 +62,10 @@ class AuditEnv:
         self._closed = False
 
     def reset(self, seed: Any = None, config: dict | None = None) -> tuple[dict, dict]:
+        if isinstance(config, dict) and isinstance(config.get("episode_dir"), (str, os.PathLike)):
+            # путь жюри — относительно ЕГО рабочего каталога; процесс оценщика работает из корня репозитория
+            raw = os.fspath(config["episode_dir"])
+            config = {**config, "episode_dir": os.path.abspath(raw) if raw.strip() else raw}
         try:
             json.dumps({"seed": seed, "config": config}, allow_nan=False, sort_keys=True)
         except (TypeError, ValueError, RecursionError):

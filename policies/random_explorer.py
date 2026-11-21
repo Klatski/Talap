@@ -39,22 +39,22 @@ class RandomExplorer:
         self.docs: list[str] = []
         self.amounts: list[int] = [0]
         self.cursors: dict[str, list[Any]] = {t: [None] for t in TABLES}
+        self.listed: str | None = None  # таблица последнего list_records: в ответе её нет, только records/next_cursor
         self.taken = 0
 
     # ------------------------------------------------------------------ наблюдения
     def _absorb(self, obs: dict) -> None:
         result = obs.get("result") if isinstance(obs, dict) else None
+        listed, self.listed = self.listed, None
         if not isinstance(result, dict):
             return
-        records = list(result.get("records") or [])
-        if isinstance(result.get("record"), dict):
-            records.append(result["record"])
-        if isinstance(result.get("document"), dict):
-            records.append(result["document"])
-        table = result.get("table")
-        if table in TABLES and result.get("next_cursor"):
-            if result["next_cursor"] not in self.cursors[table]:
-                self.cursors[table].append(result["next_cursor"])
+        if isinstance(result.get("records"), list):  # list_records -> {records, next_cursor}
+            records = [r for r in result["records"] if isinstance(r, dict)]
+            cursor = result.get("next_cursor")
+            if listed in TABLES and cursor and cursor not in self.cursors[listed]:
+                self.cursors[listed].append(cursor)
+        else:  # get_record / get_document -> сам объект
+            records = [result]
         for rec in records:
             if "account" in rec:
                 t = "ledger"
@@ -101,28 +101,32 @@ class RandomExplorer:
             if rng.random() < 0.05:
                 cursor = rng.choice(["ledger.0.ffffffffffff", "invoices.10", 42, "../.."])
             limit = rng.choice([50, 50, 50, 20, 5, 1, 0, 75, -3, "5"])
-            return {"action": "list_records", "table": table, "cursor": cursor, "limit": limit}
+            self.listed = table
+            return {"name": "list_records", "args": {"table": table, "cursor": cursor, "limit": limit}}
         if kind == "get_record":
             table = rng.choice(TABLES) if rng.random() > 0.05 else "accounts"
-            return {"action": "get_record", "table": table, "id": self._seen_id(table if table in TABLES else "ledger")}
+            return {"name": "get_record", "args": {"table": table, "id": self._seen_id(table if table in TABLES else "ledger")}}
         if kind == "get_document":
             doc = self._pick(self.docs, "D-ZZZZZZZZ") if rng.random() < 0.75 else self._seen_id("invoices")
-            return {"action": "get_document", "doc_id": doc}
+            return {"name": "get_document", "args": {"doc_id": doc}}
         if kind == "calculator":
             a, b = self._pick(self.amounts, 1), self._pick(self.amounts, 2)
             r = f"{rng.randint(1, 600)}.{rng.randint(0, 9999):04d}"
-            return {"action": "calculator", "expression": rng.choice(CALC).format(a=a, b=b, r=r)}
+            return {"name": "calculator", "args": {"expression": rng.choice(CALC).format(a=a, b=b, r=r)}}
         if kind == "unknown":
-            return {"action": rng.choice(["delete_records", "sql", "shell", "read_file", "dump_all", "SUBMIT"])}
+            return {"name": rng.choice(["delete_records", "sql", "shell", "read_file", "dump_all", "SUBMIT"]), "args": {}}
         return rng.choice([
             "list_records",
             ["list_records", "ledger"],
-            {"action": 5},
-            {"table": "ledger"},
+            {"name": 5, "args": {}},
+            {"args": {"table": "ledger"}},
+            {"name": "get_record", "args": {"table": "ledger"}},
+            {"name": "get_document", "args": {"doc_id": "D-1", "extra": True}},
+            {"name": "calculator", "args": {"expression": None}},
+            {"name": "list_records", "args": {"table": None}},
+            {"name": "list_records", "args": "ledger"},
+            {"name": "get_document", "args": {"doc_id": "D-1"}, "extra": True},
             {"action": "get_record", "table": "ledger"},
-            {"action": "get_document", "doc_id": "D-1", "extra": True},
-            {"action": "calculator", "expression": None},
-            {"action": "list_records", "table": None},
         ])
 
     def _random_submit(self) -> dict:
@@ -148,7 +152,7 @@ class RandomExplorer:
                 "all of them",
                 None,
             ])
-        return {"action": "submit", "findings": payload}
+        return {"name": "submit", "args": {"findings": payload}}
 
     def act(self, observation: dict) -> Any:
         self._absorb(observation)

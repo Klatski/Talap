@@ -87,8 +87,14 @@ python tests/jury/scorecard.py        # карточка жюри: раздел 
 python -m unittest discover -s tests/env -p "test_env_*.py"
 python -m unittest discover -s tests/grader -p "test_grader_*.py"
 python -m env.runner --splits train,dev --mode eval   # таблица P/R/F1/возврат/шаги/время + разбор сбоев
+python -m env.runner --splits train --mode closed --policy-file my_policy.py   # своя политика в песочнице
 python -m env.demo [--policy reconcile] [--mode eval] # демо со скриптовой политикой
 ```
+Интерфейс жюри — `judge_adapter.py` (`generate_episode`, `make_env`, `score_episode`, `load_policy`), описание —
+README «Интерфейс жюри»; правила жюри (PDF «Определения проверок») в тестах: `tests/env/test_env_jury_adapter.py`
+(C01–C20, блок 4), `tests/grader/test_grader_jury_rules.py` (блок 3, M01–M12), `tests/env/test_env_sandbox.py`.
+Действие — `{"name", "args"}` (плоское `{"action", …}` — синоним). Политики (кроме oracle) в runner/demo работают
+в песочнице `env/sandbox.py`; `--no-sandbox` — только для отладки.
 Любое изменение, влияющее на действия политик или эпизоды, меняет `trajectories.jsonl` → `python check.py --update`
 и коммит траекторий/отчётов вместе с кодом (иначе этап 5 `check.py` упадёт на побайтовом сравнении).
 

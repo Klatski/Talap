@@ -2,8 +2,15 @@
 
 EnvCore никогда не видит эталон. На submit / усечении он вызывает `finish_handler`
 (транспорт к оценщику), передавая только ответ агента и счётчики шагов. Что вернуть
-политике — решает оценщик (train: награда и метрики; eval: 0 и пустой info), а ядро
-дополнительно обнуляет награду и info в eval (защита в глубину).
+политике — решает оценщик (train: награда и метрики; eval/closed: 0 и пустой info), а ядро
+дополнительно обнуляет награду и info вне train (защита в глубину).
+
+Действие — JSON-объект в формате жюри {"name": <действие>, "args": {...}} или в плоском
+формате {"action": <действие>, ...аргументы}; строка с таким JSON тоже принимается.
+Результаты (одинаковы для обоих форматов, «Определения проверок» жюри):
+  list_records -> {"records": [...], "next_cursor": null | str};
+  get_record / get_document -> объект записи / документа;  calculator -> десятичная строка;
+  submit -> {"accepted": true} (без оценки правильности; награда — только в train).
 
 Контракт шага:
   * каждый вызов step() во время эпизода расходует шаг, в том числе ошибочный;
@@ -24,7 +31,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from .calculator import CalculatorError, evaluate
-from .constants import ACTIONS, CALC_DETAILS, ERRORS, MAX_ID_CHARS, PAGE_LIMIT, TABLES
+from .constants import ACTIONS, CALC_DETAILS, ERRORS, PAGE_LIMIT, TABLES
 from .cursor import CursorError, decode_cursor, encode_cursor
 from .jsonsafe import REASONS, TOO_LARGE, classify_action
 from .observation import initial_observation
@@ -142,10 +149,10 @@ class EnvCore:
             if name == "submit":
                 if isinstance(args, _MalformedSubmit):
                     payload = args
-                else:
-                    payload = args.get("findings") if set(args) == {"findings"} else _MalformedSubmit("wrapper")
+                else:  # нужен аргумент findings; прочие ключи не входят в формат и игнорируются
+                    payload = args["findings"] if "findings" in args else _MalformedSubmit("wrapper")
                 self._finish(ep, payload, ep.steps_used - 1, "submit", truncated=False)
-                return self._terminal(ep, {"status": "submitted"}, None)
+                return self._terminal(ep, {"accepted": True}, None)
             try:
                 result = _json_copy(self._dispatch(ep, name, args))
             except ActionError as exc:
@@ -207,17 +214,27 @@ class EnvCore:
         return self._bad(unsendable["submit"], unsendable["reason"])
 
     def _parse(self, action: Any) -> tuple[str, Any]:
-        """(имя, аргументы) по правилам env/jsonsafe.classify_action — общим с клиентом."""
+        """(имя, аргументы) по правилам env/jsonsafe.classify_action — общим с клиентом.
+        Формат жюри {"name", "args"} и плоский {"action", ...} дают одно и то же действие."""
         obj, bad = classify_action(action)
         if bad is not None:
             return self._bad(*bad)
         action = obj
-        name = action.get("action")
+        if "action" not in action and "name" in action:  # формат жюри
+            name, args = action["name"], action.get("args", {})
+            if args is None:
+                args = {}
+            if name == "submit":  # любой submit завершает эпизод: args не объект = неверная структура
+                return name, (args if isinstance(args, dict) else _MalformedSubmit("wrapper"))
+            if set(action) - {"name", "args"} or not isinstance(args, dict):
+                raise ActionError("invalid_action")
+        else:
+            name = action.get("action")
+            args = {k: v for k, v in action.items() if k != "action"}
         if not isinstance(name, str):
             raise ActionError("invalid_action")
         if name not in ACTIONS:
             raise ActionError("unknown_action")
-        args = {k: v for k, v in action.items() if k != "action"}
         required, optional = ACTIONS[name]
         if name == "submit":
             return name, args  # любая форма submit завершает эпизод; структуру проверяет оценщик
@@ -236,7 +253,7 @@ class EnvCore:
             return self._get_document(ep, args["doc_id"])
         if name == "calculator":
             try:
-                return {"value": evaluate(args["expression"])}
+                return evaluate(args["expression"])
             except CalculatorError as exc:
                 raise ActionError("calculator_error", CALC_DETAILS.get(exc.detail, CALC_DETAILS["syntax"])) from None
         raise ActionError("unknown_action")  # pragma: no cover
@@ -261,30 +278,26 @@ class EnvCore:
             raise ActionError("invalid_cursor") from None
         end = min(len(rows), offset + limit)
         return {
-            "table": table,
             "records": rows[offset:end],
-            "offset": offset,
-            "total": len(rows),
             "next_cursor": encode_cursor(ep.data.episode_id, table, end) if end < len(rows) else None,
         }
 
     def _get_record(self, ep: _Episode, table: Any, rid: Any) -> dict:
         table = self._table(table)
-        if not isinstance(rid, str) or not 0 < len(rid) <= MAX_ID_CHARS:
+        if not isinstance(rid, str) or not rid:
             raise ActionError("invalid_argument", "id must be a non-empty string")
         record = ep.data.by_id[table].get(rid)
         if record is None:
             raise ActionError("not_found")
-        return {"table": table, "record": record}
+        return record
 
     def _get_document(self, ep: _Episode, doc_id: Any) -> dict:
-        if not isinstance(doc_id, str) or not 0 < len(doc_id) <= MAX_ID_CHARS:
+        if not isinstance(doc_id, str) or not doc_id:
             raise ActionError("invalid_argument", "doc_id must be a non-empty string")
         found = ep.data.documents.get(doc_id)
         if found is None:
             raise ActionError("document_not_found")
-        kind, record = found
-        return {"doc_type": kind, "document": record}
+        return found[1]
 
 
 class _MalformedSubmit:

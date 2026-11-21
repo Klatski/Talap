@@ -12,12 +12,12 @@ CONTRACT_VERSION = "1.0"
 MAX_STEPS = 100            # включая submit
 PAGE_LIMIT = 50            # максимум строк на страницу list_records
 TIME_LIMIT_S = 60.0        # на эпизод, от reset
+POLICY_GRACE_S = 2.0       # сверх лимита эпизода ждём ответа политики (среда к этому моменту уже закрыла эпизод)
 MAX_ACTION_BYTES = 262_144    # обычное действие, сериализованное с sort_keys и ASCII-экранированием
 MAX_SUBMIT_BYTES = 1_048_576  # submit: больше худшего валидного ответа (~0.96 МБ), см. env/jsonsafe.py
 MAX_PARSE_BYTES = 2_097_152   # действие-строку длиннее (UTF-8) среда не разбирает
-MAX_ID_CHARS = 128
 
-MODES = ("train", "eval")
+MODES = ("train", "eval", "closed")  # closed — имя жюри для eval: политика видит 0 и {}
 
 # table -> (файл, поле-ключ, поле документа или None)
 TABLES: dict[str, dict] = {
@@ -45,7 +45,7 @@ ACTIONS: dict[str, tuple[frozenset, frozenset]] = {
 }
 
 ERRORS: dict[str, str] = {
-    "invalid_action": "Action must be a JSON object with a string field 'action'.",
+    "invalid_action": "Action must be a JSON object {\"name\": <action>, \"args\": {...}} (or the flat form {\"action\": <action>, ...}).",
     "action_too_large": "Action is too large.",
     "unknown_action": "Unknown action. Allowed: list_records, get_record, get_document, calculator, submit.",
     "missing_argument": "A required argument is missing for this action.",

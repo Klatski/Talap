@@ -254,20 +254,20 @@ def contract_block(h: Holdout, work: Path) -> list[Check]:
     def c06():
         reset()
         inv, pay, row = data.tables["invoices"][0], data.tables["payments"][0], data.tables["ledger"][0]
-        got = [env.step({"action": "get_record", "table": "invoices", "id": inv["invoice_id"]})[0]["result"]["record"] == inv,
-               env.step({"action": "get_document", "doc_id": pay["doc_id"]})[0]["result"] == {"doc_type": "payment", "document": pay},
-               env.step({"action": "get_document", "doc_id": inv["doc_id"]})[0]["result"] == {"doc_type": "invoice", "document": inv},
-               env.step({"action": "get_record", "table": "ledger", "id": row["row_id"]})[0]["result"]["record"] == row]
+        got = [env.step({"name": "get_record", "args": {"table": "invoices", "id": inv["invoice_id"]}})[0]["result"] == inv,
+               env.step({"name": "get_document", "args": {"doc_id": pay["doc_id"]}})[0]["result"] == pay,
+               env.step({"name": "get_document", "args": {"doc_id": inv["doc_id"]}})[0]["result"] == inv,
+               env.step({"name": "get_record", "args": {"table": "ledger", "id": row["row_id"]}})[0]["result"] == row]
         if data.tables["fx"]:
             fx = data.tables["fx"][0]
-            got.append(env.step({"action": "get_record", "table": "fx", "id": fx["fx_id"]})[0]["result"]["record"] == fx)
-        return all(got), "get_record/get_document return exactly the public record"
+            got.append(env.step({"name": "get_record", "args": {"table": "fx", "id": fx["fx_id"]}})[0]["result"] == fx)
+        return all(got), "get_record/get_document return exactly the public record object (jury envelope)"
 
     def c07():
         reset()
         cases = {"0.1 + 0.2": "0.3", "10 / 4": "2.5", "round_half_up(2.5)": "3", "round_half_even(2.5)": "2",
                  "round_half_up(1.005, 2)": "1.01", "1000000 * 1000000": "1000000000000", "abs(-3.25)": "3.25"}
-        bad = [e for e, v in cases.items() if env.step({"action": "calculator", "expression": e})[0]["result"] != {"value": v}]
+        bad = [e for e, v in cases.items() if env.step({"name": "calculator", "args": {"expression": e}})[0]["result"] != v]
         return not bad, f"exact decimal arithmetic and rounding ({len(cases) - len(bad)}/{len(cases)})"
 
     def c08():
@@ -313,8 +313,8 @@ def contract_block(h: Holdout, work: Path) -> list[Check]:
 
     def c12():
         obs, _ = reset()
-        o, r, term, trunc, _ = env.step({"action": "submit", "findings": {"episode_id": obs["episode_id"], "findings": []}})
-        return term is True and trunc is False and o["result"] == {"status": "submitted"}, "submit -> terminated=true"
+        o, r, term, trunc, _ = env.step({"name": "submit", "args": {"findings": {"episode_id": obs["episode_id"], "findings": []}}})
+        return term is True and trunc is False and o["result"] == {"accepted": True}, "submit -> {accepted: true}, terminated=true"
 
     def c13():
         log = work / "c13.jsonl"
@@ -614,14 +614,23 @@ def reward_block(h: Holdout) -> list[Check]:
 
     def r18(ep):
         good = ep[3]
-        bad_cases = [good + [{**(good[0] if good else _plain_finding(ep[4].tables["invoices"][0], "cutoff_error")), "claimed_amount_minor": -1}],
-                     good + [{"type": "fraud", "affected_ids": ["X"], "claimed_amount_minor": 1, "currency": "KZT", "evidence_ids": [], "explanation": ""}],
-                     [{**f, "confidence": 1.0} for f in good] or [{"confidence": 1.0}],
-                     (good * 31)[:31] if good else [_plain_finding(ep[4].tables["invoices"][0], "cutoff_error")] * 31]
-        ok = all(not _score(ep[2], b)["valid"] and _score(ep[2], b)["reward"] == -1.0 for b in bad_cases)
+        base = good[0] if good else _plain_finding(ep[4].tables["invoices"][0], "cutoff_error")
+        # неверная структура (тесты 18-20 и M05/M09 жюри): -1 и null-метрики, даже с верными выводами внутри
+        structural = [(good * 31)[:31] if good else [base] * 31,
+                      good + [{**base, "evidence_ids": [f"E-{k}" for k in range(11)]}],
+                      good + [{**base, "evidence_ids": [base["affected_ids"][0]] * 11}],
+                      good + [{**base, "explanation": "x" * 1001}],
+                      good + [{**base, "claimed_amount_minor": str(base["claimed_amount_minor"])}],
+                      good + [{**base, "claimed_amount_minor": True}],
+                      good + [{k: v for k, v in base.items() if k != "currency"}]]
+        ok = all(not r["valid"] and r["reward"] == -1.0 and r["tp"] is None for r in (_score(ep[2], b) for b in structural))
         wrong_ep = score_submission(ep[2], {"episode_id": "ep-OTHER00000", "findings": good}, 0)
-        extra_top = score_submission(ep[2], {"episode_id": ep[2]["episode_id"], "findings": good, "debug": True}, 0)
-        return True, ok and wrong_ep["reward"] == -1.0 and extra_top["reward"] == -1.0
+        # верная структура с неверным содержимым — FP, а не авария submit (M06, п. 8); поля сверх формата игнорируются
+        content = [{**base, "currency": base["currency"].lower()}, {**base, "currency": base["currency"] + " "},
+                   {**base, "type": "fraud"}, {**base, "claimed_amount_minor": -1}, {**base, "affected_ids": []}]
+        fp_ok = all(r["valid"] and r["fp"] == 1 and r["tp"] == len(good) for r in (_score(ep[2], good + [c]) for c in content))
+        extra = _score(ep[2], [{**f, "confidence": 1.0} for f in good], debug=True)
+        return True, ok and wrong_ep["reward"] == -1.0 and fp_ok and extra["valid"] and extra["tp"] == len(good)
 
     def r19(ep):
         # ответы с наградой < 1 (иначе прибавка за текст спряталась бы за clip): полный с шагами, неполный, с ложным
@@ -663,7 +672,7 @@ def reward_block(h: Holdout) -> list[Check]:
         ("R15", r15, "amount tolerance is exact: +tol TP, +tol+1 no TP"),
         ("R16", r16, "wrong type -> no TP"),
         ("R17", r17, "step cost exact (0.002 per inspection step, 0..99), strictly decreasing, at most 0.198"),
-        ("R18", r18, "wrong structure -> -1 even with correct findings inside"),
+        ("R18", r18, "wrong structure (31 findings, 11 evidence, 1001 chars, amount not int) -> -1; wrong content -> FP"),
         ("R19", r19, "explanation text never changes the reward (checked on answers scoring < 1)"),
         ("R20", r20, "author's attack suite (36 attacks/episode) matches the spec"),
     ]

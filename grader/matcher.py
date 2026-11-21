@@ -1,24 +1,31 @@
-"""Сопоставление выводов агента с эталоном (публичный код нормализации, допусков и выбора).
+"""Сопоставление выводов агента с эталоном — точные соглашения matcher из «Определений проверок» жюри.
 
-Нормализация вывода:
-  * affected_ids -> множество (порядок и повторы не важны), evidence_ids -> множество;
-  * строки сравниваются точно (без смены регистра и обрезки пробелов);
-  * type, currency — точное совпадение; сумма — |claimed - expected| <= amount_tolerance_minor.
-Ребро «вывод f — ошибка i» есть, только если выполнены ВСЕ условия TP:
-  type, множество affected_ids, валюта, сумма в допуске и evidence_ids ⊇ хотя бы одного
-  допустимого набора доказательств целиком.
-Паросочетание — максимальное взаимно однозначное (алгоритм Куна по дополняющим путям),
-а не жадное: TP = размер максимального паросочетания. Выбор при неоднозначности
-детерминирован: выводы и ошибки обходятся в каноническом порядке (по отсортированным полям),
-поэтому результат не зависит от порядка выводов в ответе.
-Несопоставленные выводы — FP (в том числе повторы), несопоставленные ошибки — FN.
-explanation в сопоставлении не участвует.
+Нормализация (только после проверки структуры и исходных размеров списков, grader/validate.py):
+  * ID сравниваются как строки точно: с учётом регистра и пробелов, без снятия префиксов и поиска похожих;
+  * affected_ids -> множество: порядок и повторы внутри списка не меняют множество (M01); для TP оно
+    должно точно совпасть с каноническим набором ошибки (лишний существующий ID -> FP, M02);
+  * evidence_ids -> множество; TP требует полного включения хотя бы одного допустимого набора;
+    лишние СУЩЕСТВУЮЩИЕ доказательства допустимы (M03); если указан хотя бы один ID, которого нет в
+    открытых данных эпизода, вывод не сопоставляется и даёт FP (M04). Существующие = доступные через
+    инструменты: row_id, invoice_id, payment_id, fx_id и doc_id (env/records.py);
+  * type — точное совпадение с одним из четырёх типов; неизвестная строка просто несопоставима;
+  * currency — точное совпадение строки: без конвертации, смены регистра и обрезки пробелов (M06);
+  * сумма — JSON-целое, |claimed - expected| <= τ; τ = amount_tolerance_minor ошибки в truth (по
+    умолчанию 0; генератор публикует τ = 1 для всех типов, docs/contract.md, раздел 4) (M07, M08).
+Ребро «вывод — ошибка» есть только при выполнении всех условий TP. TP — мощность МАКСИМАЛЬНОГО
+паросочетания (не жадного, M10), FP = выводов - TP, FN = ошибок - TP; повторный вывод остаётся
+отдельной вершиной и после закрытия ошибки даёт FP (M12). При нескольких максимальных паросочетаниях
+выбирается лексикографически наименьшая отсортированная последовательность пар (issue_id, индекс
+вывода): issue_id сравниваются по Unicode code points (M11). Порядок выводов меняет только то, какой из
+одинаковых выводов сопоставлен, но не TP/FP/FN и награду. explanation в выборе рёбер не участвует.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import AbstractSet
+
+from .validate import ISSUE_TYPES
 
 
 @dataclass(frozen=True)
@@ -29,9 +36,6 @@ class NormFinding:
     amount: int
     currency: str
     evidence: frozenset
-
-    def sort_key(self) -> tuple:
-        return (self.type, sorted(self.affected), self.amount, self.currency, sorted(self.evidence), self.index)
 
 
 @dataclass(frozen=True)
@@ -63,7 +67,7 @@ def normalize_finding(f: dict, index: int) -> NormFinding:
 def normalize_issue(issue: dict, index: int) -> NormIssue:
     return NormIssue(
         index=index,
-        issue_id=issue["issue_id"],
+        issue_id=str(issue.get("issue_id", f"#{index:06d}")),
         type=issue["type"],
         affected=frozenset(issue["affected_ids"]),
         amount=issue["expected_amount_minor"],
@@ -74,7 +78,7 @@ def normalize_issue(issue: dict, index: int) -> NormIssue:
 
 
 def failed_conditions(f: NormFinding, i: NormIssue) -> list[str]:
-    """Какие условия TP не выполнены (пустой список = ребро есть)."""
+    """Какие условия TP для пары не выполнены (пустой список = ребро есть, если доказательства существуют)."""
     failed = []
     if f.type != i.type:
         failed.append("type")
@@ -99,43 +103,67 @@ class MatchResult:
     missed: list[dict] = field(default_factory=list)          # диагностика по пропущенным ошибкам
 
 
-def _max_matching(adj: dict[int, list[int]], left: list[int]) -> dict[int, int]:
-    """Алгоритм Куна. adj: вывод -> ошибки (в каноническом порядке). Возвращает ошибка -> вывод."""
+def _max_matching_size(edges: dict[int, list[int]], issues: list[int], blocked: AbstractSet[int]) -> int:
+    """Алгоритм Куна: мощность максимального паросочетания ошибок `issues` с выводами вне `blocked`."""
     owner: dict[int, int] = {}
 
-    def augment(u: int, seen: set[int]) -> bool:
-        for v in adj.get(u, ()):
-            if v in seen:
+    def augment(i: int, seen: set[int]) -> bool:
+        for f in edges[i]:
+            if f in blocked or f in seen:
                 continue
-            seen.add(v)
-            if v not in owner or augment(owner[v], seen):
-                owner[v] = u
+            seen.add(f)
+            if f not in owner or augment(owner[f], seen):
+                owner[f] = i
                 return True
         return False
 
-    for u in left:
-        augment(u, set())
-    return owner
+    return sum(1 for i in issues if augment(i, set()))
 
 
-def match(findings: list[dict], issues: list[dict]) -> MatchResult:
-    """findings — уже валидированные выводы; issues — truth['issues']."""
+def _lexmin_max_matching(edges: dict[int, list[int]], order: list[int]) -> dict[int, int]:
+    """Максимальное паросочетание с лексикографически наименьшей последовательностью пар (issue_id, вывод).
+
+    order — ошибки по возрастанию issue_id; edges[i] — выводы по возрастанию индекса. Ошибка включается,
+    если с уже выбранными парами ещё достижима максимальная мощность, и получает наименьший такой вывод.
+    """
+    target = _max_matching_size(edges, order, frozenset())
+    chosen: dict[int, int] = {}
+    used: set[int] = set()
+    for pos, i in enumerate(order):
+        rest = order[pos + 1:]
+        for f in edges[i]:
+            if f in used:
+                continue
+            if len(chosen) + 1 + _max_matching_size(edges, rest, used | {f}) == target:
+                chosen[i] = f
+                used.add(f)
+                break
+    return chosen
+
+
+def match(findings: list[dict], issues: list[dict], known_ids: AbstractSet[str] | None = None) -> MatchResult:
+    """findings — уже валидированные выводы; issues — truth['issues'];
+    known_ids — все ID открытых данных эпизода (None = проверка существования доказательств выключена)."""
     nf = [normalize_finding(f, k) for k, f in enumerate(findings)]
     ni = [normalize_issue(x, k) for k, x in enumerate(issues)]
-    f_order = sorted(nf, key=NormFinding.sort_key)
-    i_order = sorted(ni, key=NormIssue.sort_key)
-    adj = {f.index: [i.index for i in i_order if not failed_conditions(f, i)] for f in f_order}
-    owner = _max_matching(adj, [f.index for f in f_order])
-    matched_f = {u: v for v, u in owner.items()}
-    pairs = sorted((u, v) for v, u in owner.items())
+    unknown_evidence = {f.index for f in nf if known_ids is not None and not f.evidence <= known_ids}
+    edges = {i.index: [f.index for f in nf if f.index not in unknown_evidence and not failed_conditions(f, i)] for i in ni}
+    order = [i.index for i in sorted(ni, key=lambda i: (i.issue_id, i.index))]
+    chosen = _lexmin_max_matching(edges, order)
+    matched_f = {f: i for i, f in chosen.items()}
+    pairs = sorted((f, i) for i, f in chosen.items())
 
     status = []
     for f in nf:
         if f.index in matched_f:
             status.append({"finding": f.index, "status": "tp", "issue_index": matched_f[f.index]})
             continue
-        if adj[f.index]:
-            reason, near = "duplicate", []  # мог бы совпасть, но ошибка уже закрыта другим выводом
+        if f.index in unknown_evidence:
+            reason = "unknown_evidence"  # ID доказательства, которого нет в открытых данных (M04)
+        elif any(f.index in edges[i.index] for i in ni):
+            reason = "duplicate"  # мог бы совпасть, но ошибка уже закрыта другим выводом
+        elif f.type not in ISSUE_TYPES:
+            reason = "unknown_type"
         else:
             near = [i for i in ni if i.affected == f.affected or (i.type == f.type and i.affected & f.affected)]
             if not near:
@@ -146,7 +174,7 @@ def match(findings: list[dict], issues: list[dict]) -> MatchResult:
         status.append({"finding": f.index, "status": "fp", "reason": reason, "type": f.type})
     missed = []
     for i in ni:
-        if i.index in owner:
+        if i.index in chosen:
             continue
         near = any(f.type == i.type and f.affected == i.affected for f in nf)
         missed.append({"issue_index": i.index, "type": i.type, "reason": "near_miss" if near else "not_reported"})

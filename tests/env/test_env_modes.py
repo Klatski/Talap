@@ -35,14 +35,14 @@ class ModeTests(unittest.TestCase):
         self.assertEqual(r, rec["reward"])
         self.assertEqual(set(info), INFO_KEYS)
         self.assertEqual((info["tp"], info["fp"], info["fn"], info["f1"]), (len(self.truth["issues"]), 0, 0, 1.0))
-        self.assertEqual(obs["result"], {"status": "submitted"})
+        self.assertEqual(obs["result"], {"accepted": True})
 
     def test_eval_hides_reward_and_diagnostics(self):
         seen, rec = self._episode("eval", oracle_findings(self.truth))
         for obs, r, term, trunc, info in seen:
             self.assertEqual(r, 0.0)
             self.assertEqual(info, {})
-        self.assertEqual(seen[-1][0], {"result": {"status": "submitted"}, "error": None, "remaining_steps": 96})
+        self.assertEqual(seen[-1][0], {"result": {"accepted": True}, "error": None, "remaining_steps": 96})
         self.assertAlmostEqual(rec["reward"], 1 - 0.002 * 3)  # у оценщика награда есть
         self.assertEqual(rec["mode"], "eval")
 
@@ -64,13 +64,33 @@ class ModeTests(unittest.TestCase):
 
     def test_malformed_submit_wrapper(self):
         env = local_env()
-        env.reset(seed=0, config=STUB)
-        obs, r, term, trunc, info = env.step({"action": "submit", "findings": oracle_findings(self.truth), "bonus": 1})
-        self.assertEqual((r, term), (-1.0, True))
-        env.reset(seed=0, config=STUB)
-        obs, r, term, trunc, info = env.step({"action": "submit"})
-        self.assertEqual((r, term), (-1.0, True))
+        for bad in ({"action": "submit"}, {"name": "submit"}, {"name": "submit", "args": None},
+                    {"name": "submit", "args": "all"}, {"name": "submit", "args": [1]}):
+            with self.subTest(action=bad):
+                env.reset(seed=0, config=STUB)
+                obs, r, term, trunc, info = env.step(bad)
+                self.assertEqual((r, term, obs["result"]), (-1.0, True, {"accepted": True}))
+                self.assertFalse(info["valid"])
+        # аргументы сверх findings не входят в формат и игнорируются
+        for extra in ({"action": "submit", "findings": oracle_findings(self.truth), "bonus": 1},
+                      {"name": "submit", "args": {"findings": oracle_findings(self.truth), "bonus": 1}},
+                      {"name": "submit", "args": {"findings": oracle_findings(self.truth)}, "trace": "x"}):
+            with self.subTest(action=sorted(extra)):
+                env.reset(seed=0, config=STUB)
+                obs, r, term, trunc, info = env.step(extra)
+                self.assertEqual((r, term), (1.0, True))
         env.close()
+
+    def test_closed_mode_is_eval_with_the_jury_name(self):
+        """mode="closed" (протокол жюри): награда 0 и пустой info на каждом шаге, включая submit."""
+        seen, rec = self._episode("closed", oracle_findings(self.truth))
+        for obs, r, term, trunc, info in seen:
+            self.assertEqual(r, 0.0)
+            self.assertIsInstance(r, float)
+            self.assertEqual(info, {})
+        self.assertEqual(seen[-1][0]["result"], {"accepted": True})
+        self.assertAlmostEqual(rec["reward"], 1 - 0.002 * 3)
+        self.assertEqual(rec["mode"], "closed")
 
     def test_bad_mode(self):
         env = local_env()

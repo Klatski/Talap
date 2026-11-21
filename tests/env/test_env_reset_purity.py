@@ -66,23 +66,29 @@ class ResetPurity(unittest.TestCase):
             core = env._service.core
             first_data = core._ep.data
             first_truth = env._grader.session._current.truth
-            ids_env = mutable_ids([first_data.tables, first_data.by_id, first_data.manifest, first_data.policy,
-                                   list(first_data.documents.values())])
+            # корневые списки держатся в переменных: id() освобождённого временного списка мог бы достаться новому
+            roots_1 = [first_data.tables, first_data.by_id, first_data.manifest, first_data.policy,
+                       list(first_data.documents.values())]
+            ids_env = mutable_ids(roots_1)
             ids_truth = mutable_ids(first_truth)
             # «баг»: что-то испортило состояние первого эпизода
             first_data.tables["ledger"][0]["debit_minor"] = -999
             first_data.manifest["base_currency"] = "XXX"
+            keep_alive = list(first_truth["issues"])  # освобождённый объект может отдать свой id() новому
             first_truth["issues"].clear()
             env.reset(seed=0, config=B)
             obs, _ = env.reset(seed=0, config=A)
             second_data = core._ep.data
             second_truth = env._grader.session._current.truth
-            self.assertFalse(ids_env & mutable_ids([second_data.tables, second_data.by_id, second_data.manifest,
-                                                    second_data.policy, list(second_data.documents.values())]))
+            roots_2 = [second_data.tables, second_data.by_id, second_data.manifest, second_data.policy,
+                       list(second_data.documents.values())]
+            self.assertFalse(ids_env & mutable_ids(roots_2))
+            self.assertTrue(roots_1 and roots_2)
             self.assertFalse(ids_truth & mutable_ids(second_truth))
             self.assertNotEqual(obs["manifest"]["base_currency"], "XXX")
             self.assertNotEqual(second_data.tables["ledger"][0]["debit_minor"], -999)
             self.assertTrue(second_truth["issues"])  # эталон перечитан, а не взят из прошлого эпизода
+            self.assertTrue(keep_alive)
             self.assertIsNot(first_data, second_data)
         finally:
             env.close()

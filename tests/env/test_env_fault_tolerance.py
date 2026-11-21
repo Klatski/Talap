@@ -40,7 +40,7 @@ class InternalDefects(unittest.TestCase):
         self.check_internal_error(obs, 99)
         self.assertEqual((reward, term, trunc, info), (0.0, False, False, {}))
         obs = self.env.step({"action": "calculator", "expression": "2+2"})[0]
-        self.assertEqual(obs["result"], {"value": "4"})  # среда жива
+        self.assertEqual(obs["result"], "4")  # среда жива
 
     def test_defect_in_parsing(self):
         with mock.patch.object(EnvCore, "_parse", side_effect=KeyError(SECRET)):

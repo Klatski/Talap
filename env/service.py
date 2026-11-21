@@ -3,8 +3,10 @@
 Транспорты оценщика:
   SubprocessGrader — отдельный процесс `python -m grader.service` (официальный режим);
   InProcessGrader  — тот же GraderSession в этом процессе (только тесты/отладка, без изоляции).
-Ключи config, которые разбирает среда: mode (train|eval), max_steps (1..100), time_limit_s (0..60].
-Остальные ключи уходят оценщику (выбор эпизода); их ошибки не раскрывают путей и эталона.
+Ключи config, которые разбирает среда: mode (train | eval | closed; closed — имя жюри для eval),
+max_steps (1..100), time_limit_s (0..60]. Остальные ключи уходят оценщику (выбор эпизода: episode_dir,
+team_config, split, ... — grader/episodes.py); их ошибки не раскрывают путей и эталона.
+Протокол жюри: reset(seed, {"mode": "closed", "episode_dir": "<каталог>", "team_config": {...}}).
 """
 
 from __future__ import annotations
@@ -111,7 +113,7 @@ def split_config(config: Any) -> tuple[dict, dict]:
     grader_part = {k: v for k, v in config.items() if k not in ENV_KEYS}
     mode = env_part.get("mode", "train")
     if mode not in MODES:
-        raise ResetError("mode must be 'train' or 'eval'")
+        raise ResetError("mode must be 'train', 'eval' or 'closed'")
     max_steps = env_part.get("max_steps", MAX_STEPS)
     if isinstance(max_steps, bool) or not isinstance(max_steps, int) or not 1 <= max_steps <= MAX_STEPS:
         raise ResetError(f"max_steps must be an integer 1..{MAX_STEPS}")

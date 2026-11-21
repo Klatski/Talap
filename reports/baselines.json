@@ -22,8 +22,19 @@
    },
    "episode_id": "ep-775BGFMEPG",
    "grader": {
-    "elapsed_s": 0.062,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-775BGFMEPG",
     "errors": [],
     "f1": 0.0,
@@ -38,6 +49,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 0,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-775BGFMEPG",
@@ -54,7 +66,7 @@
    "index": 0,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.3375,
+   "seconds": 0.2664,
    "split": "train",
    "steps": 60,
    "terminated": true,
@@ -73,8 +85,19 @@
    },
    "episode_id": "ep-6T8YWM4JDA",
    "grader": {
-    "elapsed_s": 0.11,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.156,
     "end_reason": "step_limit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6T8YWM4JDA",
     "errors": [],
     "f1": 1.0,
@@ -89,6 +112,7 @@
     "reward": 0.8,
     "reward_experimental": -1.0,
     "run_index": 1,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-6T8YWM4JDA",
@@ -105,7 +129,7 @@
    "index": 1,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.152,
+   "seconds": 0.2041,
    "split": "train",
    "steps": 100,
    "terminated": false,
@@ -127,8 +151,19 @@
    },
    "episode_id": "ep-FHU8P9QET4",
    "grader": {
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.125,
     "end_reason": "step_limit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-FHU8P9QET4",
     "errors": [],
     "f1": 0.0,
@@ -143,6 +178,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 2,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-FHU8P9QET4",
@@ -159,7 +195,7 @@
    "index": 2,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1489,
+   "seconds": 0.1708,
    "split": "train",
    "steps": 100,
    "terminated": false,
@@ -172,8 +208,19 @@
    },
    "episode_id": "ep-TMA46YV5FW",
    "grader": {
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TMA46YV5FW",
     "errors": [
      "submission: must be an object {episode_id, findings}"
@@ -190,6 +237,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 3,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-TMA46YV5FW",
@@ -206,7 +254,7 @@
    "index": 3,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.059,
+   "seconds": 0.0705,
    "split": "train",
    "steps": 26,
    "terminated": true,
@@ -234,8 +282,19 @@
    },
    "episode_id": "ep-6GZ29XPNAT",
    "grader": {
-    "elapsed_s": 0.063,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6GZ29XPNAT",
     "errors": [],
     "f1": 0.0,
@@ -250,6 +309,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 4,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-6GZ29XPNAT",
@@ -266,7 +326,7 @@
    "index": 4,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1071,
+   "seconds": 0.1229,
    "split": "train",
    "steps": 45,
    "terminated": true,
@@ -283,8 +343,9 @@
     },
     "fn_near_miss": 0,
     "fp_by_type": {
-     "cutoff_error": 3,
-     "unapplied_payment": 1
+     "duplicate_invoice": 1,
+     "fx_rate_error": 1,
+     "unapplied_payment": 2
     },
     "fp_on_distractor": {
      "partial_payment": 1
@@ -297,8 +358,19 @@
    },
    "episode_id": "ep-UQQ9DU9QZ5",
    "grader": {
-    "elapsed_s": 0.063,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.093,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UQQ9DU9QZ5",
     "errors": [],
     "f1": 0.0,
@@ -313,6 +385,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 5,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-UQQ9DU9QZ5",
@@ -329,7 +402,7 @@
    "index": 5,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1062,
+   "seconds": 0.1441,
    "split": "train",
    "steps": 65,
    "terminated": true,
@@ -361,8 +434,19 @@
    },
    "episode_id": "ep-WHHN283C3P",
    "grader": {
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-WHHN283C3P",
     "errors": [],
     "f1": 0.0,
@@ -377,6 +461,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 6,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-WHHN283C3P",
@@ -393,7 +478,7 @@
    "index": 6,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0534,
+   "seconds": 0.066,
    "split": "train",
    "steps": 10,
    "terminated": true,
@@ -415,15 +500,26 @@
     },
     "fp_on_distractor": {},
     "fp_reasons": {
-     "no_such_issue": 3
+     "unknown_evidence": 3
     },
     "issues": 5,
     "tp_by_type": {}
    },
    "episode_id": "ep-D2Z88UACCQ",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-D2Z88UACCQ",
     "errors": [],
     "f1": 0.0,
@@ -438,6 +534,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 7,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-D2Z88UACCQ",
@@ -454,7 +551,7 @@
    "index": 7,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0809,
+   "seconds": 0.0807,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -467,8 +564,19 @@
    },
    "episode_id": "ep-5C8KTAPXJA",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-5C8KTAPXJA",
     "errors": [
      "submission: must be an object {episode_id, findings}"
@@ -485,6 +593,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 8,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-5C8KTAPXJA",
@@ -501,7 +610,7 @@
    "index": 8,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0736,
+   "seconds": 0.0746,
    "split": "train",
    "steps": 2,
    "terminated": true,
@@ -509,7 +618,7 @@
   },
   {
    "diagnostics": {
-    "findings": 0,
+    "findings": 2,
     "fn_by_type": {
      "cutoff_error": 3,
      "duplicate_invoice": 1,
@@ -517,21 +626,37 @@
      "unapplied_payment": 1
     },
     "fn_near_miss": 0,
-    "fp_by_type": {},
+    "fp_by_type": {
+     "duplicate_invoice": 1,
+     "fx_rate_error": 1
+    },
     "fp_on_distractor": {},
-    "fp_reasons": {},
+    "fp_reasons": {
+     "no_such_issue": 2
+    },
     "issues": 7,
     "tp_by_type": {}
    },
    "episode_id": "ep-HGF3DHN7EX",
    "grader": {
-    "elapsed_s": 0.063,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-HGF3DHN7EX",
     "errors": [],
     "f1": 0.0,
     "fn": 7,
-    "fp": 0,
+    "fp": 2,
     "grader_version": "1.0.0",
     "inspection_steps": 54,
     "issues_total": 7,
@@ -541,6 +666,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 9,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-HGF3DHN7EX",
@@ -557,7 +683,7 @@
    "index": 9,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1216,
+   "seconds": 0.1282,
    "split": "train",
    "steps": 55,
    "terminated": true,
@@ -582,8 +708,19 @@
    },
    "episode_id": "ep-UM2RGUQC25",
    "grader": {
-    "elapsed_s": 0.093,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UM2RGUQC25",
     "errors": [],
     "f1": 0.0,
@@ -598,6 +735,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 10,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-UM2RGUQC25",
@@ -614,7 +752,7 @@
    "index": 0,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1316,
+   "seconds": 0.0978,
    "split": "dev",
    "steps": 27,
    "terminated": true,
@@ -633,8 +771,19 @@
    },
    "episode_id": "ep-8A8DSJVPNS",
    "grader": {
-    "elapsed_s": 0.156,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.093,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-8A8DSJVPNS",
     "errors": [],
     "f1": 1.0,
@@ -649,6 +798,7 @@
     "reward": 0.888,
     "reward_experimental": 0.888,
     "run_index": 11,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-8A8DSJVPNS",
@@ -665,7 +815,7 @@
    "index": 1,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2222,
+   "seconds": 0.1786,
    "split": "dev",
    "steps": 57,
    "terminated": true,
@@ -689,8 +839,19 @@
    },
    "episode_id": "ep-CG6TEE4B67",
    "grader": {
-    "elapsed_s": 0.266,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.11,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG6TEE4B67",
     "errors": [],
     "f1": 0.0,
@@ -705,6 +866,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 12,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-CG6TEE4B67",
@@ -721,7 +883,7 @@
    "index": 2,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.3154,
+   "seconds": 0.1643,
    "split": "dev",
    "steps": 87,
    "terminated": true,
@@ -753,8 +915,19 @@
    },
    "episode_id": "ep-PPH9SX4ZX3",
    "grader": {
-    "elapsed_s": 0.109,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.125,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-PPH9SX4ZX3",
     "errors": [],
     "f1": 0.0,
@@ -769,6 +942,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 13,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-PPH9SX4ZX3",
@@ -785,7 +959,7 @@
    "index": 3,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1463,
+   "seconds": 0.1449,
    "split": "dev",
    "steps": 64,
    "terminated": true,
@@ -793,7 +967,7 @@
   },
   {
    "diagnostics": {
-    "findings": 1,
+    "findings": 0,
     "fn_by_type": {
      "cutoff_error": 1,
      "duplicate_invoice": 1,
@@ -801,27 +975,32 @@
      "unapplied_payment": 1
     },
     "fn_near_miss": 0,
-    "fp_by_type": {
-     "fx_rate_error": 1
-    },
-    "fp_on_distractor": {
-     "split_payments": 1
-    },
-    "fp_reasons": {
-     "no_such_issue": 1
-    },
+    "fp_by_type": {},
+    "fp_on_distractor": {},
+    "fp_reasons": {},
     "issues": 4,
     "tp_by_type": {}
    },
    "episode_id": "ep-EYYG6PSRBD",
    "grader": {
-    "elapsed_s": 0.141,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.063,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-EYYG6PSRBD",
     "errors": [],
     "f1": 0.0,
     "fn": 4,
-    "fp": 1,
+    "fp": 0,
     "grader_version": "1.0.0",
     "inspection_steps": 69,
     "issues_total": 4,
@@ -831,6 +1010,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 14,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-EYYG6PSRBD",
@@ -847,7 +1027,7 @@
    "index": 4,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2063,
+   "seconds": 0.1508,
    "split": "dev",
    "steps": 70,
    "terminated": true,
@@ -855,36 +1035,39 @@
   },
   {
    "diagnostics": {
-    "findings": 4,
+    "findings": 0,
     "fn_by_type": {
      "cutoff_error": 1,
      "fx_rate_error": 2,
      "unapplied_payment": 1
     },
     "fn_near_miss": 0,
-    "fp_by_type": {
-     "duplicate_invoice": 3,
-     "unapplied_payment": 1
-    },
-    "fp_on_distractor": {
-     "partial_payment": 3,
-     "posting_lag": 2
-    },
-    "fp_reasons": {
-     "no_such_issue": 4
-    },
+    "fp_by_type": {},
+    "fp_on_distractor": {},
+    "fp_reasons": {},
     "issues": 4,
     "tp_by_type": {}
    },
    "episode_id": "ep-MJGNUH73SG",
    "grader": {
-    "elapsed_s": 0.11,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.063,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-MJGNUH73SG",
     "errors": [],
     "f1": 0.0,
     "fn": 4,
-    "fp": 4,
+    "fp": 0,
     "grader_version": "1.0.0",
     "inspection_steps": 53,
     "issues_total": 4,
@@ -894,6 +1077,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 15,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-MJGNUH73SG",
@@ -910,7 +1094,7 @@
    "index": 5,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1465,
+   "seconds": 0.0969,
    "split": "dev",
    "steps": 54,
    "terminated": true,
@@ -923,16 +1107,26 @@
    },
    "episode_id": "ep-7XX674TAX5",
    "grader": {
-    "elapsed_s": 0.063,
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-7XX674TAX5",
     "errors": [
      "findings[0]: missing field affected_ids",
      "findings[0]: missing field claimed_amount_minor",
      "findings[0]: missing field currency",
      "findings[0]: missing field evidence_ids",
-     "findings[0]: missing field explanation",
-     "findings[0].type: must be one of duplicate_invoice, unapplied_payment, fx_rate_error, cutoff_error"
+     "findings[0]: missing field explanation"
     ],
     "f1": 0.0,
     "fn": null,
@@ -946,6 +1140,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 16,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-7XX674TAX5",
@@ -962,7 +1157,7 @@
    "index": 6,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1023,
+   "seconds": 0.0843,
    "split": "dev",
    "steps": 34,
    "terminated": true,
@@ -980,23 +1175,35 @@
     "fn_near_miss": 0,
     "fp_by_type": {
      "cutoff_error": 1,
-     "duplicate_invoice": 1,
-     "fx_rate_error": 1,
-     "unapplied_payment": 1
+     "duplicate_invoice": 3
     },
     "fp_on_distractor": {
+     "boundary_document": 1,
      "split_payments": 1
     },
     "fp_reasons": {
-     "no_such_issue": 4
+     "no_such_issue": 2,
+     "wrong_affected_ids+amount+evidence": 1,
+     "wrong_type+currency+amount+evidence": 1
     },
     "issues": 12,
     "tp_by_type": {}
    },
    "episode_id": "ep-SYDT74KXT8",
    "grader": {
-    "elapsed_s": 0.407,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.188,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-SYDT74KXT8",
     "errors": [],
     "f1": 0.0,
@@ -1011,6 +1218,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 17,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-SYDT74KXT8",
@@ -1027,7 +1235,7 @@
    "index": 7,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.4759,
+   "seconds": 0.2628,
    "split": "dev",
    "steps": 96,
    "terminated": true,
@@ -1035,7 +1243,7 @@
   },
   {
    "diagnostics": {
-    "findings": 3,
+    "findings": 2,
     "fn_by_type": {
      "cutoff_error": 3,
      "duplicate_invoice": 1,
@@ -1044,27 +1252,38 @@
     },
     "fn_near_miss": 0,
     "fp_by_type": {
-     "cutoff_error": 2,
-     "fx_rate_error": 1
+     "cutoff_error": 1,
+     "unapplied_payment": 1
     },
     "fp_on_distractor": {
-     "batch_payment": 1
+     "partial_payment": 1
     },
     "fp_reasons": {
-     "no_such_issue": 3
+     "no_such_issue": 2
     },
     "issues": 6,
     "tp_by_type": {}
    },
    "episode_id": "ep-CG27UFYQPX",
    "grader": {
-    "elapsed_s": 0.219,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG27UFYQPX",
     "errors": [],
     "f1": 0.0,
     "fn": 6,
-    "fp": 3,
+    "fp": 2,
     "grader_version": "1.0.0",
     "inspection_steps": 45,
     "issues_total": 6,
@@ -1074,6 +1293,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 18,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-CG27UFYQPX",
@@ -1090,7 +1310,7 @@
    "index": 8,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.5643,
+   "seconds": 0.1699,
    "split": "dev",
    "steps": 46,
    "terminated": true,
@@ -1112,8 +1332,19 @@
    },
    "episode_id": "ep-TBP8V4MB8H",
    "grader": {
-    "elapsed_s": 0.265,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.156,
     "end_reason": "step_limit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TBP8V4MB8H",
     "errors": [],
     "f1": 0.0,
@@ -1128,6 +1359,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 19,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-TBP8V4MB8H",
@@ -1144,7 +1376,7 @@
    "index": 9,
    "policy": "random",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.4892,
+   "seconds": 0.2386,
    "split": "dev",
    "steps": 100,
    "terminated": false,
@@ -1176,8 +1408,19 @@
    },
    "episode_id": "ep-775BGFMEPG",
    "grader": {
-    "elapsed_s": 0.203,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-775BGFMEPG",
     "errors": [],
     "f1": 0.0,
@@ -1192,6 +1435,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 0,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-775BGFMEPG",
@@ -1208,7 +1452,7 @@
    "index": 0,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.4414,
+   "seconds": 0.2576,
    "split": "train",
    "steps": 15,
    "terminated": true,
@@ -1240,8 +1484,19 @@
    },
    "episode_id": "ep-6T8YWM4JDA",
    "grader": {
-    "elapsed_s": 0.343,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.11,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6T8YWM4JDA",
     "errors": [],
     "f1": 0.0,
@@ -1256,6 +1511,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 1,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-6T8YWM4JDA",
@@ -1272,7 +1528,7 @@
    "index": 1,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.3874,
+   "seconds": 0.1554,
    "split": "train",
    "steps": 18,
    "terminated": true,
@@ -1308,8 +1564,19 @@
    },
    "episode_id": "ep-FHU8P9QET4",
    "grader": {
-    "elapsed_s": 0.203,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-FHU8P9QET4",
     "errors": [],
     "f1": 0.0625,
@@ -1324,6 +1591,7 @@
     "reward": -0.899,
     "reward_experimental": -0.899,
     "run_index": 2,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-FHU8P9QET4",
@@ -1340,7 +1608,7 @@
    "index": 2,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2423,
+   "seconds": 0.0993,
    "split": "train",
    "steps": 13,
    "terminated": true,
@@ -1375,8 +1643,19 @@
    },
    "episode_id": "ep-TMA46YV5FW",
    "grader": {
-    "elapsed_s": 0.187,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TMA46YV5FW",
     "errors": [],
     "f1": 0.42105263157894735,
@@ -1391,6 +1670,7 @@
     "reward": -0.18789473684210525,
     "reward_experimental": -0.18789473684210525,
     "run_index": 3,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-TMA46YV5FW",
@@ -1407,7 +1687,7 @@
    "index": 3,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.228,
+   "seconds": 0.1357,
    "split": "train",
    "steps": 16,
    "terminated": true,
@@ -1442,8 +1722,19 @@
    },
    "episode_id": "ep-6GZ29XPNAT",
    "grader": {
-    "elapsed_s": 0.234,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.109,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6GZ29XPNAT",
     "errors": [],
     "f1": 0.17647058823529413,
@@ -1458,6 +1749,7 @@
     "reward": -0.6850588235294117,
     "reward_experimental": -0.6850588235294117,
     "run_index": 4,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-6GZ29XPNAT",
@@ -1474,7 +1766,7 @@
    "index": 4,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2779,
+   "seconds": 0.1595,
    "split": "train",
    "steps": 20,
    "terminated": true,
@@ -1513,8 +1805,19 @@
    },
    "episode_id": "ep-UQQ9DU9QZ5",
    "grader": {
-    "elapsed_s": 0.235,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UQQ9DU9QZ5",
     "errors": [],
     "f1": 0.11764705882352941,
@@ -1529,6 +1832,7 @@
     "reward": -0.8007058823529412,
     "reward_experimental": -0.8007058823529412,
     "run_index": 5,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-UQQ9DU9QZ5",
@@ -1545,7 +1849,7 @@
    "index": 5,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.277,
+   "seconds": 0.1468,
    "split": "train",
    "steps": 19,
    "terminated": true,
@@ -1583,8 +1887,19 @@
    },
    "episode_id": "ep-WHHN283C3P",
    "grader": {
-    "elapsed_s": 0.203,
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-WHHN283C3P",
     "errors": [],
     "f1": 0.21052631578947367,
@@ -1599,6 +1914,7 @@
     "reward": -0.6069473684210527,
     "reward_experimental": -0.6069473684210527,
     "run_index": 6,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-WHHN283C3P",
@@ -1615,7 +1931,7 @@
    "index": 6,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2454,
+   "seconds": 0.124,
    "split": "train",
    "steps": 15,
    "terminated": true,
@@ -1653,8 +1969,19 @@
    },
    "episode_id": "ep-D2Z88UACCQ",
    "grader": {
-    "elapsed_s": 0.469,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.187,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-D2Z88UACCQ",
     "errors": [],
     "f1": 0.05714285714285714,
@@ -1669,6 +1996,7 @@
     "reward": -0.9517142857142857,
     "reward_experimental": -0.9517142857142857,
     "run_index": 7,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-D2Z88UACCQ",
@@ -1685,7 +2013,7 @@
    "index": 7,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.5501,
+   "seconds": 0.2692,
    "split": "train",
    "steps": 34,
    "terminated": true,
@@ -1726,8 +2054,19 @@
    },
    "episode_id": "ep-5C8KTAPXJA",
    "grader": {
-    "elapsed_s": 0.422,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.187,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-5C8KTAPXJA",
     "errors": [],
     "f1": 0.19047619047619047,
@@ -1742,6 +2081,7 @@
     "reward": -0.677047619047619,
     "reward_experimental": -0.677047619047619,
     "run_index": 8,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-5C8KTAPXJA",
@@ -1758,7 +2098,7 @@
    "index": 8,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.5009,
+   "seconds": 0.2514,
    "split": "train",
    "steps": 30,
    "terminated": true,
@@ -1800,8 +2140,19 @@
    },
    "episode_id": "ep-HGF3DHN7EX",
    "grader": {
-    "elapsed_s": 0.281,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.125,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-HGF3DHN7EX",
     "errors": [],
     "f1": 0.21621621621621623,
@@ -1816,6 +2167,7 @@
     "reward": -0.6095675675675676,
     "reward_experimental": -0.6095675675675676,
     "run_index": 9,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-HGF3DHN7EX",
@@ -1832,7 +2184,7 @@
    "index": 9,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.4347,
+   "seconds": 0.1748,
    "split": "train",
    "steps": 22,
    "terminated": true,
@@ -1864,8 +2216,19 @@
    },
    "episode_id": "ep-UM2RGUQC25",
    "grader": {
-    "elapsed_s": 0.281,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.109,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UM2RGUQC25",
     "errors": [],
     "f1": 0.0,
@@ -1880,6 +2243,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 10,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-UM2RGUQC25",
@@ -1896,7 +2260,7 @@
    "index": 0,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.4126,
+   "seconds": 0.1507,
    "split": "dev",
    "steps": 20,
    "terminated": true,
@@ -1926,8 +2290,19 @@
    },
    "episode_id": "ep-8A8DSJVPNS",
    "grader": {
-    "elapsed_s": 0.703,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-8A8DSJVPNS",
     "errors": [],
     "f1": 0.0,
@@ -1942,6 +2317,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 11,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-8A8DSJVPNS",
@@ -1958,7 +2334,7 @@
    "index": 1,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.9833,
+   "seconds": 0.2672,
    "split": "dev",
    "steps": 37,
    "terminated": true,
@@ -1998,8 +2374,19 @@
    },
    "episode_id": "ep-CG6TEE4B67",
    "grader": {
-    "elapsed_s": 0.141,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.093,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG6TEE4B67",
     "errors": [],
     "f1": 0.5,
@@ -2014,6 +2401,7 @@
     "reward": -0.04,
     "reward_experimental": -0.04,
     "run_index": 12,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-CG6TEE4B67",
@@ -2030,7 +2418,7 @@
    "index": 2,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.3323,
+   "seconds": 0.1473,
    "split": "dev",
    "steps": 21,
    "terminated": true,
@@ -2066,8 +2454,19 @@
    },
    "episode_id": "ep-PPH9SX4ZX3",
    "grader": {
-    "elapsed_s": 0.047,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-PPH9SX4ZX3",
     "errors": [],
     "f1": 0.3333333333333333,
@@ -2082,6 +2481,7 @@
     "reward": -0.35133333333333333,
     "reward_experimental": -0.35133333333333333,
     "run_index": 13,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-PPH9SX4ZX3",
@@ -2098,7 +2498,7 @@
    "index": 3,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0821,
+   "seconds": 0.0879,
    "split": "dev",
    "steps": 10,
    "terminated": true,
@@ -2136,8 +2536,19 @@
    },
    "episode_id": "ep-EYYG6PSRBD",
    "grader": {
-    "elapsed_s": 0.141,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.172,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-EYYG6PSRBD",
     "errors": [],
     "f1": 0.11764705882352941,
@@ -2152,6 +2563,7 @@
     "reward": -0.8287058823529412,
     "reward_experimental": -0.8287058823529412,
     "run_index": 14,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-EYYG6PSRBD",
@@ -2168,7 +2580,7 @@
    "index": 4,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2165,
+   "seconds": 0.2561,
    "split": "dev",
    "steps": 33,
    "terminated": true,
@@ -2204,8 +2616,19 @@
    },
    "episode_id": "ep-MJGNUH73SG",
    "grader": {
-    "elapsed_s": 0.047,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-MJGNUH73SG",
     "errors": [],
     "f1": 0.25,
@@ -2220,6 +2643,7 @@
     "reward": -0.526,
     "reward_experimental": -0.526,
     "run_index": 15,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-MJGNUH73SG",
@@ -2236,7 +2660,7 @@
    "index": 5,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0832,
+   "seconds": 0.1277,
    "split": "dev",
    "steps": 14,
    "terminated": true,
@@ -2273,8 +2697,19 @@
    },
    "episode_id": "ep-7XX674TAX5",
    "grader": {
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.093,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-7XX674TAX5",
     "errors": [],
     "f1": 0.10526315789473684,
@@ -2289,6 +2724,7 @@
     "reward": -0.8234736842105264,
     "reward_experimental": -0.8234736842105264,
     "run_index": 16,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-7XX674TAX5",
@@ -2305,7 +2741,7 @@
    "index": 6,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1298,
+   "seconds": 0.1571,
    "split": "dev",
    "steps": 18,
    "terminated": true,
@@ -2342,8 +2778,19 @@
    },
    "episode_id": "ep-SYDT74KXT8",
    "grader": {
-    "elapsed_s": 0.156,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.187,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-SYDT74KXT8",
     "errors": [],
     "f1": 0.7333333333333333,
@@ -2358,6 +2805,7 @@
     "reward": 0.40066666666666667,
     "reward_experimental": 0.40066666666666667,
     "run_index": 17,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-SYDT74KXT8",
@@ -2374,7 +2822,7 @@
    "index": 7,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.222,
+   "seconds": 0.2578,
    "split": "dev",
    "steps": 34,
    "terminated": true,
@@ -2409,8 +2857,19 @@
    },
    "episode_id": "ep-CG27UFYQPX",
    "grader": {
-    "elapsed_s": 0.172,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.219,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG27UFYQPX",
     "errors": [],
     "f1": 0.4,
@@ -2425,6 +2884,7 @@
     "reward": -0.28,
     "reward_experimental": -0.28,
     "run_index": 18,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-CG27UFYQPX",
@@ -2441,7 +2901,7 @@
    "index": 8,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2503,
+   "seconds": 0.3001,
    "split": "dev",
    "steps": 41,
    "terminated": true,
@@ -2475,8 +2935,19 @@
    },
    "episode_id": "ep-TBP8V4MB8H",
    "grader": {
-    "elapsed_s": 0.172,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TBP8V4MB8H",
     "errors": [],
     "f1": 0.25,
@@ -2491,6 +2962,7 @@
     "reward": -0.572,
     "reward_experimental": -0.572,
     "run_index": 19,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-TBP8V4MB8H",
@@ -2507,7 +2979,7 @@
    "index": 9,
    "policy": "reconcile",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2338,
+   "seconds": 0.2983,
    "split": "dev",
    "steps": 37,
    "terminated": true,
@@ -2539,8 +3011,19 @@
    },
    "episode_id": "ep-775BGFMEPG",
    "grader": {
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.015,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-775BGFMEPG",
     "errors": [],
     "f1": 0.0,
@@ -2555,6 +3038,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 0,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-775BGFMEPG",
@@ -2571,7 +3055,7 @@
    "index": 0,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.248,
+   "seconds": 0.2193,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -2601,8 +3085,19 @@
    },
    "episode_id": "ep-6T8YWM4JDA",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6T8YWM4JDA",
     "errors": [],
     "f1": 0.0,
@@ -2617,6 +3112,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 1,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-6T8YWM4JDA",
@@ -2633,7 +3129,7 @@
    "index": 1,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0675,
+   "seconds": 0.0837,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -2667,8 +3163,19 @@
    },
    "episode_id": "ep-FHU8P9QET4",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.032,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-FHU8P9QET4",
     "errors": [],
     "f1": 0.0,
@@ -2683,6 +3190,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 2,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-FHU8P9QET4",
@@ -2699,7 +3207,7 @@
    "index": 2,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0526,
+   "seconds": 0.0673,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -2736,8 +3244,19 @@
    },
    "episode_id": "ep-TMA46YV5FW",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.032,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TMA46YV5FW",
     "errors": [],
     "f1": 0.0,
@@ -2752,6 +3271,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 3,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-TMA46YV5FW",
@@ -2768,7 +3288,7 @@
    "index": 3,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0598,
+   "seconds": 0.0761,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -2800,8 +3320,19 @@
    },
    "episode_id": "ep-6GZ29XPNAT",
    "grader": {
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6GZ29XPNAT",
     "errors": [],
     "f1": 0.0,
@@ -2816,6 +3347,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 4,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-6GZ29XPNAT",
@@ -2832,7 +3364,7 @@
    "index": 4,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0707,
+   "seconds": 0.0907,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -2868,8 +3400,19 @@
    },
    "episode_id": "ep-UQQ9DU9QZ5",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.047,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UQQ9DU9QZ5",
     "errors": [],
     "f1": 0.0,
@@ -2884,6 +3427,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 5,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-UQQ9DU9QZ5",
@@ -2900,7 +3444,7 @@
    "index": 5,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0719,
+   "seconds": 0.0968,
    "split": "train",
    "steps": 5,
    "terminated": true,
@@ -2934,8 +3478,19 @@
    },
    "episode_id": "ep-WHHN283C3P",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-WHHN283C3P",
     "errors": [],
     "f1": 0.0,
@@ -2950,6 +3505,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 6,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-WHHN283C3P",
@@ -2966,7 +3522,7 @@
    "index": 6,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0603,
+   "seconds": 0.0752,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -3001,8 +3557,19 @@
    },
    "episode_id": "ep-D2Z88UACCQ",
    "grader": {
-    "elapsed_s": 0.031,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.047,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-D2Z88UACCQ",
     "errors": [],
     "f1": 0.0,
@@ -3017,6 +3584,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 7,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-D2Z88UACCQ",
@@ -3033,7 +3601,7 @@
    "index": 7,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0975,
+   "seconds": 0.1244,
    "split": "train",
    "steps": 5,
    "terminated": true,
@@ -3068,8 +3636,19 @@
    },
    "episode_id": "ep-5C8KTAPXJA",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.032,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-5C8KTAPXJA",
     "errors": [],
     "f1": 0.0,
@@ -3084,6 +3663,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 8,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-5C8KTAPXJA",
@@ -3100,7 +3680,7 @@
    "index": 8,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0879,
+   "seconds": 0.1152,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -3133,8 +3713,19 @@
    },
    "episode_id": "ep-HGF3DHN7EX",
    "grader": {
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-HGF3DHN7EX",
     "errors": [],
     "f1": 0.0,
@@ -3149,6 +3740,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 9,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-HGF3DHN7EX",
@@ -3165,7 +3757,7 @@
    "index": 9,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0744,
+   "seconds": 0.0959,
    "split": "train",
    "steps": 4,
    "terminated": true,
@@ -3194,8 +3786,19 @@
    },
    "episode_id": "ep-UM2RGUQC25",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UM2RGUQC25",
     "errors": [],
     "f1": 0.0,
@@ -3210,6 +3813,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 10,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-UM2RGUQC25",
@@ -3226,7 +3830,7 @@
    "index": 0,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.066,
+   "seconds": 0.0826,
    "split": "dev",
    "steps": 4,
    "terminated": true,
@@ -3254,8 +3858,19 @@
    },
    "episode_id": "ep-8A8DSJVPNS",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.032,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-8A8DSJVPNS",
     "errors": [],
     "f1": 0.0,
@@ -3270,6 +3885,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 11,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-8A8DSJVPNS",
@@ -3286,7 +3902,7 @@
    "index": 1,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0987,
+   "seconds": 0.1177,
    "split": "dev",
    "steps": 5,
    "terminated": true,
@@ -3321,8 +3937,19 @@
    },
    "episode_id": "ep-CG6TEE4B67",
    "grader": {
-    "elapsed_s": 0.031,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.032,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG6TEE4B67",
     "errors": [],
     "f1": 0.0,
@@ -3337,6 +3964,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 12,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-CG6TEE4B67",
@@ -3353,7 +3981,7 @@
    "index": 2,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0658,
+   "seconds": 0.0772,
    "split": "dev",
    "steps": 5,
    "terminated": true,
@@ -3387,8 +4015,19 @@
    },
    "episode_id": "ep-PPH9SX4ZX3",
    "grader": {
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-PPH9SX4ZX3",
     "errors": [],
     "f1": 0.0,
@@ -3403,6 +4042,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 13,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-PPH9SX4ZX3",
@@ -3419,7 +4059,7 @@
    "index": 3,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0454,
+   "seconds": 0.0655,
    "split": "dev",
    "steps": 3,
    "terminated": true,
@@ -3453,8 +4093,19 @@
    },
    "episode_id": "ep-EYYG6PSRBD",
    "grader": {
-    "elapsed_s": 0.031,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.047,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-EYYG6PSRBD",
     "errors": [],
     "f1": 0.0,
@@ -3469,6 +4120,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 14,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-EYYG6PSRBD",
@@ -3485,7 +4137,7 @@
    "index": 4,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0974,
+   "seconds": 0.1284,
    "split": "dev",
    "steps": 5,
    "terminated": true,
@@ -3519,8 +4171,19 @@
    },
    "episode_id": "ep-MJGNUH73SG",
    "grader": {
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-MJGNUH73SG",
     "errors": [],
     "f1": 0.0,
@@ -3535,6 +4198,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 15,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-MJGNUH73SG",
@@ -3551,7 +4215,7 @@
    "index": 5,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0446,
+   "seconds": 0.0587,
    "split": "dev",
    "steps": 3,
    "terminated": true,
@@ -3586,8 +4250,19 @@
    },
    "episode_id": "ep-7XX674TAX5",
    "grader": {
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-7XX674TAX5",
     "errors": [],
     "f1": 0.0,
@@ -3602,6 +4277,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 16,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-7XX674TAX5",
@@ -3618,7 +4294,7 @@
    "index": 6,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0689,
+   "seconds": 0.0957,
    "split": "dev",
    "steps": 4,
    "terminated": true,
@@ -3653,8 +4329,19 @@
    },
    "episode_id": "ep-SYDT74KXT8",
    "grader": {
-    "elapsed_s": 0.031,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-SYDT74KXT8",
     "errors": [],
     "f1": 0.0,
@@ -3669,6 +4356,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 17,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-SYDT74KXT8",
@@ -3685,7 +4373,7 @@
    "index": 7,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0986,
+   "seconds": 0.1265,
    "split": "dev",
    "steps": 5,
    "terminated": true,
@@ -3721,8 +4409,19 @@
    },
    "episode_id": "ep-CG27UFYQPX",
    "grader": {
-    "elapsed_s": 0.032,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG27UFYQPX",
     "errors": [],
     "f1": 0.0,
@@ -3737,6 +4436,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 18,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-CG27UFYQPX",
@@ -3753,7 +4453,7 @@
    "index": 8,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1011,
+   "seconds": 0.1212,
    "split": "dev",
    "steps": 4,
    "terminated": true,
@@ -3785,8 +4485,19 @@
    },
    "episode_id": "ep-TBP8V4MB8H",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.031,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TBP8V4MB8H",
     "errors": [],
     "f1": 0.0,
@@ -3801,6 +4512,7 @@
     "reward": -1.0,
     "reward_experimental": -1.0,
     "run_index": 19,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-TBP8V4MB8H",
@@ -3817,7 +4529,7 @@
    "index": 9,
    "policy": "flag_all",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1028,
+   "seconds": 0.1181,
    "split": "dev",
    "steps": 4,
    "terminated": true,
@@ -3836,8 +4548,19 @@
    },
    "episode_id": "ep-775BGFMEPG",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-775BGFMEPG",
     "errors": [],
     "f1": 1.0,
@@ -3852,6 +4575,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 0,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-775BGFMEPG",
@@ -3868,7 +4592,7 @@
    "index": 0,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2753,
+   "seconds": 0.3456,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -3887,8 +4611,19 @@
    },
    "episode_id": "ep-6T8YWM4JDA",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.015,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6T8YWM4JDA",
     "errors": [],
     "f1": 1.0,
@@ -3903,6 +4638,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 1,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-6T8YWM4JDA",
@@ -3919,7 +4655,7 @@
    "index": 1,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0465,
+   "seconds": 0.06,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -3941,8 +4677,19 @@
    },
    "episode_id": "ep-FHU8P9QET4",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-FHU8P9QET4",
     "errors": [],
     "f1": 1.0,
@@ -3957,6 +4704,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 2,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-FHU8P9QET4",
@@ -3973,7 +4721,7 @@
    "index": 2,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0318,
+   "seconds": 0.0442,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -3997,8 +4745,19 @@
    },
    "episode_id": "ep-TMA46YV5FW",
    "grader": {
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TMA46YV5FW",
     "errors": [],
     "f1": 1.0,
@@ -4013,6 +4772,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 3,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-TMA46YV5FW",
@@ -4029,7 +4789,7 @@
    "index": 3,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0406,
+   "seconds": 0.052,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4051,8 +4811,19 @@
    },
    "episode_id": "ep-6GZ29XPNAT",
    "grader": {
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6GZ29XPNAT",
     "errors": [],
     "f1": 1.0,
@@ -4067,6 +4838,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 4,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-6GZ29XPNAT",
@@ -4083,7 +4855,7 @@
    "index": 4,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0489,
+   "seconds": 0.0604,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4107,8 +4879,19 @@
    },
    "episode_id": "ep-UQQ9DU9QZ5",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UQQ9DU9QZ5",
     "errors": [],
     "f1": 1.0,
@@ -4123,6 +4906,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 5,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-UQQ9DU9QZ5",
@@ -4139,7 +4923,7 @@
    "index": 5,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0475,
+   "seconds": 0.066,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4162,8 +4946,19 @@
    },
    "episode_id": "ep-WHHN283C3P",
    "grader": {
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-WHHN283C3P",
     "errors": [],
     "f1": 1.0,
@@ -4178,6 +4973,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 6,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-WHHN283C3P",
@@ -4194,7 +4990,7 @@
    "index": 6,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0404,
+   "seconds": 0.0495,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4218,8 +5014,19 @@
    },
    "episode_id": "ep-D2Z88UACCQ",
    "grader": {
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.015,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-D2Z88UACCQ",
     "errors": [],
     "f1": 1.0,
@@ -4234,6 +5041,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 7,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-D2Z88UACCQ",
@@ -4250,7 +5058,7 @@
    "index": 7,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0728,
+   "seconds": 0.0846,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4274,8 +5082,19 @@
    },
    "episode_id": "ep-5C8KTAPXJA",
    "grader": {
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-5C8KTAPXJA",
     "errors": [],
     "f1": 1.0,
@@ -4290,6 +5109,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 8,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-5C8KTAPXJA",
@@ -4306,7 +5126,7 @@
    "index": 8,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0676,
+   "seconds": 0.0781,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4330,8 +5150,19 @@
    },
    "episode_id": "ep-HGF3DHN7EX",
    "grader": {
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "train"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-HGF3DHN7EX",
     "errors": [],
     "f1": 1.0,
@@ -4346,6 +5177,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 9,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-HGF3DHN7EX",
@@ -4362,7 +5194,7 @@
    "index": 9,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0549,
+   "seconds": 0.0612,
    "split": "train",
    "steps": 1,
    "terminated": true,
@@ -4381,8 +5213,19 @@
    },
    "episode_id": "ep-UM2RGUQC25",
    "grader": {
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UM2RGUQC25",
     "errors": [],
     "f1": 1.0,
@@ -4397,6 +5240,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 10,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-UM2RGUQC25",
@@ -4413,7 +5257,7 @@
    "index": 0,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0454,
+   "seconds": 0.0565,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4432,8 +5276,19 @@
    },
    "episode_id": "ep-8A8DSJVPNS",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-8A8DSJVPNS",
     "errors": [],
     "f1": 1.0,
@@ -4448,6 +5303,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 11,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-8A8DSJVPNS",
@@ -4464,7 +5320,7 @@
    "index": 1,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.073,
+   "seconds": 0.0864,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4488,8 +5344,19 @@
    },
    "episode_id": "ep-CG6TEE4B67",
    "grader": {
-    "elapsed_s": 0.016,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG6TEE4B67",
     "errors": [],
     "f1": 1.0,
@@ -4504,6 +5371,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 12,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-CG6TEE4B67",
@@ -4520,7 +5388,7 @@
    "index": 2,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0446,
+   "seconds": 0.0575,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4544,8 +5412,19 @@
    },
    "episode_id": "ep-PPH9SX4ZX3",
    "grader": {
-    "elapsed_s": 0.015,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-PPH9SX4ZX3",
     "errors": [],
     "f1": 1.0,
@@ -4560,6 +5439,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 13,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-PPH9SX4ZX3",
@@ -4576,7 +5456,7 @@
    "index": 3,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0306,
+   "seconds": 0.0348,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4600,8 +5480,19 @@
    },
    "episode_id": "ep-EYYG6PSRBD",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.016,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-EYYG6PSRBD",
     "errors": [],
     "f1": 1.0,
@@ -4616,6 +5507,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 14,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-EYYG6PSRBD",
@@ -4632,7 +5524,7 @@
    "index": 4,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0704,
+   "seconds": 0.0864,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4655,8 +5547,19 @@
    },
    "episode_id": "ep-MJGNUH73SG",
    "grader": {
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-MJGNUH73SG",
     "errors": [],
     "f1": 1.0,
@@ -4671,6 +5574,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 15,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-MJGNUH73SG",
@@ -4687,7 +5591,7 @@
    "index": 5,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0306,
+   "seconds": 0.0386,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4711,8 +5615,19 @@
    },
    "episode_id": "ep-7XX674TAX5",
    "grader": {
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-7XX674TAX5",
     "errors": [],
     "f1": 1.0,
@@ -4727,6 +5642,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 16,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-7XX674TAX5",
@@ -4743,7 +5659,7 @@
    "index": 6,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0499,
+   "seconds": 0.0569,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4767,8 +5683,19 @@
    },
    "episode_id": "ep-SYDT74KXT8",
    "grader": {
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-SYDT74KXT8",
     "errors": [],
     "f1": 1.0,
@@ -4783,6 +5710,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 17,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-SYDT74KXT8",
@@ -4799,7 +5727,7 @@
    "index": 7,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0697,
+   "seconds": 0.0919,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4823,8 +5751,19 @@
    },
    "episode_id": "ep-CG27UFYQPX",
    "grader": {
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.0,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG27UFYQPX",
     "errors": [],
     "f1": 1.0,
@@ -4839,6 +5778,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 18,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-CG27UFYQPX",
@@ -4855,7 +5795,7 @@
    "index": 8,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0778,
+   "seconds": 0.0925,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4877,8 +5817,19 @@
    },
    "episode_id": "ep-TBP8V4MB8H",
    "grader": {
-    "elapsed_s": 0.0,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.015,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TBP8V4MB8H",
     "errors": [],
     "f1": 1.0,
@@ -4893,6 +5844,7 @@
     "reward": 1.0,
     "reward_experimental": 1.0,
     "run_index": 19,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-TBP8V4MB8H",
@@ -4909,7 +5861,7 @@
    "index": 9,
    "policy": "oracle",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.075,
+   "seconds": 0.098,
    "split": "dev",
    "steps": 1,
    "terminated": true,
@@ -4928,8 +5880,19 @@
    },
    "episode_id": "ep-775BGFMEPG",
    "grader": {
-    "elapsed_s": 0.062,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.063,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-775BGFMEPG",
     "errors": [],
     "f1": 1.0,
@@ -4944,6 +5907,7 @@
     "reward": 0.972,
     "reward_experimental": 0.972,
     "run_index": 0,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-775BGFMEPG",
@@ -4960,7 +5924,7 @@
    "index": 0,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.3084,
+   "seconds": 0.274,
    "split": "train",
    "steps": 15,
    "terminated": true,
@@ -4979,8 +5943,19 @@
    },
    "episode_id": "ep-6T8YWM4JDA",
    "grader": {
-    "elapsed_s": 0.078,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6T8YWM4JDA",
     "errors": [],
     "f1": 1.0,
@@ -4995,6 +5970,7 @@
     "reward": 0.966,
     "reward_experimental": 0.966,
     "run_index": 1,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-6T8YWM4JDA",
@@ -5011,7 +5987,7 @@
    "index": 1,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1209,
+   "seconds": 0.1632,
    "split": "train",
    "steps": 18,
    "terminated": true,
@@ -5033,8 +6009,19 @@
    },
    "episode_id": "ep-FHU8P9QET4",
    "grader": {
-    "elapsed_s": 0.047,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-FHU8P9QET4",
     "errors": [],
     "f1": 1.0,
@@ -5049,6 +6036,7 @@
     "reward": 0.976,
     "reward_experimental": 0.976,
     "run_index": 2,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-FHU8P9QET4",
@@ -5065,7 +6053,7 @@
    "index": 2,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0798,
+   "seconds": 0.1033,
    "split": "train",
    "steps": 13,
    "terminated": true,
@@ -5089,8 +6077,19 @@
    },
    "episode_id": "ep-TMA46YV5FW",
    "grader": {
-    "elapsed_s": 0.062,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TMA46YV5FW",
     "errors": [],
     "f1": 1.0,
@@ -5105,6 +6104,7 @@
     "reward": 0.97,
     "reward_experimental": 0.97,
     "run_index": 3,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-TMA46YV5FW",
@@ -5121,7 +6121,7 @@
    "index": 3,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1075,
+   "seconds": 0.1285,
    "split": "train",
    "steps": 16,
    "terminated": true,
@@ -5143,8 +6143,19 @@
    },
    "episode_id": "ep-6GZ29XPNAT",
    "grader": {
-    "elapsed_s": 0.094,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.093,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-6GZ29XPNAT",
     "errors": [],
     "f1": 1.0,
@@ -5159,6 +6170,7 @@
     "reward": 0.962,
     "reward_experimental": 0.962,
     "run_index": 4,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-6GZ29XPNAT",
@@ -5175,7 +6187,7 @@
    "index": 4,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.133,
+   "seconds": 0.1597,
    "split": "train",
    "steps": 20,
    "terminated": true,
@@ -5199,8 +6211,19 @@
    },
    "episode_id": "ep-UQQ9DU9QZ5",
    "grader": {
-    "elapsed_s": 0.078,
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.094,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UQQ9DU9QZ5",
     "errors": [],
     "f1": 1.0,
@@ -5215,6 +6238,7 @@
     "reward": 0.964,
     "reward_experimental": 0.964,
     "run_index": 5,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-UQQ9DU9QZ5",
@@ -5231,7 +6255,7 @@
    "index": 5,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1227,
+   "seconds": 0.1528,
    "split": "train",
    "steps": 19,
    "terminated": true,
@@ -5254,8 +6278,19 @@
    },
    "episode_id": "ep-WHHN283C3P",
    "grader": {
-    "elapsed_s": 0.063,
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.078,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-WHHN283C3P",
     "errors": [],
     "f1": 1.0,
@@ -5270,6 +6305,7 @@
     "reward": 0.972,
     "reward_experimental": 0.972,
     "run_index": 6,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-WHHN283C3P",
@@ -5286,7 +6322,7 @@
    "index": 6,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1003,
+   "seconds": 0.1237,
    "split": "train",
    "steps": 15,
    "terminated": true,
@@ -5310,8 +6346,19 @@
    },
    "episode_id": "ep-D2Z88UACCQ",
    "grader": {
-    "elapsed_s": 0.14,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.204,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-D2Z88UACCQ",
     "errors": [],
     "f1": 1.0,
@@ -5326,6 +6373,7 @@
     "reward": 0.934,
     "reward_experimental": 0.934,
     "run_index": 7,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-D2Z88UACCQ",
@@ -5342,7 +6390,7 @@
    "index": 7,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.224,
+   "seconds": 0.2896,
    "split": "train",
    "steps": 34,
    "terminated": true,
@@ -5366,8 +6414,19 @@
    },
    "episode_id": "ep-5C8KTAPXJA",
    "grader": {
-    "elapsed_s": 0.14,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-5C8KTAPXJA",
     "errors": [],
     "f1": 1.0,
@@ -5382,6 +6441,7 @@
     "reward": 0.942,
     "reward_experimental": 0.942,
     "run_index": 8,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-5C8KTAPXJA",
@@ -5398,7 +6458,7 @@
    "index": 8,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1992,
+   "seconds": 0.282,
    "split": "train",
    "steps": 30,
    "terminated": true,
@@ -5422,8 +6482,19 @@
    },
    "episode_id": "ep-HGF3DHN7EX",
    "grader": {
-    "elapsed_s": 0.094,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "train"
+    },
+    "elapsed_s": 0.125,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-HGF3DHN7EX",
     "errors": [],
     "f1": 1.0,
@@ -5438,6 +6509,7 @@
     "reward": 0.958,
     "reward_experimental": 0.958,
     "run_index": 9,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-HGF3DHN7EX",
@@ -5454,7 +6526,7 @@
    "index": 9,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1445,
+   "seconds": 0.1753,
    "split": "train",
    "steps": 22,
    "terminated": true,
@@ -5473,8 +6545,19 @@
    },
    "episode_id": "ep-UM2RGUQC25",
    "grader": {
-    "elapsed_s": 0.094,
+    "config": {
+     "index": 0,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.11,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-UM2RGUQC25",
     "errors": [],
     "f1": 1.0,
@@ -5489,6 +6572,7 @@
     "reward": 0.962,
     "reward_experimental": 0.962,
     "run_index": 10,
+    "seed": 0,
     "source": {
      "config_version": null,
      "episode": "ep-UM2RGUQC25",
@@ -5505,7 +6589,7 @@
    "index": 0,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1271,
+   "seconds": 0.1661,
    "split": "dev",
    "steps": 20,
    "terminated": true,
@@ -5524,8 +6608,19 @@
    },
    "episode_id": "ep-8A8DSJVPNS",
    "grader": {
-    "elapsed_s": 0.156,
+    "config": {
+     "index": 1,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-8A8DSJVPNS",
     "errors": [],
     "f1": 1.0,
@@ -5540,6 +6635,7 @@
     "reward": 0.928,
     "reward_experimental": 0.928,
     "run_index": 11,
+    "seed": 1,
     "source": {
      "config_version": null,
      "episode": "ep-8A8DSJVPNS",
@@ -5556,7 +6652,7 @@
    "index": 1,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2272,
+   "seconds": 0.2923,
    "split": "dev",
    "steps": 37,
    "terminated": true,
@@ -5580,8 +6676,19 @@
    },
    "episode_id": "ep-CG6TEE4B67",
    "grader": {
-    "elapsed_s": 0.078,
+    "config": {
+     "index": 2,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.11,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG6TEE4B67",
     "errors": [],
     "f1": 1.0,
@@ -5596,6 +6703,7 @@
     "reward": 0.96,
     "reward_experimental": 0.96,
     "run_index": 12,
+    "seed": 2,
     "source": {
      "config_version": null,
      "episode": "ep-CG6TEE4B67",
@@ -5612,7 +6720,7 @@
    "index": 2,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1231,
+   "seconds": 0.1722,
    "split": "dev",
    "steps": 21,
    "terminated": true,
@@ -5636,8 +6744,19 @@
    },
    "episode_id": "ep-PPH9SX4ZX3",
    "grader": {
-    "elapsed_s": 0.047,
+    "config": {
+     "index": 3,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-PPH9SX4ZX3",
     "errors": [],
     "f1": 1.0,
@@ -5652,6 +6771,7 @@
     "reward": 0.982,
     "reward_experimental": 0.982,
     "run_index": 13,
+    "seed": 3,
     "source": {
      "config_version": null,
      "episode": "ep-PPH9SX4ZX3",
@@ -5668,7 +6788,7 @@
    "index": 3,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0721,
+   "seconds": 0.1004,
    "split": "dev",
    "steps": 10,
    "terminated": true,
@@ -5692,8 +6812,19 @@
    },
    "episode_id": "ep-EYYG6PSRBD",
    "grader": {
-    "elapsed_s": 0.141,
+    "config": {
+     "index": 4,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-EYYG6PSRBD",
     "errors": [],
     "f1": 1.0,
@@ -5708,6 +6839,7 @@
     "reward": 0.936,
     "reward_experimental": 0.936,
     "run_index": 14,
+    "seed": 4,
     "source": {
      "config_version": null,
      "episode": "ep-EYYG6PSRBD",
@@ -5724,7 +6856,7 @@
    "index": 4,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2151,
+   "seconds": 0.2834,
    "split": "dev",
    "steps": 33,
    "terminated": true,
@@ -5747,8 +6879,19 @@
    },
    "episode_id": "ep-MJGNUH73SG",
    "grader": {
+    "config": {
+     "index": 5,
+     "mode": "eval",
+     "split": "dev"
+    },
     "elapsed_s": 0.062,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-MJGNUH73SG",
     "errors": [],
     "f1": 1.0,
@@ -5763,6 +6906,7 @@
     "reward": 0.974,
     "reward_experimental": 0.974,
     "run_index": 15,
+    "seed": 5,
     "source": {
      "config_version": null,
      "episode": "ep-MJGNUH73SG",
@@ -5779,7 +6923,7 @@
    "index": 5,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.0903,
+   "seconds": 0.102,
    "split": "dev",
    "steps": 14,
    "terminated": true,
@@ -5803,8 +6947,19 @@
    },
    "episode_id": "ep-7XX674TAX5",
    "grader": {
-    "elapsed_s": 0.078,
+    "config": {
+     "index": 6,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.141,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-7XX674TAX5",
     "errors": [],
     "f1": 1.0,
@@ -5819,6 +6974,7 @@
     "reward": 0.966,
     "reward_experimental": 0.966,
     "run_index": 16,
+    "seed": 6,
     "source": {
      "config_version": null,
      "episode": "ep-7XX674TAX5",
@@ -5835,7 +6991,7 @@
    "index": 6,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.1273,
+   "seconds": 0.2123,
    "split": "dev",
    "steps": 18,
    "terminated": true,
@@ -5859,8 +7015,19 @@
    },
    "episode_id": "ep-SYDT74KXT8",
    "grader": {
-    "elapsed_s": 0.14,
+    "config": {
+     "index": 7,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.203,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-SYDT74KXT8",
     "errors": [],
     "f1": 1.0,
@@ -5875,6 +7042,7 @@
     "reward": 0.934,
     "reward_experimental": 0.934,
     "run_index": 17,
+    "seed": 7,
     "source": {
      "config_version": null,
      "episode": "ep-SYDT74KXT8",
@@ -5891,7 +7059,7 @@
    "index": 7,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2109,
+   "seconds": 0.278,
    "split": "dev",
    "steps": 34,
    "terminated": true,
@@ -5915,8 +7083,19 @@
    },
    "episode_id": "ep-CG27UFYQPX",
    "grader": {
-    "elapsed_s": 0.157,
+    "config": {
+     "index": 8,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.25,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-CG27UFYQPX",
     "errors": [],
     "f1": 1.0,
@@ -5931,6 +7110,7 @@
     "reward": 0.92,
     "reward_experimental": 0.92,
     "run_index": 18,
+    "seed": 8,
     "source": {
      "config_version": null,
      "episode": "ep-CG27UFYQPX",
@@ -5947,7 +7127,7 @@
    "index": 8,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2408,
+   "seconds": 0.3451,
    "split": "dev",
    "steps": 41,
    "terminated": true,
@@ -5969,8 +7149,19 @@
    },
    "episode_id": "ep-TBP8V4MB8H",
    "grader": {
-    "elapsed_s": 0.172,
+    "config": {
+     "index": 9,
+     "mode": "eval",
+     "split": "dev"
+    },
+    "elapsed_s": 0.218,
     "end_reason": "submit",
+    "env_version": "1.0.0",
+    "environment": {
+     "implementation": "CPython",
+     "platform": "Windows-10",
+     "python": "3.11.9"
+    },
     "episode_id": "ep-TBP8V4MB8H",
     "errors": [],
     "f1": 1.0,
@@ -5985,6 +7176,7 @@
     "reward": 0.928,
     "reward_experimental": 0.928,
     "run_index": 19,
+    "seed": 9,
     "source": {
      "config_version": null,
      "episode": "ep-TBP8V4MB8H",
@@ -6001,7 +7193,7 @@
    "index": 9,
    "policy": "auditor",
    "return_seen_by_policy": 0.0,
-   "seconds": 0.2395,
+   "seconds": 0.3182,
    "split": "dev",
    "steps": 37,
    "terminated": true,
@@ -6014,6 +7206,7 @@
   "grader_version": "1.0.0",
   "isolated": true,
   "mode": "eval",
+  "policy_sandbox": "separate restricted process (env/sandbox.py); oracle grader-side",
   "policy_seed": 0,
   "splits": [
    "train",
@@ -6032,14 +7225,14 @@
    "fp_reasons": {},
    "inspection_steps": 22.35,
    "invalid": 0,
-   "max_seconds": 0.3084,
+   "max_seconds": 0.3451,
    "micro_f1": 1.0,
    "precision": 0.8,
    "recall": 0.8,
    "return": 0.9553,
    "return_clean_books": 0.957,
    "return_experimental": 0.9553,
-   "seconds": 0.1607,
+   "seconds": 0.2061,
    "steps": 23.35,
    "tp": 87,
    "truncated": 0
@@ -6081,14 +7274,14 @@
    },
    "inspection_steps": 3.2,
    "invalid": 0,
-   "max_seconds": 0.248,
+   "max_seconds": 0.2193,
    "micro_f1": 0.0,
    "precision": 0.0,
    "recall": 0.0,
    "return": -1.0,
    "return_clean_books": -1.0,
    "return_experimental": -1.0,
-   "seconds": 0.084,
+   "seconds": 0.1018,
    "steps": 4.2,
    "tp": 0,
    "truncated": 0
@@ -6104,14 +7297,14 @@
    "fp_reasons": {},
    "inspection_steps": 0.0,
    "invalid": 0,
-   "max_seconds": 0.2753,
+   "max_seconds": 0.3456,
    "micro_f1": 1.0,
    "precision": 0.8,
    "recall": 0.8,
    "return": 1.0,
    "return_clean_books": 1.0,
    "return_experimental": 1.0,
-   "seconds": 0.0647,
+   "seconds": 0.0801,
    "steps": 1.0,
    "tp": 87,
    "truncated": 0
@@ -6126,36 +7319,38 @@
     "fx_rate_error": 21,
     "unapplied_payment": 16
    },
-   "fp": 34,
+   "fp": 30,
    "fp_by_type": {
-    "cutoff_error": 11,
-    "duplicate_invoice": 10,
-    "fx_rate_error": 9,
+    "cutoff_error": 7,
+    "duplicate_invoice": 11,
+    "fx_rate_error": 8,
     "unapplied_payment": 4
    },
    "fp_on_distractor": {
-    "batch_payment": 1,
-    "boundary_document": 1,
+    "boundary_document": 2,
     "overpayment": 1,
-    "partial_payment": 4,
+    "partial_payment": 2,
     "partial_shipments": 2,
-    "posting_lag": 5,
+    "posting_lag": 3,
     "recurring_invoices": 1,
-    "split_payments": 3
+    "split_payments": 2
    },
    "fp_reasons": {
-    "no_such_issue": 34
+    "no_such_issue": 25,
+    "unknown_evidence": 3,
+    "wrong_affected_ids+amount+evidence": 1,
+    "wrong_type+currency+amount+evidence": 1
    },
    "inspection_steps": 54.1,
    "invalid": 3,
-   "max_seconds": 0.5643,
+   "max_seconds": 0.2664,
    "micro_f1": 0.0,
    "precision": 0.0,
    "recall": 0.0,
    "return": -0.8156,
    "return_clean_books": -0.078,
    "return_experimental": -0.9056,
-   "seconds": 0.202,
+   "seconds": 0.1459,
    "steps": 54.95,
    "tp": 0,
    "truncated": 3
@@ -6197,14 +7392,14 @@
    },
    "inspection_steps": 22.35,
    "invalid": 0,
-   "max_seconds": 0.9833,
+   "max_seconds": 0.3001,
    "micro_f1": 0.2008,
    "precision": 0.1404,
    "recall": 0.4882,
    "return": -0.6219,
    "return_clean_books": -1.0,
    "return_experimental": -0.6219,
-   "seconds": 0.3266,
+   "seconds": 0.1912,
    "steps": 23.35,
    "tp": 53,
    "truncated": 0

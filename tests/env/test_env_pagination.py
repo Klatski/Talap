@@ -16,12 +16,12 @@ TABLES = {"ledger": "row_id", "invoices": "invoice_id", "payments": "payment_id"
 def _walk(env, table, limit):
     rows, cursor, steps = [], None, 0
     while True:
-        obs, _, term, trunc, _ = env.step({"action": "list_records", "table": table, "cursor": cursor, "limit": limit})
+        obs, _, term, trunc, _ = env.step({"name": "list_records", "args": {"table": table, "cursor": cursor, "limit": limit}})
         steps += 1
         assert obs["error"] is None, obs["error"]
         res = obs["result"]
+        assert set(res) == {"records", "next_cursor"}, sorted(res)  # формат жюри: ровно эти два поля
         assert len(res["records"]) <= 50
-        assert res["offset"] == len(rows)
         rows += res["records"]
         cursor = res["next_cursor"]
         if cursor is None:
@@ -117,7 +117,7 @@ class PaginationTests(unittest.TestCase):
             self.assertEqual(r["fx_id"], f"FX:{r['source_currency']}:{r['target_currency']}:{r['date']}")
             self.assertIsInstance(r["rate"], str)
         obs = self.env.step({"action": "get_record", "table": "fx", "id": rows[0]["fx_id"]})[0]
-        self.assertEqual(obs["result"]["record"], rows[0])
+        self.assertEqual(obs["result"], rows[0])
 
 
 if __name__ == "__main__":

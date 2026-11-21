@@ -172,23 +172,35 @@ def build_attacks(public: dict[str, str], truth: dict, seed: int = 0) -> list[di
         "missing_findings_key": {"episode_id": ep},
         "findings_not_a_list": {"episode_id": ep, "findings": {"a": 1}},
         "wrong_episode_id": {"episode_id": "ep-ZZZZZZZZZZ", "findings": [base]},
-        "extra_top_level_field": {"episode_id": ep, "findings": [base], "bonus": True},
-        "extra_finding_field": sub([{**base, "confidence": 1.0}]),
         "missing_finding_field": sub([{k: v for k, v in base.items() if k != "currency"}]),
-        "unknown_type": sub([{**base, "type": "fraud"}]),
-        "negative_amount": sub([{**base, "claimed_amount_minor": -5}]),
         "float_amount": sub([{**base, "claimed_amount_minor": float(base["claimed_amount_minor"])}]),
         "bool_amount": sub([{**base, "claimed_amount_minor": True}]),
         "string_amount": sub([{**base, "claimed_amount_minor": str(base["claimed_amount_minor"])}]),
         "affected_ids_not_list": sub([{**base, "affected_ids": base["affected_ids"][0]}]),
-        "empty_affected_ids": sub([{**base, "affected_ids": []}]),
         "eleven_evidence_ids": sub([{**base, "evidence_ids": [f"L-{i:08d}" for i in range(11)]}]),
         "explanation_1001_chars": sub([{**base, "explanation": "x" * 1001}]),
         "thirty_one_findings": sub([copy.deepcopy(base) for _ in range(31)]),
-        "lowercase_currency": sub([{**base, "currency": base["currency"].lower()}]),
     }
     for name, payload in malformed.items():
         add(f"malformed_{name}", payload, 0, 0, 0, valid=False, note="неверная структура -> награда -1")
+
+    # ---------------------------------------------------------------- верная структура, неверное содержимое -> FP
+    # «Определения проверок» жюри, соглашения matcher п. 5 и 8: неизвестный строковый type, другая запись
+    # валюты, отрицательная сумма, пустые affected_ids — несопоставимый вывод (FP), а не авария submit;
+    # поля сверх формата игнорируются (base — верный вывод по первой ошибке; на чистом эпизоде — выдуманный).
+    base_tp = 1 if oracle else 0
+    wrong_content = {
+        "unknown_type": {**base, "type": "fraud"},
+        "negative_amount": {**base, "claimed_amount_minor": -5},
+        "empty_affected_ids": {**base, "affected_ids": []},
+        "lowercase_currency": {**base, "currency": base["currency"].lower()},
+    }
+    for name, finding in wrong_content.items():
+        add(f"wrong_content_{name}", sub([finding]), 0, 1, n, note="верная структура, неверное содержимое -> FP")
+    add("extra_finding_field_ignored", sub([{**base, "confidence": 1.0}]), base_tp, 1 - base_tp, n - base_tp,
+        note="поле сверх формата не влияет на сопоставление")
+    add("extra_top_level_field_ignored", {"episode_id": ep, "findings": [base], "bonus": True}, base_tp, 1 - base_tp,
+        n - base_tp, note="поле сверх формата не влияет на сопоставление")
     return cases
 
 

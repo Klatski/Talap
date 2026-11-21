@@ -50,7 +50,7 @@ class PolicyTests(unittest.TestCase):
         env = local_env()
         for split, idx in (("stub", 0), clean_episode(), ("dev", 3)):
             actions, reward, info, _ = _run(env, "flag_all", idx, {"split": split})
-            self.assertLessEqual(len(actions[-1]["findings"]["findings"]), 30)
+            self.assertLessEqual(len(actions[-1]["args"]["findings"]["findings"]), 30)
             self.assertEqual(info["tp"], 0)
             self.assertEqual(reward, -1.0)
         env.close()

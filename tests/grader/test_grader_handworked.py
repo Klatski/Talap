@@ -105,7 +105,7 @@ EXAMPLES = [
 
 # Неверная структура -> reward -1 (даже если внутри верные выводы). Вручную: valid = False, reward = -1.
 INVALID = [
-    ("extra field in a finding", {"episode_id": T["episode_id"], "findings": [OK1, OK2, {**OK3, "confidence": 0.9}]}),
+    ("amount as a string", {"episode_id": T["episode_id"], "findings": [OK1, OK2, {**OK3, "claimed_amount_minor": "70000"}]}),
     ("other episode_id", {"episode_id": "ep-HAND999999", "findings": [OK1, OK2, OK3]}),
     ("31 findings", {"episode_id": T["episode_id"], "findings": [OK1] * 31}),
     ("explanation of 1001 characters", {"episode_id": T["episode_id"], "findings": [{**OK1, "explanation": "x" * 1001}]}),

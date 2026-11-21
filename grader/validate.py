@@ -1,32 +1,38 @@
-"""Строгая валидация submit (findings.json) — зеркало schemas/findings.schema.json.
+"""Валидация СТРУКТУРЫ submit (findings.json) — зеркало schemas/findings.schema.json.
 
-Любое нарушение = неверная структура = награда -1 и запись в журнале оценщика:
-не объект, лишние/отсутствующие поля, неверные типы (bool и float — не integer),
-отрицательные суммы, неизвестный type, валюта не из трёх заглавных латинских букв,
-> 30 выводов, affected_ids вне 1..10, > 10 evidence_ids, explanation > 1000 символов,
-строки ID вне 1..64 символов, чужой episode_id.
-Сообщения об ошибках описывают только структуру ответа, ничего об эталоне.
+По «Определениям проверок» жюри («Точные соглашения matcher», п. 6–8) структурная ошибка — это
+неверный тип значения, отсутствующее обязательное поле и превышение лимита кейса. Тогда неверен весь
+submit: эпизод завершён, награда -1, ошибки пишутся в журнал оценщика:
+  * не объект; нет episode_id или findings; episode_id не строка или чужой (не из manifest эпизода);
+  * findings не массив или больше 30 выводов;
+  * вывод не объект; нет одного из полей type, affected_ids, claimed_amount_minor, currency, evidence_ids,
+    explanation;
+  * type, currency, explanation — не строки; affected_ids, evidence_ids — не массивы строк;
+  * claimed_amount_minor — не JSON-целое (bool, дробное число и строка не принимаются, пример M09);
+  * больше 10 evidence_ids (считается исходная длина списка, до удаления повторов — пример M05);
+  * explanation длиннее 1000 символов (Unicode code points после разбора JSON).
+Структурно правильный вывод с НЕВЕРНЫМ содержимым — неизвестный type, валюта другого регистра или с
+пробелом, отрицательная сумма, пустые или лишние affected_ids, несуществующие ID доказательств — не
+ошибка структуры, а несопоставимый вывод: FP в matcher (примеры M02, M04, M06, M07). Поля сверх
+перечисленных не входят в формат и игнорируются: на сопоставление и награду они не влияют.
+Сообщения об ошибках описывают только структуру ответа: без эха значений и без сведений об эталоне.
 """
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 ISSUE_TYPES = ("duplicate_invoice", "unapplied_payment", "fx_rate_error", "cutoff_error")
-TOP_FIELDS = frozenset({"episode_id", "findings"})
-FINDING_FIELDS = frozenset({"type", "affected_ids", "claimed_amount_minor", "currency", "evidence_ids", "explanation"})
+TOP_FIELDS = ("episode_id", "findings")
+FINDING_FIELDS = ("type", "affected_ids", "claimed_amount_minor", "currency", "evidence_ids", "explanation")
 MAX_FINDINGS = 30
-MAX_AFFECTED = 10
 MAX_EVIDENCE = 10
 MAX_EXPLANATION = 1000
-MAX_ID_LEN = 64
 MAX_ERRORS = 20
-_CURRENCY = re.compile(r"[A-Z]{3}")
 MALFORMED_REASONS = {
-    "wrapper": "must have exactly one argument, findings",
+    "wrapper": "must be an object with the argument findings",
     "not_json": "is not JSON-serializable (e.g. NaN or an integer too long to parse)",
-    "too_large": "is larger than any valid submission can be",
+    "too_large": "is larger than the 1 MB submission limit",
 }
 
 
@@ -39,42 +45,33 @@ def _is_int(v: Any) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
 
 
-def _id_list(value: Any, path: str, lo: int, hi: int, errors: list[str]) -> None:
+def _string_list(value: Any, path: str, errors: list[str], max_items: int | None = None) -> None:
     if not isinstance(value, list):
-        errors.append(f"{path}: must be an array")
+        errors.append(f"{path}: must be an array of strings")
         return
-    if len(value) < lo:
-        errors.append(f"{path}: needs at least {lo} item(s)")
-    if len(value) > hi:
-        errors.append(f"{path}: at most {hi} items")
-    for i, item in enumerate(value):
-        if not isinstance(item, str) or not 1 <= len(item) <= MAX_ID_LEN:
-            errors.append(f"{path}[{i}]: must be a string of 1..{MAX_ID_LEN} characters")
+    if max_items is not None and len(value) > max_items:
+        errors.append(f"{path}: at most {max_items} items")
+    if any(not isinstance(item, str) for item in value):
+        errors.append(f"{path}: every item must be a string")
 
 
 def _finding(f: Any, path: str, errors: list[str]) -> None:
     if not isinstance(f, dict):
         errors.append(f"{path}: must be an object")
         return
-    keys = set(f)
-    for k in sorted(FINDING_FIELDS - keys):
-        errors.append(f"{path}: missing field {k}")
-    if keys - FINDING_FIELDS:
-        errors.append(f"{path}: unexpected field(s)")
-    if "type" in f and (not isinstance(f["type"], str) or f["type"] not in ISSUE_TYPES):
-        errors.append(f"{path}.type: must be one of {', '.join(ISSUE_TYPES)}")
+    for k in FINDING_FIELDS:
+        if k not in f:
+            errors.append(f"{path}: missing field {k}")
+    if "type" in f and not isinstance(f["type"], str):
+        errors.append(f"{path}.type: must be a string")
     if "affected_ids" in f:
-        _id_list(f["affected_ids"], f"{path}.affected_ids", 1, MAX_AFFECTED, errors)
-    if "claimed_amount_minor" in f:
-        v = f["claimed_amount_minor"]
-        if not _is_int(v):
-            errors.append(f"{path}.claimed_amount_minor: must be an integer (minor units)")
-        elif v < 0:
-            errors.append(f"{path}.claimed_amount_minor: must be >= 0")
-    if "currency" in f and (not isinstance(f["currency"], str) or not _CURRENCY.fullmatch(f["currency"])):
-        errors.append(f"{path}.currency: must be three uppercase letters")
+        _string_list(f["affected_ids"], f"{path}.affected_ids", errors)
+    if "claimed_amount_minor" in f and not _is_int(f["claimed_amount_minor"]):
+        errors.append(f"{path}.claimed_amount_minor: must be a JSON integer (minor units)")
+    if "currency" in f and not isinstance(f["currency"], str):
+        errors.append(f"{path}.currency: must be a string")
     if "evidence_ids" in f:
-        _id_list(f["evidence_ids"], f"{path}.evidence_ids", 0, MAX_EVIDENCE, errors)
+        _string_list(f["evidence_ids"], f"{path}.evidence_ids", errors, MAX_EVIDENCE)
     if "explanation" in f:
         v = f["explanation"]
         if not isinstance(v, str):
@@ -84,19 +81,17 @@ def _finding(f: Any, path: str, errors: list[str]) -> None:
 
 
 def validate_submission(submission: Any, episode_id: str | None = None) -> list[str]:
-    """Пустой список = структура верна. episode_id — ожидаемый ID эпизода (из эталона)."""
+    """Пустой список = структура верна. episode_id — ожидаемый ID эпизода (из manifest)."""
     errors: list[str] = []
     if not isinstance(submission, dict):
         return ["submission: must be an object {episode_id, findings}"]
-    keys = set(submission)
-    for k in sorted(TOP_FIELDS - keys):
-        errors.append(f"submission: missing field {k}")
-    if keys - TOP_FIELDS:
-        errors.append("submission: unexpected field(s)")
+    for k in TOP_FIELDS:
+        if k not in submission:
+            errors.append(f"submission: missing field {k}")
     if "episode_id" in submission:
         ep = submission["episode_id"]
-        if not isinstance(ep, str) or not 1 <= len(ep) <= MAX_ID_LEN:
-            errors.append(f"episode_id: must be a string of 1..{MAX_ID_LEN} characters")
+        if not isinstance(ep, str):
+            errors.append("episode_id: must be a string")
         elif episode_id is not None and ep != episode_id:
             errors.append("episode_id: does not match the current episode")
     if "findings" in submission:

@@ -21,13 +21,13 @@ Closed set emulated by `generator.holdout`: 20 salted episodes with new paramete
 | C03 | PASS | no seed/paths/truth in reset output (0 hits) |
 | C04 | PASS | 256 ledger rows in 6 pages of <= 50, file order, limit 500 -> 50 |
 | C05 | PASS | same cursor -> same page; bound to table/episode; deterministic |
-| C06 | PASS | get_record/get_document return exactly the public record |
+| C06 | PASS | get_record/get_document return exactly the public record object (jury envelope) |
 | C07 | PASS | exact decimal arithmetic and rounding (7/7) |
 | C08 | PASS | code, power towers, names and exponent literals rejected; each step used |
 | C09 | PASS | no shell/SQL/FS: bounded unknown_action, step used, input not echoed |
 | C10 | PASS | unknown IDs/tables: bounded errors, steps used, IDs not echoed |
 | C11 | PASS | 16 malformed inputs -> bounded catalogue errors, no exception, each step used |
-| C12 | PASS | submit -> terminated=true |
+| C12 | PASS | submit -> {accepted: true}, terminated=true |
 | C13 | PASS | 100 steps incl. submit; step 100 -> truncated, empty final answer scored (clean book: 0.8) |
 | C14 | PASS | time limit -> truncated, action not executed |
 | C15 | PASS | after the end: defined error; a second submit is not scored |
@@ -83,7 +83,7 @@ Closed set emulated by `generator.holdout`: 20 salted episodes with new paramete
 | R15 | PASS | amount tolerance is exact: +tol TP, +tol+1 no TP: 15/15 episodes |
 | R16 | PASS | wrong type -> no TP: 15/15 episodes |
 | R17 | PASS | step cost exact (0.002 per inspection step, 0..99), strictly decreasing, at most 0.198: 20/20 episodes |
-| R18 | PASS | wrong structure -> -1 even with correct findings inside: 20/20 episodes |
+| R18 | PASS | wrong structure (31 findings, 11 evidence, 1001 chars, amount not int) -> -1; wrong content -> FP: 20/20 episodes |
 | R19 | PASS | explanation text never changes the reward (checked on answers scoring < 1): 20/20 episodes |
 | R20 | PASS | author's attack suite (36 attacks/episode) matches the spec: 20/20 episodes |
 
@@ -120,4 +120,4 @@ Closed set emulated by `generator.holdout`: 20 salted episodes with new paramete
 | config versions | 2 | 21 manifests with schema/generator version; split indexes with seed+config digest |
 | trajectory logs | 2 | trajectories/trajectories.jsonl with the required fields (leak scan: stage 5) |
 | measured failure analysis | 2 | reports/baselines.md (P/R/F1/return/steps/time + FP reasons by count), reports/holdout.md |
-| honest limitations | 2 | docs/design.md: 9 stated limitations |
+| honest limitations | 2 | docs/design.md: 10 stated limitations |

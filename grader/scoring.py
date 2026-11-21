@@ -1,6 +1,6 @@
 """score_submission — единая точка оценки (её же вызывают тесты A через grader.score_submission).
 
-    score_submission(truth, submission, inspection_steps) -> {
+    score_submission(truth, submission, inspection_steps, *, public_ids=None, ...) -> {
         "valid", "errors", "tp", "fp", "fn", "precision", "recall", "f1",
         "inspection_steps", "reward", "reward_experimental", "diagnostics"}
 
@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any
+from typing import AbstractSet, Any
 
 from .matcher import match
 from .metrics import experimental_reward, prf, shared_reward
@@ -44,7 +44,11 @@ def score_submission(
     provenance: dict | None = None,
     truncated: bool = False,
     malformed_reason: str | None = None,
+    public_ids: AbstractSet[str] | None = None,
 ) -> dict[str, Any]:
+    """public_ids — все ID открытых данных эпизода (grader/episodes.py::public_ids). Если задано, вывод с
+    несуществующим ID доказательства — FP (правило жюри M04); процесс оценщика и score_episode передают его
+    всегда, None оставлен для модульных тестов на синтетическом эталоне без открытых файлов."""
     if isinstance(inspection_steps, bool) or not isinstance(inspection_steps, int) or inspection_steps < 0:
         raise ValueError("inspection_steps must be a non-negative integer")
     issues = truth["issues"]
@@ -69,7 +73,7 @@ def score_submission(
             "diagnostics": {"findings": 0, "issues": len(issues)},
         }
     findings = submission["findings"]
-    result = match(findings, issues)
+    result = match(findings, issues, public_ids)
     precision, recall, f1 = prf(result.tp, result.fp, result.fn)
     distractors = _distractor_index(provenance)
     fp_reasons: Counter = Counter()

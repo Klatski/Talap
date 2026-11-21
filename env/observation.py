@@ -55,27 +55,39 @@ ISSUE_TYPES = {
 }
 
 MATCHING = (
-    "A finding counts only if type, the set of affected_ids, currency and amount (within the published "
-    "tolerance of 1 minor unit) are right and evidence_ids contain at least one complete evidence set "
-    "(extra ids are allowed). Matching to the reference is one-to-one: repeated findings are false positives. "
-    "The text of explanation never changes the reward. A malformed submission ends the episode with reward -1."
+    "A finding counts only if its type, the set of affected_ids, the currency (exact string: no case change "
+    "or trimming) and the amount (|claimed - expected| <= the published tolerance: 1 minor unit for every type "
+    "in generated episodes) are right, every evidence id exists in this episode (a row_id, invoice_id, "
+    "payment_id, fx_id or doc_id) and evidence_ids contain at least one complete evidence set (extra existing "
+    "ids are allowed). Matching to the reference is one-to-one (maximum matching): repeated findings are false "
+    "positives. A well-formed but wrong finding (unknown type, wrong currency, negative amount, unknown id) is "
+    "a false positive. A malformed submission (wrong JSON types, missing or extra fields, more than 30 findings, "
+    "more than 10 evidence ids in a finding, explanation over 1000 characters, another episode_id) ends the "
+    "episode with reward -1. The text of explanation never changes the reward."
 )
 
 ACTIONS_HELP = {
     "list_records": {"args": {"table": "ledger | invoices | payments | fx",
                               "cursor": "null for the first page, then next_cursor from the previous page",
                               "limit": f"1..{PAGE_LIMIT} (larger values are reduced to {PAGE_LIMIT})"},
-                     "example": {"action": "list_records", "table": "ledger", "cursor": None, "limit": PAGE_LIMIT}},
+                     "result": "{records: [record], next_cursor: null | string}",
+                     "example": {"name": "list_records", "args": {"table": "ledger", "cursor": None, "limit": PAGE_LIMIT}}},
     "get_record": {"args": {"table": "ledger | invoices | payments | fx",
                             "id": "row_id | invoice_id | payment_id | fx_id (FX:<source>:<target>:<date>)"},
-                   "example": {"action": "get_record", "table": "fx", "id": "FX:USD:KZT:2026-03-02"}},
+                   "result": "the record object",
+                   "example": {"name": "get_record", "args": {"table": "fx", "id": "FX:USD:KZT:2026-03-02"}}},
     "get_document": {"args": {"doc_id": "doc_id of an invoice or a payment"},
-                     "example": {"action": "get_document", "doc_id": "D-XXXXXXXX"}},
+                     "result": "the document object (an invoice or a payment record)",
+                     "example": {"name": "get_document", "args": {"doc_id": "D-XXXXXXXX"}}},
     "calculator": {"args": {"expression": "decimal arithmetic: + - * / ( ), abs(x), round_half_up(x[, n]), round_half_even(x[, n])"},
-                   "example": {"action": "calculator", "expression": "round_half_up(23208 * 516.3571)"}},
+                   "result": "a decimal string, e.g. \"0.3\" for 0.1+0.2",
+                   "example": {"name": "calculator", "args": {"expression": "round_half_up(23208 * 516.3571)"}}},
     "submit": {"args": {"findings": "{episode_id, findings: [{type, affected_ids, claimed_amount_minor, currency, evidence_ids, explanation}]}"},
-               "example": {"action": "submit", "findings": {"episode_id": "<manifest.episode_id>", "findings": []}}},
+               "result": "{accepted: true}; the episode ends (terminated=true)",
+               "example": {"name": "submit", "args": {"findings": {"episode_id": "<manifest.episode_id>", "findings": []}}}},
 }
+ACTION_FORMAT = ("An action is {\"name\": <action>, \"args\": {...}}; the flat form {\"action\": <action>, ...args} is "
+                 "accepted too. Every step() uses one step of the budget, a failing one too.")
 
 
 def initial_observation(ep: PublicEpisode, max_steps: int, time_limit_s: float) -> dict:
@@ -95,13 +107,13 @@ def initial_observation(ep: PublicEpisode, max_steps: int, time_limit_s: float) 
         "issue_types": copy.deepcopy(ISSUE_TYPES),
         "matching": MATCHING,
         "actions": copy.deepcopy(ACTIONS_HELP),
+        "action_format": ACTION_FORMAT,
         "limits": {
             "max_steps": max_steps,
             "page_limit": PAGE_LIMIT,
             "time_limit_seconds": time_limit_s,
             "max_findings": 30,
             "max_evidence_ids": 10,
-            "max_affected_ids": 10,
             "max_explanation_chars": 1000,
             "max_action_bytes": MAX_ACTION_BYTES,
             "max_submit_bytes": MAX_SUBMIT_BYTES,

@@ -33,7 +33,8 @@ class Unrepresentable:
 UNREPRESENTABLE = Unrepresentable()
 
 # Строку больше MAX_PARSE_BYTES среда не разбирает; submit узнаётся по началу: {"action": "submit", …
-_SUBMIT_PREFIX = re.compile(r'\s*\{\s*"action"\s*:\s*"submit"\s*[,}]')
+# или {"name": "submit", … (формат жюри)
+_SUBMIT_PREFIX = re.compile(r'\s*\{\s*"(?:action|name)"\s*:\s*"submit"\s*[,}]')
 
 # Причины, по которым действие нельзя выполнить как есть.
 INVALID, NOT_JSON, TOO_LARGE = "invalid", "not_json", "too_large"
@@ -64,6 +65,22 @@ def is_json_value(value: Any) -> bool:
     return True
 
 
+def action_parts(action: Any) -> tuple[Any, Any]:
+    """(имя, аргументы) действия в любом из двух форматов — для показа и разбора траекторий, без проверки."""
+    if not isinstance(action, dict):
+        return None, None
+    if "action" not in action and "name" in action:
+        return action.get("name"), action.get("args") or {}
+    return action.get("action"), {k: v for k, v in action.items() if k != "action"}
+
+
+def is_submit_action(action: dict) -> bool:
+    """submit в любом из двух форматов: {"action": "submit", ...} или {"name": "submit", "args": ...}."""
+    if "action" in action:
+        return action.get("action") == "submit"
+    return action.get("name") == "submit"
+
+
 def classify_action(action: Any) -> tuple[dict | None, tuple[bool, str] | None]:
     """(объект, None) — действие можно выполнять; (None, (это_submit, причина)) — нельзя.
 
@@ -80,7 +97,7 @@ def classify_action(action: Any) -> tuple[dict | None, tuple[bool, str] | None]:
             return None, (False, INVALID)
     if not isinstance(action, dict):
         return None, (False, INVALID)
-    is_submit = action.get("action") == "submit"
+    is_submit = is_submit_action(action)
     try:
         size = len(json.dumps(action, allow_nan=False, sort_keys=True).encode("utf-8"))
     except (TypeError, ValueError, RecursionError):

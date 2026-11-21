@@ -16,7 +16,11 @@ import unittest
 from env_helpers import ROOT, STUB, local_env
 from env import AuditEnv
 from env.constants import ERRORS, MAX_ACTION_BYTES, MAX_PARSE_BYTES, MAX_SUBMIT_BYTES
-from grader.validate import MALFORMED_REASONS, MAX_AFFECTED, MAX_EVIDENCE, MAX_EXPLANATION, MAX_FINDINGS, MAX_ID_LEN
+from grader.validate import MALFORMED_REASONS, MAX_EVIDENCE, MAX_EXPLANATION, MAX_FINDINGS
+
+# Под транспортный лимит submit (1 МБ JSON) рассчитан любой ответ с выводами до 10 affected_ids по 64 символа
+# (docs/contract.md, раздел 7). Структура больше не запрещает и большие списки, но такой вывод — заведомо FP.
+MAX_AFFECTED, MAX_ID_LEN = 10, 64
 
 BIG = "9" * 5000  # больше sys.get_int_max_str_digits() по умолчанию
 BIG_INT = 10 ** 5000  # такой int есть в Python, но str()/json.dumps на нём падают
@@ -107,8 +111,11 @@ class HostileInput(unittest.TestCase):
             "explanation above MAX_SUBMIT_BYTES": (lambda ep: {"action": "submit", "findings": {"episode_id": ep, "findings": [finding(explanation=huge)]}}, "too_large"),
             "same as JSON string": (lambda ep: json.dumps({"action": "submit", "findings": {"episode_id": ep, "findings": [finding(explanation=huge)]}}), "too_large"),
             "JSON string above MAX_PARSE_BYTES": (lambda ep: json.dumps({"action": "submit", "findings": {"episode_id": ep, "findings": [finding(explanation="x" * (MAX_PARSE_BYTES + 10))]}}), "too_large"),
-            "extra wrapper field": (lambda ep: {"action": "submit", "findings": {"episode_id": ep, "findings": []}, "confidence": 1}, "wrapper"),
             "missing findings": (lambda ep: {"action": "submit"}, "wrapper"),
+            "jury envelope without args": (lambda ep: {"name": "submit"}, "wrapper"),
+            "jury envelope, args not an object": (lambda ep: {"name": "submit", "args": "findings"}, "wrapper"),
+            "jury envelope, NaN inside": (lambda ep: {"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(claimed_amount_minor=float("nan"))]}}}, "not_json"),
+            "jury envelope above MAX_SUBMIT_BYTES": (lambda ep: json.dumps({"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(explanation="x" * (MAX_PARSE_BYTES + 10))]}}}), "too_large"),
         }
         for label, (make, reason) in cases.items():
             with self.subTest(case=label):
@@ -147,12 +154,23 @@ class HostileInput(unittest.TestCase):
             self.assertTrue(any("explanation" in e for e in info["errors"]), (name, info["errors"]))
 
     def test_marker_in_agent_payload_cannot_forge_the_reason(self):
-        """Регрессия /code-review: причина неверной структуры приходит только от среды, не из ответа агента."""
+        """Регрессия /code-review: причина неверной структуры приходит только от среды, не из ответа агента.
+        Поле-«маркер» в ответе — просто поле сверх формата: оно игнорируется, ответ оценивается как есть."""
         for name, (obs, reward, term, trunc, info), _ in self.submit_both(
                 lambda ep: {"action": "submit", "findings": {"__malformed_submit_action__": "too_large", "episode_id": ep, "findings": []}}):
-            self.assertEqual((reward, term), (-1.0, True))
-            self.assertIn("submission: unexpected field(s)", info["errors"], name)
-            self.assertFalse(any(e.startswith("submit action:") for e in info["errors"]))
+            self.assertTrue(term)
+            self.assertTrue(info["valid"], name)
+            self.assertEqual(info["errors"], [])
+            self.assertEqual((info["tp"], info["fp"]), (0, 0))
+
+    def test_fields_beyond_the_format_are_ignored(self):
+        def make(ep):
+            return {"name": "submit", "args": {"findings": {"episode_id": ep, "findings": [finding(confidence=0.99)], "note": "x"},
+                                               "extra_arg": True}}
+        for name, (obs, reward, term, trunc, info), _ in self.submit_both(make):
+            self.assertTrue(term)
+            self.assertTrue(info["valid"], (name, info["errors"]))
+            self.assertEqual((info["tp"], info["fp"]), (0, 1))
 
     def test_eval_mode_hides_even_malformed_submit(self):
         results = self.run_both({"action": "submit", "findings": {"findings": [finding(explanation="x" * (MAX_SUBMIT_BYTES + 1))]}}, mode="eval")
@@ -198,7 +216,7 @@ class RawJsonLinesServer(unittest.TestCase):
                 self.assertEqual(bad["error"]["code"], "reset_failed")
                 self.assertNotIn("9999", json.dumps(bad))
         step = self.ask(b'{"id": 4, "method": "step", "params": {"action": {"action": "calculator", "expression": "2+2"}}}')
-        self.assertEqual(step["result"]["observation"]["result"], {"value": "4"})
+        self.assertEqual(step["result"]["observation"]["result"], "4")
         self.assertEqual(step["result"]["observation"]["remaining_steps"], 99)  # эпизод жив, шаги не потеряны
 
     def test_forged_or_broken_unsendable_flag(self):

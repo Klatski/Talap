@@ -40,7 +40,7 @@ os.chdir(ROOT)
 TRAJ_POLICIES = ("random", "reconcile", "flag_all", "auditor")
 EVAL_POLICIES = ("random", "reconcile", "flag_all", "oracle", "auditor")
 DEFAULT_SALT = "check-emulation-salt"
-VOLATILE = frozenset({"seconds", "elapsed_s"})  # время — не часть снимка
+VOLATILE = frozenset({"seconds", "elapsed_s", "environment"})  # время и машина — не часть снимка
 UPDATE_HINT = "if the change is intended: python check.py --update and commit reports/"
 
 
@@ -130,7 +130,7 @@ def _write(path: Path, text: str) -> None:
 
 def _stored(results: list[dict]) -> list[dict]:
     """Результаты прогона в том виде, в каком они лежат в reports/*.json."""
-    return [{**{k: v for k, v in r.items() if k not in ("final_info", "grader")},
+    return [{**{k: v for k, v in r.items() if k not in ("final_info", "grader", "sandbox")},
              "grader": {k: v for k, v in r["grader"].items() if k != "diagnostics"},
              "diagnostics": {k: v for k, v in r["grader"]["diagnostics"].items() if k not in ("per_finding", "missed")}}
             for r in results]
@@ -174,7 +174,8 @@ def stage_baselines(update: bool):
     results = _run(EVAL_POLICIES, ("train", "dev"), "eval")
     table = summarize(results)
     meta = {"env_version": ENV_VERSION, "grader_version": GRADER_VERSION, "mode": "eval", "splits": ["train", "dev"],
-            "episodes": len(results) // len(EVAL_POLICIES), "isolated": True, "policy_seed": 0}
+            "episodes": len(results) // len(EVAL_POLICIES), "isolated": True, "policy_seed": 0,
+            "policy_sandbox": "separate restricted process (env/sandbox.py); oracle grader-side"}
     md = markdown_report(table, "Baseline diagnostics (train + dev, eval mode)", meta)
     print(md)
     problems = []
@@ -260,7 +261,7 @@ def stage_holdout(update: bool, salt: str, root: Path, state: dict):
     table = summarize(results["episodes"])
     pairs_table = summarize(results["pairs"])
     meta = {"env_version": "", "grader_version": "", "mode": "eval", "splits": ["holdout (salted, new configs)"],
-            "episodes": 20, "isolated": True}
+            "episodes": 20, "isolated": True, "policy_sandbox": "separate restricted process (env/sandbox.py); oracle grader-side"}
     from env.constants import ENV_VERSION
     from grader.version import GRADER_VERSION
 

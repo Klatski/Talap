@@ -3,7 +3,7 @@
     class Policy:
         name: str
         def reset(self, observation: dict, info: dict) -> None: ...
-        def act(self, observation: dict) -> dict: ...   # одно действие среды
+        def act(self, observation: dict) -> dict: ...   # одно действие среды: {"name": ..., "args": {...}}
 
 Политика видит только наблюдения среды. ScriptedPolicy позволяет писать сценарий как
 генератор: `obs = yield action`; помощник read_table() листает таблицу курсорами.
@@ -25,7 +25,7 @@ class Policy(Protocol):
 
 
 def submit_action(episode_id: str, findings: list[dict]) -> dict:
-    return {"action": "submit", "findings": {"episode_id": episode_id, "findings": findings[:30]}}
+    return {"name": "submit", "args": {"findings": {"episode_id": episode_id, "findings": findings[:30]}}}
 
 
 class TableReadError(RuntimeError):
@@ -68,7 +68,7 @@ class ScriptedPolicy:
         rows: list[dict] = []
         cursor: Any = None
         while True:
-            obs = yield {"action": "list_records", "table": table, "cursor": cursor, "limit": limit}
+            obs = yield {"name": "list_records", "args": {"table": table, "cursor": cursor, "limit": limit}}
             if obs.get("error"):
                 raise TableReadError(obs["error"].get("code", "error"))
             result = obs["result"]
