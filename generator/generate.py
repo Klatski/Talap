@@ -23,7 +23,7 @@ from .history import GenerationShortfall, build_history
 from .inject import finalize_issues, inject_all
 from .invariants import check_after, check_clean
 from .render import render
-from .version import GENERATOR_VERSION
+from .version import SEED_STREAM_VERSION
 
 MAX_ATTEMPTS = 40
 # Та же история с теми же ID, но без внесённых ошибок: доказательство «равенства до внесения»
@@ -70,7 +70,7 @@ def generate_episode(seed: int | str, config: dict[str, Any], salt: str = "") ->
     digest = config_digest(cfg)
     last_reason = ""
     for attempt in range(MAX_ATTEMPTS):
-        material = f"{GENERATOR_VERSION}|{seed}|{digest}|{salt}|{attempt}"
+        material = f"{SEED_STREAM_VERSION}|{seed}|{digest}|{salt}|{attempt}"
 
         def stream(stage: str) -> random.Random:
             return random.Random(f"{material}|{stage}")

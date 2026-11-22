@@ -21,7 +21,7 @@ import weakref
 from pathlib import Path
 from typing import Any
 
-from .jsonsafe import classify_action
+from .jsonsafe import classify_action, json_seed
 from .protocol import Channel, RemoteError, stop_process
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -78,6 +78,7 @@ class AuditEnv:
             # путь жюри — относительно ЕГО рабочего каталога; процесс оценщика работает из корня репозитория
             raw = os.fspath(config["episode_dir"])
             config = {**config, "episode_dir": os.path.abspath(raw) if raw.strip() else raw}
+        seed = json_seed(seed)
         try:
             json.dumps({"seed": seed, "config": config}, allow_nan=False, sort_keys=True)
         except (TypeError, ValueError, RecursionError):

@@ -14,7 +14,7 @@
   },
   "episode_id": "ep-CG6TEE4B67",
   "fx_rate_format": "decimal string",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "money_format": "integer minor units; exponent per currency in currency_exponents",
   "period_end": "2025-07-01T00:00:00+06:00",
   "period_start": "2025-06-01T00:00:00+06:00",

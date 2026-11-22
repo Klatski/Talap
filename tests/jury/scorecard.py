@@ -630,7 +630,9 @@ def reward_block(h: Holdout) -> list[Check]:
                    {**base, "type": "fraud"}, {**base, "claimed_amount_minor": -1}, {**base, "affected_ids": []}]
         fp_ok = all(r["valid"] and r["fp"] == 1 and r["tp"] == len(good) for r in (_score(ep[2], good + [c]) for c in content))
         extra = _score(ep[2], [{**f, "confidence": 1.0} for f in good], debug=True)
-        return True, ok and wrong_ep["reward"] == -1.0 and fp_ok and extra["valid"] and extra["tp"] == len(good)
+        # чужой episode_id — не структурная ошибка (п. 8): ответ оценён против эпизода, в журнале предупреждение
+        wrong_ep_ok = wrong_ep["valid"] and wrong_ep["tp"] == len(good) and bool(wrong_ep["warnings"])
+        return True, ok and wrong_ep_ok and fp_ok and extra["valid"] and extra["tp"] == len(good)
 
     def r19(ep):
         # ответы с наградой < 1 (иначе прибавка за текст спряталась бы за clip): полный с шагами, неполный, с ложным

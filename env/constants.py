@@ -10,8 +10,18 @@ import os
 import sys
 import tempfile
 
-ENV_VERSION = "1.0.0"
+ENV_VERSION = "1.1.0"
 CONTRACT_VERSION = "1.0"
+
+# Опубликованный допуск суммы τ по типу (docs/contract.md, раздел 4): |claimed - expected| <= τ.
+# Генератор пишет ровно эти значения в truth (amount_tolerance_minor), matcher берёт τ из truth;
+# текст задачи агенту строится отсюда (env/observation.py). Сверку держат тесты.
+AMOUNT_TOLERANCE_MINOR: dict[str, int] = {
+    "duplicate_invoice": 0,
+    "unapplied_payment": 0,
+    "fx_rate_error": 1,      # округление пересчёта по курсу
+    "cutoff_error": 0,
+}
 
 MAX_STEPS = 100            # включая submit
 PAGE_LIMIT = 50            # максимум строк на страницу list_records

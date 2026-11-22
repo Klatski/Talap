@@ -174,7 +174,7 @@
       "seed": 210
     }
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "schema_version": "1.0",
   "split": "dev"
 }

@@ -132,5 +132,29 @@ class MatcherTests(unittest.TestCase):
         self.assertEqual(score([])["f1"], 0.0)
 
 
+class FxKeySynonymTests(unittest.TestCase):
+    """Ключ курса в записи жюри <date>:<source>:<target> — синоним fx_id FX:<source>:<target>:<date> на ОБЕИХ
+    сторонах: в доказательствах вывода и в наборах truth (фикстура жюри может записать эталон своим ключом)."""
+
+    CANON, JURY = "FX:USD:KZT:2026-03-02", "2026-03-02:USD:KZT"
+
+    def test_any_form_in_truth_and_in_finding(self):
+        known = frozenset({"D-1", "L-1", self.CANON, "INV-AAAAAAA"})  # открытые данные знают только fx_id
+        for truth_key in (self.CANON, self.JURY):
+            truth = truth_of(issue(evidence=(("D-1", "L-1", truth_key),)))
+            for finding_key in (self.CANON, self.JURY):
+                with self.subTest(truth=truth_key, finding=finding_key):
+                    f = finding_for(truth["issues"][0], evidence_ids=["D-1", "L-1", finding_key])
+                    r = score_submission(truth, sub([f]), 0, public_ids=known)
+                    self.assertEqual((r["tp"], r["fp"], r["fn"], r["reward"]), (1, 0, 0, 1.0))
+
+    def test_synonym_does_not_relax_the_set(self):
+        truth = truth_of(issue(evidence=(("D-1", "L-1", self.JURY),)))
+        for evidence in (["D-1", "L-1"], ["D-1", "L-1", "FX:USD:KZT:2026-03-03"], ["D-1", "L-1", "2026-03-02:EUR:KZT"]):
+            with self.subTest(evidence=evidence):
+                r = score_submission(truth, sub([finding_for(truth["issues"][0], evidence_ids=evidence)]), 0)
+                self.assertEqual((r["tp"], r["fp"], r["fn"]), (0, 1, 1))
+
+
 if __name__ == "__main__":
     unittest.main()

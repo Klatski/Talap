@@ -136,6 +136,7 @@ class GraderSession:
             "issues_total": len(ep.truth["issues"]) if ep.truth is not None else None,
             **{k: result[k] for k in ("valid", "errors", "tp", "fp", "fn", "precision", "recall", "f1",
                                       "inspection_steps", "reward", "reward_experimental")},
+            "warnings": result.get("warnings", []),  # напр. чужой episode_id: на оценку не влияет
             "diagnostics": result["diagnostics"],
         }
         self.records.append(record)

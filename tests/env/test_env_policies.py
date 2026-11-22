@@ -93,5 +93,19 @@ class PolicyTests(unittest.TestCase):
         env.close()
 
 
+class AuditorEvidenceLimitTests(unittest.TestCase):
+    def test_long_evidence_is_cut_to_the_case_limit(self):
+        """Платёж на много счетов в чужих данных: набор длиннее 10 ID не должен делать весь ответ неверным (-1)."""
+        from grader import validate_submission
+        from policies.auditor import MAX_EVIDENCE_IDS, _finding
+
+        self.assertEqual(MAX_EVIDENCE_IDS, 10)
+        long = _finding("unapplied_payment", ["PAY-1", "INV-1"], 5, "KZT", [f"L-{k}" for k in range(14)], "x")
+        self.assertEqual(long["evidence_ids"], [f"L-{k}" for k in range(10)])
+        self.assertEqual(validate_submission({"episode_id": "ep-X", "findings": [long]}), [])
+        short = _finding("cutoff_error", ["INV-1"], 5, "KZT", ["D-1", "L-1"], "x")
+        self.assertEqual(short["evidence_ids"], ["D-1", "L-1"])
+
+
 if __name__ == "__main__":
     unittest.main()

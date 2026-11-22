@@ -22,7 +22,7 @@ from typing import Any
 from .constants import MAX_STEPS, MODES, TIME_LIMIT_S
 from .core import EnvCore
 from .protocol import Channel, ProtocolError, RemoteError
-from .jsonsafe import is_json_value
+from .jsonsafe import is_json_value, json_seed
 from .records import EpisodeDataError, load_public
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -163,6 +163,7 @@ class EnvService:
         started = time.monotonic()  # лимит 60 с — от начала reset, включая загрузку эпизода
         if self._closed:
             raise ResetError("environment is closed")
+        seed = json_seed(seed)  # numpy.int64 и др. целые -> int (LocalAuditEnv; AuditEnv приводит до отправки)
         if not is_json_value({"seed": seed, "config": config}):  # до abandon: текущий эпизод не трогаем
             raise ResetError("seed and config must be JSON values")
         env_cfg, grader_cfg = split_config(config)

@@ -5,14 +5,18 @@
   * affected_ids -> множество: порядок и повторы внутри списка не меняют множество (M01); для TP оно
     должно точно совпасть с каноническим набором ошибки (лишний существующий ID -> FP, M02);
   * evidence_ids -> множество (ключ курса в записи жюри <date>:<source>:<target> — синоним fx_id
-    FX:<source>:<target>:<date>); TP требует полного включения хотя бы одного допустимого набора;
+    FX:<source>:<target>:<date>; к fx_id приводятся ОБЕ стороны: доказательства вывода и наборы эталона,
+    поэтому truth фикстуры с ключом в записи жюри сопоставляется так же, как сгенерированный);
+    TP требует полного включения хотя бы одного допустимого набора;
     лишние СУЩЕСТВУЮЩИЕ доказательства допустимы (M03); если указан хотя бы один ID, которого нет в
     открытых данных эпизода, вывод не сопоставляется и даёт FP (M04). Существующие = доступные через
     инструменты: row_id, invoice_id, payment_id, fx_id и doc_id (env/records.py);
   * type — точное совпадение с одним из четырёх типов; неизвестная строка просто несопоставима;
   * currency — точное совпадение строки: без конвертации, смены регистра и обрезки пробелов (M06);
-  * сумма — JSON-целое, |claimed - expected| <= τ; τ = amount_tolerance_minor ошибки в truth (по
-    умолчанию 0; генератор публикует τ = 1 для всех типов, docs/contract.md, раздел 4) (M07, M08).
+  * сумма — JSON-целое, |claimed - expected| <= τ; τ = amount_tolerance_minor ошибки в truth (нет поля
+    или null — 0). Генератор пишет опубликованные значения env/constants.py::AMOUNT_TOLERANCE_MINOR:
+    0 для duplicate_invoice, unapplied_payment, cutoff_error и 1 для fx_rate_error (округление пересчёта
+    по курсу), docs/contract.md, раздел 4 (M07, M08).
 Ребро «вывод — ошибка» есть только при выполнении всех условий TP. TP — мощность МАКСИМАЛЬНОГО
 паросочетания (не жадного, M10), FP = выводов - TP, FN = ошибок - TP; повторный вывод остаётся
 отдельной вершиной и после закрытия ошибки даёт FP (M12). При нескольких максимальных паросочетаниях
@@ -82,7 +86,8 @@ def normalize_issue(issue: dict, index: int) -> NormIssue:
         amount=issue["expected_amount_minor"],
         currency=issue["currency"],
         tolerance=issue.get("amount_tolerance_minor") or 0,  # нет поля или null — τ = 0 (правила жюри)
-        evidence_sets=tuple(frozenset(s) for s in issue["evidence_sets"]),
+        # тот же canonical_record_id, что у вывода: ключ курса жюри в truth фикстуры -> fx_id
+        evidence_sets=tuple(frozenset(canonical_record_id(e) for e in s) for s in issue["evidence_sets"]),
     )
 
 

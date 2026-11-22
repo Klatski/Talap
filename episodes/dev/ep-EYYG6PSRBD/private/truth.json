@@ -74,7 +74,13 @@
       "currency": "KZT",
       "evidence_sets": [
         [
+          "D-3MH8H46N",
+          "D-YHGZGBQ6",
           "D-YTSXBVM9",
+          "FX:USD:KZT:2026-09-11",
+          "FX:USD:KZT:2026-09-17",
+          "L-KS94ZPU9",
+          "L-PGM96QQ2",
           "L-WAJMQX66"
         ]
       ],

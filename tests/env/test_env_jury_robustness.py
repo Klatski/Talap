@@ -27,7 +27,7 @@ import time
 import unittest
 from pathlib import Path
 
-from env_helpers import ROOT
+from env_helpers import ROOT, local_env
 import judge_adapter
 from test_env_jury_adapter import C_CONFIG, J, JuryAdapter, oracle_findings, read_log, tree_digest
 
@@ -291,7 +291,7 @@ class JuryRobustness(JuryAdapter):
                 ("31 findings", {"episode_id": self.e_truth["episode_id"], "findings": [one] * 31}, "30"),
                 ("amount is a string", {"episode_id": self.e_truth["episode_id"],
                                         "findings": [{**one, "claimed_amount_minor": "10000"}]}, "claimed_amount_minor"),
-                ("another episode", {"episode_id": "ep-NOTTHIS00", "findings": []}, "episode_id")):
+                ("episode_id not a string", {"episode_id": 7, "findings": []}, "episode_id")):
             with self.subTest(case=label):
                 obs, _ = self.reset(self.E)
                 out = self.step(J("submit", findings=findings))
@@ -301,6 +301,22 @@ class JuryRobustness(JuryAdapter):
                 self.assertEqual((out[1], out[2], out[3], out[4]), (0.0, True, False, {}))  # closed: награды нет
                 self.assertBoundedError(out[0], 100)  # submit тоже расходует шаг
                 self.assertEqual(self.records()[-1]["reward"], -1.0)
+
+    def test_foreign_episode_id_through_step_is_scored_with_a_warning(self):
+        """Чужой episode_id (строка) — не ошибка структуры: {"accepted": true}, оценка против этого эпизода."""
+        answer = oracle_findings(self.e_truth)
+        self.reset(self.E)
+        self.step(J("submit", findings=answer))
+        right = self.records()[-1]
+        self.reset(self.E)
+        out = self.step(J("submit", findings={**answer, "episode_id": "ep-NOTTHIS00"}))
+        self.assertEqual((out[0]["result"], out[0]["error"]), ({"accepted": True}, None))
+        self.assertEqual((out[1], out[2], out[3], out[4]), (0.0, True, False, {}))  # closed: награды нет
+        rec = self.records()[-1]
+        self.assertEqual((rec["valid"], rec["tp"], rec["fp"], rec["fn"], rec["reward"]),
+                         (True, right["tp"], right["fp"], right["fn"], right["reward"]))
+        self.assertEqual((len(rec["warnings"]), right["warnings"]), (1, []))
+        self.assertNotIn("ep-NOTTHIS00", json.dumps(out[0]))
 
     # ------------------------------------------------------------------ ключ курса жюри
     def test_fx_record_by_the_jury_key(self):
@@ -372,6 +388,87 @@ class GraderLogLocation(unittest.TestCase):
             self.assertEqual([r.get("kind", "episode") for r in records], ["generate_episode", "episode", "score_episode"])
             self.assertEqual([r["code_version"] for r in records], [code] * 3)
             self.assertFalse((ROOT / "журнал").exists())  # не от корня репозитория
+
+
+def _jury_fx_key(rid: str) -> str:
+    """fx_id FX:<source>:<target>:<date> -> ключ курса в записи жюри <date>:<source>:<target>; прочее как есть."""
+    if not rid.startswith("FX:"):
+        return rid
+    _, source, target, day = rid.split(":")
+    return f"{day}:{source}:{target}"
+
+
+class JuryFixtures(JuryAdapter):
+    """Фикстуры, которые жюри собирает само: ручной эпизод из пяти записей (тест 12 блока 3) с пустым fx.csv,
+    truth с ключом курса в записи жюри и seed — целое не типа int (numpy.int64)."""
+
+    def _hand_made(self, name: str, fx_text: str) -> Path:
+        d = self.root / name
+        d.mkdir()
+        header = "row_id,timestamp,account,debit_minor,credit_minor,currency,entity_id,invoice_id,payment_id"
+        rows = [f"R{i},2026-03-0{i}T10:00:00+05:00,1000,{10000 if i % 2 else 0},{0 if i % 2 else 10000},KZT,,,"
+                for i in range(1, 6)]
+        manifest = {"schema_version": "1.0", "episode_id": "ep-FIXTURE12", "base_currency": "KZT",
+                    "period_start": "2026-03-01T00:00:00+05:00", "period_end": "2026-04-01T00:00:00+05:00",
+                    "timezone": "+05:00", "counts": {"ledger_rows": 5, "documents": 0}, "rounding": {"mode": "half_up"}}
+        truth = {"episode_id": "ep-FIXTURE12", "issues": [
+            {"issue_id": "A", "type": "cutoff_error", "affected_ids": ["R1"], "expected_amount_minor": 10000,
+             "currency": "KZT", "evidence_sets": [["R2", "R3"]], "amount_tolerance_minor": 0}]}
+        files = {"ledger.csv": "\n".join([header, *rows]) + "\n", "invoices.jsonl": "", "payments.jsonl": "",
+                 "fx.csv": fx_text, "manifest.json": json.dumps(manifest), "policy.json": "{}",
+                 "truth.json": json.dumps(truth)}
+        for file, text in files.items():
+            (d / file).write_text(text, encoding="utf-8", newline="")
+        return d
+
+    def test_hand_made_fixture_with_empty_fx_csv(self):
+        types = ("duplicate_invoice", "unapplied_payment", "fx_rate_error", "cutoff_error")
+        answer = {"episode_id": "ep-FIXTURE12", "findings": [
+            {"type": t, "affected_ids": [f"R{i}"], "claimed_amount_minor": 10000, "currency": "KZT",
+             "evidence_ids": ["R2", "R3"], "explanation": "flag"} for i in range(1, 6) for t in types]}
+        for k, fx_text in enumerate(("date,source_currency,target_currency,rate\n", "", "\r\n")):
+            with self.subTest(fx=repr(fx_text)):
+                d = self._hand_made(f"ручная фикстура {k}", fx_text)
+                score = judge_adapter.score_episode(str(d), answer, 10)
+                self.assertEqual((score["tp"], score["fp"], score["fn"]), (1, 19, 0))  # тест 12 блока 3
+                self.assertAlmostEqual(score["return"], -871 / 1050, places=9)
+                obs, _ = self.reset(d)
+                self.assertEqual((obs["tables"]["fx"]["rows"], obs["tables"]["ledger"]["rows"]), (0, 5))
+                result = self.step(J("list_records", table="fx", cursor=None, limit=50))[0]["result"]
+                self.assertEqual((result["records"], result["next_cursor"]), ([], None))
+
+    def test_fixture_truth_with_jury_fx_key(self):
+        d = self.root / "fx fixture"
+        judge_adapter.generate_episode(424242, {"team_config": {"errors": {"fx_rate_error": 2}}}, str(d))
+        truth_path = d / "private" / "truth.json"
+        truth = json.loads(truth_path.read_text(encoding="utf-8"))
+        answer = oracle_findings(truth)
+        jury_answer = {**answer, "findings": [{**f, "evidence_ids": [_jury_fx_key(e) for e in f["evidence_ids"]]}
+                                              for f in answer["findings"]]}
+        self.assertNotEqual(answer, jury_answer)  # ключи курса в ответе действительно есть
+        expected = judge_adapter.score_episode(str(d), answer, 10)
+        self.assertEqual((expected["tp"], expected["fp"], expected["fn"]), (len(truth["issues"]), 0, 0))
+        truth["issues"] = [{**i, "evidence_sets": [[_jury_fx_key(e) for e in s] for s in i["evidence_sets"]]}
+                           for i in truth["issues"]]
+        truth_path.write_text(json.dumps(truth), encoding="utf-8")
+        for submission in (answer, jury_answer):
+            self.assertEqual(judge_adapter.score_episode(str(d), submission, 10), expected)
+
+    def test_int_like_seed(self):
+        class Seed:  # как numpy.int64: не подкласс int, но с __index__
+            def __init__(self, value: int) -> None:
+                self.value = value
+
+            def __index__(self) -> int:
+                return self.value
+
+        config = {"mode": "train", "team_config": C_CONFIG}
+        self.assertEqual(self.raw_reset(Seed(5), config), self.raw_reset(5, config))
+        local = local_env()
+        try:
+            self.assertEqual(local.reset(Seed(5), config), local.reset(5, config))
+        finally:
+            local.close()
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 По «Определениям проверок» жюри («Точные соглашения matcher», п. 6–8) структурная ошибка — это
 неверный тип значения, отсутствующее обязательное поле и превышение лимита кейса. Тогда неверен весь
 submit: эпизод завершён, награда -1, ошибки пишутся в журнал оценщика:
-  * не объект; нет episode_id или findings; episode_id не строка или чужой (не из manifest эпизода);
+  * не объект; нет episode_id или findings; episode_id не строка;
   * findings не массив или больше 30 выводов;
   * вывод не объект; нет одного из полей type, affected_ids, claimed_amount_minor, currency, evidence_ids,
     explanation;
@@ -15,6 +15,10 @@ submit: эпизод завершён, награда -1, ошибки пишу�
 пробелом, отрицательная сумма, пустые или лишние affected_ids, несуществующие ID доказательств — не
 ошибка структуры, а несопоставимый вывод: FP в matcher (примеры M02, M04, M06, M07). Поля сверх
 перечисленных не входят в формат и игнорируются: на сопоставление и награду они не влияют.
+episode_id, отличный от manifest.episode_id, — тоже не ошибка структуры (п. 8 жюри перечисляет только
+тип значения, отсутствие поля и лимиты): ответ оценивается против текущего эпизода, а несовпадение
+пишется в журнал оценщика предупреждением (submission_warnings). Ответ другого эпизода и так не набирает
+TP: ID записей у эпизодов разные.
 Сообщения об ошибках описывают только структуру ответа: без эха значений и без сведений об эталоне.
 """
 
@@ -80,20 +84,25 @@ def _finding(f: Any, path: str, errors: list[str]) -> None:
             errors.append(f"{path}.explanation: at most {MAX_EXPLANATION} characters")
 
 
+def submission_warnings(submission: Any, episode_id: str | None) -> list[str]:
+    """Замечания к структурно верному ответу, которые не меняют оценку (только журнал оценщика)."""
+    if (episode_id is not None and isinstance(submission, dict) and isinstance(submission.get("episode_id"), str)
+            and submission["episode_id"] != episode_id):
+        return ["episode_id: does not match the current episode (scored against the current episode)"]
+    return []
+
+
 def validate_submission(submission: Any, episode_id: str | None = None) -> list[str]:
-    """Пустой список = структура верна. episode_id — ожидаемый ID эпизода (из manifest)."""
+    """Пустой список = структура верна. episode_id — ID текущего эпизода (из manifest); его несовпадение
+    с ответом не ошибка структуры (см. submission_warnings), параметр оставлен для совместимости вызовов."""
     errors: list[str] = []
     if not isinstance(submission, dict):
         return ["submission: must be an object {episode_id, findings}"]
     for k in TOP_FIELDS:
         if k not in submission:
             errors.append(f"submission: missing field {k}")
-    if "episode_id" in submission:
-        ep = submission["episode_id"]
-        if not isinstance(ep, str):
-            errors.append("episode_id: must be a string")
-        elif episode_id is not None and ep != episode_id:
-            errors.append("episode_id: does not match the current episode")
+    if "episode_id" in submission and not isinstance(submission["episode_id"], str):
+        errors.append("episode_id: must be a string")
     if "findings" in submission:
         findings = submission["findings"]
         if not isinstance(findings, list):

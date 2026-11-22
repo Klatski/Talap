@@ -17,7 +17,7 @@ from generator.fileio import write_episode_dir
 from generator.leakscan import scan_records
 from generator.schema_check import load_schema, validate
 
-SEMANTIC_ONLY_INVALID = {"malformed_wrong_episode_id"}  # схема валидна, но episode_id чужой
+SEMANTIC_ONLY_INVALID: set[str] = set()  # схема валидна, а ответ неверен; чужой episode_id сюда больше не входит
 
 
 def _cases(key, seed):

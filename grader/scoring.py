@@ -1,7 +1,7 @@
 """score_submission — единая точка оценки (её же вызывают тесты A через grader.score_submission).
 
     score_submission(truth, submission, inspection_steps, *, public_ids=None, ...) -> {
-        "valid", "errors", "tp", "fp", "fn", "precision", "recall", "f1",
+        "valid", "errors", "warnings", "tp", "fp", "fn", "precision", "recall", "f1",
         "inspection_steps", "reward", "reward_experimental", "diagnostics"}
 
 `diagnostics` (разбор по выводам, пропуски по типам, FP на отвлекающих случаях) — только для
@@ -16,7 +16,7 @@ from typing import AbstractSet, Any
 
 from .matcher import issue_label, match
 from .metrics import experimental_reward, prf, shared_reward
-from .validate import malformed_message, validate_submission
+from .validate import malformed_message, submission_warnings, validate_submission
 
 
 def _distractor_index(provenance: dict | None) -> dict[str, list[str]]:
@@ -45,7 +45,8 @@ def check_structure_only(submission: Any, episode_id: str, inspection_steps: int
     else:
         errors = validate_submission(submission, episode_id)
     n = len(submission["findings"]) if not errors and isinstance(submission, dict) else 0
-    return {"valid": not errors, "errors": errors, "tp": None, "fp": None, "fn": None, "precision": None,
+    warnings = submission_warnings(submission, episode_id) if not errors else []
+    return {"valid": not errors, "errors": errors, "warnings": warnings, "tp": None, "fp": None, "fn": None, "precision": None,
             "recall": None, "f1": None, "inspection_steps": inspection_steps, "truncated": truncated, "reward": None,
             "reward_experimental": None, "diagnostics": {"reference": "missing", "findings": n}}
 
@@ -74,6 +75,7 @@ def score_submission(
         return {
             "valid": False,
             "errors": errors,
+            "warnings": [],
             "tp": None,
             "fp": None,
             "fn": None,
@@ -118,6 +120,7 @@ def score_submission(
     return {
         "valid": True,
         "errors": [],
+        "warnings": submission_warnings(submission, truth["episode_id"]),
         "tp": result.tp,
         "fp": result.fp,
         "fn": result.fn,

@@ -18,7 +18,7 @@ python check.py --update   # после намеренных изменений:
 python tools/clean_run.py  # перед сдачей: то же с нуля — свежий клон, новый venv, 2 CPU, сеть запрещена
 ```
 
-Этапы (около 3 минут на ноутбуке):
+Этапы (обычно 3–5 минут на ноутбуке, при нехватке памяти дольше):
 1. окружение;
 2. все тесты (generator, env, grader, jury);
 3. побайтовая воспроизводимость, схемы и эталон 21 открытого эпизода;
@@ -73,7 +73,7 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 | Вызов | Поведение |
 |---|---|
 | `generate_episode(seed, config, output_dir)` | `config` = `{"team_config": {...}}` или сам конфиг генератора: имя пресета (`"heavy"`), `{"preset": "…", …переопределения}` или объект из [`docs/generator.md`](docs/generator.md) (например `{"size": "small", "errors": {"duplicate_invoice": 1}}`). Ключи reset (`mode`, `episode_dir`, `max_steps`, `time_limit_s`) и ключи, которых генератор не знает, игнорируются и пишутся в журнал оценщика. Опечатка — `ValueError`, а не молча чистая компания: и ключ верхнего уровня, похожий на известный (`{"Errors": …}`, `{"error": …}`, `{"errors ": …}`, `team_confg`; то же внутри `team_config`), и вложенное имя типа ошибки или сценария. Явно чужие ключи (`kind`, `label`, `note`) игнорируются. Пишет `output_dir/public/{manifest.json, ledger.csv, invoices.jsonl, payments.jsonl, fx.csv, policy.json}` и `output_dir/private/{truth.json, provenance.json, counterfactual/}`. Те же seed и config дают побайтово те же файлы. Соль закрытого прогона — переменная окружения `AUDIT_GRADER_SALT`. |
-| `reset(seed, config)` | `{"mode": "closed", "episode_dir": D, "team_config": {...}}` загружает ровно каталог `D`: имя любое, путь абсолютный или от рабочей директории жюри; раскладка `public/` + `private/` или плоская (шесть открытых файлов и `truth.json` в одном каталоге). ID не меняются, повторный reset начинает тот же эпизод заново, `team_config` при `episode_dir` не используется. `truth.json` в каталоге `closed` не обязателен: без него эпизод проводится, а метрики жюри считает своим `score_episode` (в журнале `reference: "missing"`). `episode_id` берётся из `manifest.json`. Файлы читаются и с BOM, и с CRLF, колонки CSV — по заголовку в любом порядке. `{"mode": "train", "team_config": {...}}` без `episode_dir` генерирует эпизод генератором команды с этим seed (тот же, что `generate_episode`). Режимы: `train` — терминальная награда и метрики политике; `closed` (синоним `eval`) — политика всегда получает `0.0` и `{}`. Необязательно: `max_steps` 1..100, `time_limit_s` (0, 60]; 60 с считаются от начала reset. Лишние ключи config (и `split`/`index` рядом с `episode_dir`) игнорируются и пишутся в журнал оценщика (`source.ignored_config_keys`); ключ, похожий на известный (`Mode`, `episode-dir`, `team_confg`, `Errors`, `error`), — ошибка, а не молча другой эпизод. Неверный config (неизвестный `mode`, нет каталога, неверные значения, опечатка в ключе) — исключение `ValueError` (у `make_env()` — его подкласс `EnvConfigError`), среда остаётся рабочей. |
+| `reset(seed, config)` | `{"mode": "closed", "episode_dir": D, "team_config": {...}}` загружает ровно каталог `D`: имя любое, путь абсолютный или от рабочей директории жюри; раскладка `public/` + `private/` или плоская (шесть открытых файлов и `truth.json` в одном каталоге). ID не меняются, повторный reset начинает тот же эпизод заново, `team_config` при `episode_dir` не используется. `truth.json` в каталоге `closed` не обязателен: без него эпизод проводится, а метрики жюри считает своим `score_episode` (в журнале `reference: "missing"`). `episode_id` берётся из `manifest.json`. Файлы читаются и с BOM, и с CRLF, колонки CSV — по заголовку в любом порядке; файл из 0 байт (например, `fx.csv` фикстуры без курсов) — пустая таблица. `seed` — JSON-значение; целое не типа `int` (`numpy.int64`) приводится к `int`. `{"mode": "train", "team_config": {...}}` без `episode_dir` генерирует эпизод генератором команды с этим seed (тот же, что `generate_episode`). Режимы: `train` — терминальная награда и метрики политике; `closed` (синоним `eval`) — политика всегда получает `0.0` и `{}`. Необязательно: `max_steps` 1..100, `time_limit_s` (0, 60]; 60 с считаются от начала reset. Лишние ключи config (и `split`/`index` рядом с `episode_dir`) игнорируются и пишутся в журнал оценщика (`source.ignored_config_keys`); ключ, похожий на известный (`Mode`, `episode-dir`, `team_confg`, `Errors`, `error`), — ошибка, а не молча другой эпизод. Неверный config (неизвестный `mode`, нет каталога, неверные значения, опечатка в ключе) — исключение `ValueError` (у `make_env()` — его подкласс `EnvConfigError`), среда остаётся рабочей. |
 | `step(action)` | `{"name": "<действие>", "args": {...}}`; плоская форма `{"action": "…", …}` — то же действие. |
 | `score_episode(episode_dir, findings, inspection_steps)` | `{"tp", "fp", "fn", "precision", "recall", "f1", "return"}`; невалидный submit — `return = -1`, остальные поля `null`, ошибка в журнале оценщика. `findings` проходит через `json.dumps`/`json.loads`, как через `step`: кортежи — массивы, не-JSON значение (NaN, `set`) — неверная структура. |
 
@@ -102,7 +102,7 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 | Ошибка кейса | `type` | `affected_ids` | сумма / валюта | наборы доказательств |
 |---|---|---|---|---|
 | дубль счёта | `duplicate_invoice` | оба `invoice_id` пары | `total_minor` счёта / валюта счёта | `{doc_id A, doc_id B}` |
-| пропущенное или частичное распределение платежа | `unapplied_payment` | `{payment_id, invoice_id}` | строка 2300 платежа / базовая | `{doc_id платежа, row_id строки 2300}` |
+| пропущенное или частичное распределение платежа | `unapplied_payment` | `{payment_id, invoice_id}` | строка 2300 платежа / базовая | `{doc_id платежа, row_id строки 2300}`; у платежа на несколько счетов ещё все строки 1200 платежа, `doc_id` каждого счёта и (не базовая валюта) FX-id курса на дату каждого счёта |
 | неверная дата или курс конвертации | `fx_rate_error` | `{invoice_id}` или `{payment_id}` | разница с верной конвертацией / базовая | `{doc_id, row_id, fx_id верной даты}` |
 | ошибка отнесения к периоду | `cutoff_error` | `{invoice_id}` или `{payment_id}` | сумма документа / валюта документа | `{doc_id, row_id проводки}` |
 
@@ -121,8 +121,11 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 * `type` и `currency` сравниваются точно, без смены регистра и обрезки. Неизвестный тип или валюта — FP.
 * `claimed_amount_minor` — JSON-целое; bool, строка или дробное число — ошибка структуры.
 * Ошибка структуры всего submit (−1): больше 30 выводов, больше 10 `evidence_ids`, `explanation` длиннее
-  1000 code points, неверный тип значения, нет обязательного поля, чужой `episode_id`. Поля сверх формата
-  игнорируются.
+  1000 code points, неверный тип значения, нет обязательного поля. Поля сверх формата игнорируются.
+* `episode_id` — строка из `manifest.json`. Другая строка — не ошибка структуры: ответ оценивается против
+  текущего эпизода, несовпадение пишется в журнал оценщика (`warnings`).
+* Ключ курса жюри `<date>:<source>:<target>` равен `fx_id` `FX:<source>:<target>:<date>` и в ответе, и в
+  `evidence_sets` своего truth.
 * Паросочетание максимальной мощности. При равенстве выбирается лексикографически наименьшая
   последовательность пар (`issue_id`, индекс вывода); повторы — FP.
 
@@ -136,7 +139,8 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 Одна JSON-строка на эпизод или вызов `generate_episode` / `score_episode`; параллельные среды пишут в один файл
 без потери строк. В строке: окружение (python, реализация, платформа), версии среды и оценщика, `code_version`
 (sha256 исходников команды; его же печатает `python -m grader.codeversion`), seed, config, `episode_id`, режим,
-причина завершения, ошибки структуры, TP/FP/FN/P/R/F1, шаги, награда и разбор по выводам. Строка дописывается
+причина завершения, ошибки структуры, предупреждения (`warnings`, например чужой `episode_id`), TP/FP/FN/P/R/F1,
+шаги, награда и разбор по выводам. Строка дописывается
 сразу по завершении эпизода.
 
 **Граница доступа:**

@@ -397,14 +397,41 @@ def check_evidence_set(pub: Public, issue: dict, evidence: list[str]) -> list[st
         if len(pays) != 1:
             return ["unapplied: payment document required"]
         pay = pays[0]
+        pid, cur = pay["payment_id"], pay["currency"]
         refs = pay["invoice_refs"] or []
-        if not any(r["invoice_id"] in affected for r in refs):
-            problems.append("unapplied: payment does not reference the invoice")
+        if not refs:
+            return ["unapplied: payment references no invoice"]
         if sum(r["amount_minor"] for r in refs) != pay["amount_minor"]:
             problems.append("unapplied: payment has a legitimate unallocated remainder")
-        un = [r for r in rows if r["account"] == UNAPPLIED and r["payment_id"] == pay["payment_id"]]
+        un = [r for r in rows if r["account"] == UNAPPLIED and r["payment_id"] == pid]
         if len(un) != 1 or un[0]["credit_minor"] != expected:
             problems.append("unapplied: 2300 row with the amount required")
+        if len(refs) == 1:
+            short = [refs[0]["invoice_id"]]
+        else:
+            # Счетов несколько: недоразнесённый счёт выводится только из записей набора — Кт 1200 этого
+            # платежа по каждому счёту против суммы ссылки по курсу счёта (дата счёта по политике).
+            short = []
+            for ref in refs:
+                inv = next((d for d in docs if d.get("invoice_id") == ref["invoice_id"]), None)
+                if inv is None:
+                    return ["unapplied: document of every referenced invoice required"]
+                rate_date, rate = pub.rate(cur, parse_iso(inv["issued_at"]))
+                if cur != pub.base:
+                    fx_row = next((f for f in fxs if f["source_currency"] == cur and rate_date is not None
+                                   and f["date"] == rate_date.isoformat()), None)
+                    if fx_row is None:
+                        return ["unapplied: policy rate of every referenced invoice required"]
+                    rate = Decimal(fx_row["rate"])
+                expected_credit = pub.conv(ref["amount_minor"], cur, rate)
+                got = sum(r["credit_minor"] for r in rows
+                          if r["account"] == AR and r["payment_id"] == pid and r["invoice_id"] == ref["invoice_id"])
+                if got < expected_credit:
+                    short.append(ref["invoice_id"])
+                elif got > expected_credit:
+                    problems.append("unapplied: AR credit above allocation")
+        if len(short) != 1 or sorted(affected) != sorted([pid, short[0]]):
+            problems.append("unapplied: the evidence does not determine the under-allocated invoice")
         return problems
 
     if kind == "fx_rate_error":

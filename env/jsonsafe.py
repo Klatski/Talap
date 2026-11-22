@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import json
+import operator
 import re
 from typing import Any
 
@@ -66,6 +67,17 @@ def _parse_constant(name: str) -> Any:
 def loads_text(text: str) -> Any:
     """json.loads, который не бросает ничего, кроме ValueError/RecursionError на синтаксисе."""
     return json.loads(text, parse_int=_parse_int, parse_constant=_parse_constant)
+
+
+def json_seed(seed: Any) -> Any:
+    """Целое не-int с __index__ (numpy.int64 и т.п.) -> int, как в judge_adapter.generate_episode/score_episode;
+    bool, int, float, str, None и прочее — как есть (дальше их проверяет reset)."""
+    if seed is None or isinstance(seed, (bool, int, float, str)):
+        return seed
+    try:
+        return operator.index(seed)
+    except TypeError:
+        return seed
 
 
 def is_json_value(value: Any) -> bool:

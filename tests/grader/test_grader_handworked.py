@@ -106,7 +106,7 @@ EXAMPLES = [
 # Неверная структура -> reward -1 (даже если внутри верные выводы). Вручную: valid = False, reward = -1.
 INVALID = [
     ("amount as a string", {"episode_id": T["episode_id"], "findings": [OK1, OK2, {**OK3, "claimed_amount_minor": "70000"}]}),
-    ("other episode_id", {"episode_id": "ep-HAND999999", "findings": [OK1, OK2, OK3]}),
+    ("episode_id not a string", {"episode_id": 12, "findings": [OK1, OK2, OK3]}),
     ("31 findings", {"episode_id": T["episode_id"], "findings": [OK1] * 31}),
     ("explanation of 1001 characters", {"episode_id": T["episode_id"], "findings": [{**OK1, "explanation": "x" * 1001}]}),
     ("11 evidence ids", {"episode_id": T["episode_id"], "findings": [{**OK1, "evidence_ids": [f"L-{k}" for k in range(11)]}]}),
@@ -157,6 +157,13 @@ class HandWorked(unittest.TestCase):
                 got = score_submission(T, submission, 0)
                 self.assertFalse(got["valid"])
                 self.assertEqual(got["reward"], -1.0)
+
+    def test_other_episode_id_is_scored_against_this_episode(self):
+        """Чужой episode_id — не структура (п. 8 жюри): полный ответ -> TP 3, reward 1, предупреждение в журнале."""
+        got = score_submission(T, {"episode_id": "ep-HAND999999", "findings": [OK1, OK2, OK3]}, 0)
+        self.assertTrue(got["valid"])
+        self.assertEqual((got["tp"], got["fp"], got["fn"], got["reward"]), (3, 0, 0, 1.0))
+        self.assertEqual(len(got["warnings"]), 1)
 
     def test_end_to_end_through_the_isolated_env(self):
         """Агрегированный путь: процессы среды и оценщика, стаб-эпизод, ответ составлен по его truth.json руками.

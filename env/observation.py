@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import copy
 
-from .constants import ENV_VERSION, MAX_ACTION_BYTES, MAX_EXPLANATION_CHARS, MAX_SUBMIT_BYTES, PAGE_LIMIT, TABLES
+from .constants import (AMOUNT_TOLERANCE_MINOR, ENV_VERSION, MAX_ACTION_BYTES, MAX_EXPLANATION_CHARS, MAX_SUBMIT_BYTES,
+                        PAGE_LIMIT, TABLES)
 from .records import PublicEpisode
 
 TASK = (
@@ -33,11 +34,15 @@ ISSUE_TYPES = {
         "evidence": "both invoice doc_id values",
     },
     "unapplied_payment": {
-        "meaning": "invoice_refs of a payment allocate the whole payment to invoice X, but the ledger "
-                   "credits 1200 for X with less than allocated; the rest sits on 2300",
+        "meaning": "invoice_refs of a payment allocate the whole payment (their sum equals amount_minor), but the "
+                   "ledger credits 1200 for one referenced invoice X with less than its allocation (converted at the "
+                   "invoice rate); the rest sits on 2300",
         "affected_ids": "payment_id and the invoice_id X",
         "amount": "the 2300 credit of that payment as posted, in the ledger (base) currency",
-        "evidence": "payment doc_id and the row_id of that 2300 row",
+        "evidence": "payment doc_id and the row_id of that 2300 row; if invoice_refs lists several invoices, also "
+                    "every 1200 row of that payment, the doc_id of every referenced invoice and, for a payment in a "
+                    "foreign currency, the fx_id of the policy rate of each referenced invoice (by its issued_at): "
+                    "then the evidence itself shows which invoice is under-allocated",
     },
     "fx_rate_error": {
         "meaning": "a converted ledger amount differs from the conversion at the rate date required by the policy",
@@ -54,16 +59,22 @@ ISSUE_TYPES = {
     },
 }
 
+# Опубликованный τ по типу — только в тексте: имя поля truth (amount_tolerance_minor) в наблюдение не попадает,
+# его ловят сканеры утечек (generator/leakscan.py, C03/C19 карточки жюри).
+TOLERANCE_TEXT = ", ".join(f"{t} {tol}" for t, tol in AMOUNT_TOLERANCE_MINOR.items())
+
 MATCHING = (
     "A finding counts only if its type, the set of affected_ids, the currency (exact string: no case change "
-    "or trimming) and the amount (|claimed - expected| <= the published tolerance: 1 minor unit for every type "
-    "in generated episodes) are right, every evidence id exists in this episode (a row_id, invoice_id, "
-    "payment_id, fx_id or doc_id) and evidence_ids contain at least one complete evidence set (extra existing "
-    "ids are allowed). Matching to the reference is one-to-one (maximum matching): repeated findings are false "
-    "positives. A well-formed but wrong finding (unknown type, wrong currency, negative amount, unknown id) is "
-    "a false positive. A malformed submission (wrong JSON types, a missing field, more than 30 findings, more "
-    "than 10 evidence ids in a finding, explanation over 1000 characters, another episode_id) ends the episode "
-    "with reward -1. Fields beyond the format are ignored. The text of explanation never changes the reward."
+    "or trimming) and the amount are right (|claimed - expected| <= the published tolerance in minor units: "
+    f"{TOLERANCE_TEXT}), every evidence id "
+    "exists in this episode (a row_id, invoice_id, payment_id, fx_id or doc_id) and evidence_ids contain at "
+    "least one complete evidence set (extra existing ids are allowed). Matching to the reference is one-to-one "
+    "(maximum matching): repeated findings are false positives. A well-formed but wrong finding (unknown type, "
+    "wrong currency, negative amount, unknown id) is a false positive. A malformed submission (wrong JSON types, "
+    "a missing field, more than 30 findings, more than 10 evidence ids in a finding, explanation over 1000 "
+    "characters) ends the episode with reward -1. Put manifest.episode_id into episode_id; the answer is always "
+    "scored against the current episode. Fields beyond the format are ignored. The text of explanation never "
+    "changes the reward."
 )
 
 ACTIONS_HELP = {

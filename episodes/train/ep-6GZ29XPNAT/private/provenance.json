@@ -310,7 +310,7 @@
     }
   ],
   "episode_id": "ep-6GZ29XPNAT",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "history": {
     "customers": 10,
     "doc_offsets": [

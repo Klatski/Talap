@@ -21,6 +21,8 @@ from typing import Any
 
 from .base import ScriptedPolicy, TableReadError, submit_action
 
+MAX_EVIDENCE_IDS = 10  # лимит кейса на evidence_ids одного вывода: длиннее — неверная структура всего submit (-1)
+
 BANK, AR, UNAPPLIED, REVENUE = "1000", "1200", "2300", "4000"
 ROUNDING = {"half_up": ROUND_HALF_UP, "half_even": ROUND_HALF_EVEN}
 
@@ -92,8 +94,10 @@ class Books:
 
 
 def _finding(kind: str, affected: list[str], amount: int, currency: str, evidence: list[str], why: str) -> dict:
+    # Набор длиннее лимита бывает только на чужих данных (платёж на 3+ счёта в валюте с разными датами курса;
+    # генератор такую ошибку не вносит). Обрезка оставляет ответ структурно верным: этот вывод — FP, а не -1 всем.
     return {"type": kind, "affected_ids": sorted(affected), "claimed_amount_minor": amount, "currency": currency,
-            "evidence_ids": evidence, "explanation": why}
+            "evidence_ids": evidence[:MAX_EVIDENCE_IDS], "explanation": why}
 
 
 def _line_sig(li: dict) -> tuple:
@@ -156,6 +160,7 @@ def derive_findings(manifest: dict, policy: dict, ledger: list[dict], invoices: 
             if r["account"] == AR and r.get("invoice_id"):
                 credited[r["invoice_id"]] += r["credit_minor"]
         short = []
+        support = []  # документы счетов и их курсы по политике: по ним сверяется фактическое разнесение
         for ref in refs:
             target = b.inv_by_id.get(ref["invoice_id"])
             if target is None:
@@ -163,11 +168,15 @@ def derive_findings(manifest: dict, policy: dict, ledger: list[dict], invoices: 
             found = ("", Decimal(1)) if cur == b.base else b.rate_for(cur, target["issued_at"])
             if found is None:
                 continue
+            support += [target["doc_id"]] + ([found[0]] if found[0] else [])
             if credited.get(ref["invoice_id"], 0) < b.convert(ref["amount_minor"], cur, found[1]):
                 short.append(ref["invoice_id"])
         if len(short) == 1:
+            evidence = [pay["doc_id"], unapplied[0]["row_id"]]
+            if len(refs) > 1:  # счетов несколько: какой недоразнесён, видно по строкам 1200, счетам и курсам
+                evidence += [r["row_id"] for r in rows if r["account"] == AR and r["credit_minor"] > 0] + support
             out.append(_finding("unapplied_payment", [pid, short[0]], sum(r["credit_minor"] for r in unapplied), b.base,
-                                [pay["doc_id"], unapplied[0]["row_id"]],
+                                list(dict.fromkeys(evidence)),
                                 "Payment references the invoice in full, but part of it stayed on 2300."))
 
     # ------------------------------------------------------------ дубли счетов

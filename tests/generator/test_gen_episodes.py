@@ -5,10 +5,10 @@ import random
 import unittest
 from collections import Counter
 
-from gen_helpers import CONFIGS, episode
-from generator.audit import audit, compare_with_truth, parse_public
+from gen_helpers import CONFIGS, ROOT, episode
+from generator.audit import audit, check_evidence_set, compare_with_truth, parse_public
 from generator.config import DISTRACTOR_TYPES, ERROR_TYPES, SCENARIO_TYPES, SIZE_PROFILES
-from generator.fileio import parse_jsonl, parse_ledger
+from generator.fileio import parse_jsonl, parse_ledger, read_episode_dir
 from generator.generate import generate_episode
 from generator.schema_check import load_schema, validate, validate_episode_texts
 from policies.oracle import oracle_findings
@@ -177,6 +177,66 @@ class AuditDetectsTamperingTests(unittest.TestCase):
         public["ledger.csv"] = "".join(lines)
         result = audit(parse_public(public))
         self.assertTrue(result.anomalies)
+
+
+class MultiInvoiceUnappliedEvidenceTests(unittest.TestCase):
+    """Неразнесённый платёж на несколько счетов (блок 2 жюри, условие 4: «по набору можно проверить вывод»).
+    По документу платежа и строке 2300 (invoice_id у неё пуст) не видно, какой счёт недоразнесён, поэтому набор
+    содержит фактическое разнесение: все строки 1200 платежа, документы всех счетов и курсы на их даты."""
+
+    @staticmethod
+    def _multi_ref(pub, truth):
+        for issue in truth["issues"]:
+            if issue["type"] != "unapplied_payment":
+                continue
+            pay = next(p for p in pub.payments if p["payment_id"] in issue["affected_ids"])
+            if len(pay["invoice_refs"] or []) > 1:
+                yield issue, pay
+
+    def _check_issue(self, pub, issue, pay):
+        pid = pay["payment_id"]
+        short = next(a for a in issue["affected_ids"] if a != pid)
+        ar = {r["row_id"]: r["invoice_id"] for r in pub.ledger if r["account"] == "1200" and r["payment_id"] == pid}
+        invoice_docs = {pub.inv_by_id[r["invoice_id"]]["doc_id"] for r in pay["invoice_refs"]}
+        for ev in issue["evidence_sets"]:
+            self.assertLessEqual(len(ev), 10)  # лимит evidence_ids одного вывода
+            self.assertLessEqual(set(ar) | invoice_docs, set(ev))
+            self.assertEqual(check_evidence_set(pub, issue, ev), [])
+            if pay["currency"] != pub.base:
+                self.assertTrue(any(e.startswith(f"FX:{pay['currency']}:") for e in ev))
+            # без строки 1200 полностью разнесённого счёта, без документа счёта или без курса счёт не определён
+            needed = [row for row, inv in ar.items() if inv != short] + sorted(invoice_docs)
+            needed += [e for e in ev if e.startswith("FX:")]
+            for drop in needed:
+                self.assertTrue(check_evidence_set(pub, issue, [e for e in ev if e != drop]), drop)
+            # прежний набор из двух ID (документ платежа и строка 2300) недостаточен
+            old = [pay["doc_id"]] + [e for e in ev if e in pub.row_by_id and pub.row_by_id[e]["account"] == "2300"]
+            self.assertTrue(check_evidence_set(pub, issue, old))
+
+    def test_generated_episodes(self):
+        found = 0
+        for seed in range(24):
+            ep = generate_episode(seed, {"scenarios": {"fx_partial_boundary_payment": 2}})
+            pub = parse_public(ep.public)
+            for issue, pay in self._multi_ref(pub, ep.truth):
+                found += 1
+                with self.subTest(seed=seed, issue=issue["issue_id"]):
+                    self._check_issue(pub, issue, pay)
+        self.assertGreaterEqual(found, 4)
+
+    def test_open_episodes(self):
+        found = 0
+        for split in ("train", "dev"):
+            for ep_dir in sorted((ROOT / "episodes" / split).iterdir()):
+                if not (ep_dir / "private" / "truth.json").is_file():
+                    continue
+                public, private = read_episode_dir(ep_dir)
+                pub, truth = parse_public(public), json.loads(private["truth.json"])
+                for issue, pay in self._multi_ref(pub, truth):
+                    found += 1
+                    with self.subTest(episode=ep_dir.name, issue=issue["issue_id"]):
+                        self._check_issue(pub, issue, pay)
+        self.assertGreaterEqual(found, 1)  # такие случаи есть в открытых эпизодах (dev)
 
 
 if __name__ == "__main__":

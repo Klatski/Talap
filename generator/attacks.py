@@ -171,7 +171,6 @@ def build_attacks(public: dict[str, str], truth: dict, seed: int = 0) -> list[di
         "not_an_object": "findings please",
         "missing_findings_key": {"episode_id": ep},
         "findings_not_a_list": {"episode_id": ep, "findings": {"a": 1}},
-        "wrong_episode_id": {"episode_id": "ep-ZZZZZZZZZZ", "findings": [base]},
         "missing_finding_field": sub([{k: v for k, v in base.items() if k != "currency"}]),
         "float_amount": sub([{**base, "claimed_amount_minor": float(base["claimed_amount_minor"])}]),
         "bool_amount": sub([{**base, "claimed_amount_minor": True}]),
@@ -201,6 +200,9 @@ def build_attacks(public: dict[str, str], truth: dict, seed: int = 0) -> list[di
         note="поле сверх формата не влияет на сопоставление")
     add("extra_top_level_field_ignored", {"episode_id": ep, "findings": [base], "bonus": True}, base_tp, 1 - base_tp,
         n - base_tp, note="поле сверх формата не влияет на сопоставление")
+    add("foreign_episode_id_scored", {"episode_id": "ep-ZZZZZZZZZZ", "findings": [base]}, base_tp, 1 - base_tp,
+        n - base_tp, note="чужой episode_id — не ошибка структуры (п. 8 жюри): ответ оценивается против этого "
+        "эпизода, несовпадение — предупреждение в журнале оценщика")
     return cases
 
 

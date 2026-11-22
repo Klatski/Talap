@@ -262,17 +262,21 @@ def render(
     entry_by_doc = {e.doc: e for e in h.entries if e.doc}
     group_ids: dict[int, str] = {}
 
-    def resolve(ref: tuple) -> list[str]:
+    def resolve(ref: tuple) -> list[tuple[str, ...]]:
+        """Варианты одного элемента шаблона доказательств; вариант — кортеж ID. "row" — любая ОДНА строка
+        роли (каждая даёт свой набор), "rows" — ВСЕ строки роли вместе в одном наборе (может быть пусто)."""
         if ref[0] == "doc":
-            return [maps.doc_id[ref[1]]]
-        if ref[0] == "row":
+            return [(maps.doc_id[ref[1]],)]
+        if ref[0] in ("row", "rows"):
             entry = entry_by_doc[ref[1]]
             found = [row_ids[(entry.key, i)] for i, ln in enumerate(entry.lines) if ref[2] in ("*", ln.role)]
+            if ref[0] == "rows":
+                return [tuple(found)]
             if not found:
                 raise AssertionError(f"no evidence row {ref}")
-            return found
+            return [(rid,) for rid in found]
         if ref[0] == "fx":
-            return [fx_record_id(ref[1], h.base, ref[2].isoformat())]
+            return [(fx_record_id(ref[1], h.base, ref[2].isoformat()),)]
         raise AssertionError(ref)
 
     truth_issues = []
@@ -281,7 +285,7 @@ def render(
         sets = set()
         for template in issue.evidence:
             for combo in itertools.product(*(resolve(r) for r in template)):
-                sets.add(tuple(sorted(set(combo))))
+                sets.add(tuple(sorted({rid for variant in combo for rid in variant})))
         group = None
         if issue.group is not None:
             if issue.group not in group_ids:

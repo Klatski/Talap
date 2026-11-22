@@ -29,6 +29,8 @@ from .history import MIN_FX_DIFF, GenerationShortfall, History, Invoice, Payment
 from .money import format_rate
 from .timeutil import local_date
 
+MAX_EVIDENCE_IDS = 10  # лимит evidence_ids в одном выводе (кейс): набор эталона должен в него помещаться
+
 
 @dataclass
 class IssueSpec:
@@ -176,9 +178,13 @@ class Injector:
     def _apply_shortfall(self, pay: Payment, scenario=None, group=None, variant: str | None = None) -> bool:
         """variant: None — случайно (45% полный пропуск), "missing_allocation" — счёт не получил ничего,
         "partial_allocation" — счёт получил часть (15–85%), остаток на 2300. False — у этого платежа
-        заказанный вариант невозможен (слишком малая сумма), вызывающий берёт другого кандидата."""
+        заказанный вариант невозможен (слишком малая сумма или полный набор доказательств длиннее
+        MAX_EVIDENCE_IDS), вызывающий берёт другого кандидата."""
         h = self.h
         rng = self.rng
+        evidence = self._shortfall_evidence(pay)
+        if self._evidence_size_bound(pay) > MAX_EVIDENCE_IDS:  # до расхода случайности: прочие кандидаты те же
+            return False
         k = rng.randrange(len(pay.allocations))
         alloc = pay.allocations[k]
         a = alloc.amount_minor
@@ -210,7 +216,7 @@ class Injector:
                 affected=[pay.key, alloc.invoice],
                 currency=h.base,
                 amount_rule=("posted_line", pay.key, "unapplied"),
-                evidence=[[("doc", pay.key), ("row", pay.key, "unapplied")]],
+                evidence=evidence,
                 variant="missing_allocation" if full else "partial_allocation",
                 cause=(
                     "платёж не разнесён на указанный в invoice_refs счёт, сумма осталась на 2300"
@@ -224,6 +230,30 @@ class Injector:
             )
         )
         return True
+
+    def _shortfall_evidence(self, pay: Payment) -> list[list[tuple]]:
+        """Набор доказательств неразнесённого платежа. Один счёт в invoice_refs: документ платежа и строка 2300
+        (недоразнесён единственный счёт). Несколько счетов: по документу и строке 2300 (invoice_id у неё пуст)
+        не видно, какой счёт недоразнесён, поэтому в набор входит фактическое разнесение — все строки 1200
+        этого платежа, документы всех счетов из invoice_refs и, у валютного платежа, курсы по политике на даты
+        этих счетов (Кт 1200 считается по курсу счёта). По ним недоразнесённый счёт выводится однозначно
+        (generator/audit.py::check_evidence_set проверяет это по одному набору, без остальных данных)."""
+        h = self.h
+        template = [("doc", pay.key), ("row", pay.key, "unapplied")]
+        if len(pay.allocations) > 1:
+            template.append(("rows", pay.key, "ar"))
+            for alloc in pay.allocations:
+                template.append(("doc", alloc.invoice))
+                rate_date = h.policy_rate(pay.currency, h.invoices[alloc.invoice].issued_at)[0]
+                if rate_date is not None:  # None — платёж в базовой валюте, курс не нужен
+                    template.append(("fx", pay.currency, rate_date))
+        return [template]
+
+    def _evidence_size_bound(self, pay: Payment) -> int:
+        """Верхняя граница размера набора _shortfall_evidence (все строки 1200 на месте)."""
+        template = self._shortfall_evidence(pay)[0]
+        rows_refs = sum(1 for ref in template if ref[0] == "rows")
+        return len({ref for ref in template if ref[0] != "rows"}) + rows_refs * len(pay.allocations)
 
     def unapplied(self, variant: str | None = None) -> None:
         h = self.h

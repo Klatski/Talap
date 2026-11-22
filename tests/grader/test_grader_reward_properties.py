@@ -62,12 +62,16 @@ class RewardProperties(unittest.TestCase):
                 self.assertLessEqual(score_submission(truth, cases["flag_all_zero_amount"]["submission"], 0)["reward"], -0.9)
 
     def test_cross_episode_answers_do_not_score(self):
-        """Ответ oracle одного эпизода, поданный в другой (даже с подменой episode_id), не даёт TP."""
+        """Ответ oracle одного эпизода, поданный в другой (с любым episode_id), не даёт TP: ID записей разные.
+        Чужой episode_id — не ошибка структуры (п. 8 жюри), а предупреждение в журнале оценщика."""
         for (_, _, _, a, _), (_, _, _, b, _) in zip(EPISODES, EPISODES[1:]):
             foreign = oracle_findings(a)["findings"]
             r = score_submission(b, {"episode_id": b["episode_id"], "findings": foreign}, 0)
             self.assertEqual(r["tp"], 0)
-            self.assertFalse(score_submission(b, {"episode_id": a["episode_id"], "findings": foreign}, 0)["valid"])
+            r2 = score_submission(b, {"episode_id": a["episode_id"], "findings": foreign}, 0)
+            self.assertTrue(r2["valid"])
+            self.assertEqual((r2["tp"], r2["reward"]), (0, r["reward"]))
+            self.assertTrue(r2["warnings"])
 
 
 if __name__ == "__main__":

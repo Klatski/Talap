@@ -13,7 +13,7 @@
   },
   "episode_id": "ep-D2Z88UACCQ",
   "fx_rate_format": "decimal string",
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "money_format": "integer minor units; exponent per currency in currency_exponents",
   "period_end": "2026-02-01T00:00:00+00:00",
   "period_start": "2026-01-01T00:00:00+00:00",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "submit(findings) payload",
-  "description": "Structure only (a violation ends the episode with reward -1): wrong JSON type, a missing field, more than 30 findings, more than 10 evidence_ids (raw list length), explanation over 1000 code points. A well-formed finding with wrong content (unknown type, other currency spelling, negative amount, unknown ids) is a false positive, not a structure error. Fields beyond these are ignored. episode_id must also equal manifest.episode_id (checked by the grader).",
+  "description": "Structure only (a violation ends the episode with reward -1): wrong JSON type, a missing field, more than 30 findings, more than 10 evidence_ids (raw list length), explanation over 1000 code points. A well-formed finding with wrong content (unknown type, other currency spelling, negative amount, unknown ids) is a false positive, not a structure error. Fields beyond these are ignored. Put manifest.episode_id into episode_id; a different string is not a structure error: the answer is scored against the current episode and the grader logs a warning.",
   "type": "object",
   "properties": {
     "episode_id": {

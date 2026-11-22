@@ -82,6 +82,7 @@ def score_episode(episode_dir: str, findings: Any, inspection_steps: int, *, mal
         "inspection_steps": inspection_steps,
         "valid": result["valid"],
         "errors": result["errors"],
+        "warnings": result["warnings"],  # напр. чужой episode_id: оценка против этого эпизода, без штрафа
         **{k: result[k] for k in METRIC_KEYS},
         "reward": result["reward"],
         "issues_total": len(ep.truth["issues"]),

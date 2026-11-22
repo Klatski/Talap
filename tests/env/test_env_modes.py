@@ -54,13 +54,24 @@ class ModeTests(unittest.TestCase):
         self.assertTrue(rec["errors"])
 
     def test_train_invalid_submission(self):
-        for payload in (None, "all", {"episode_id": "ep-OTHER00000", "findings": []}, {"findings": []}):
+        for payload in (None, "all", {"episode_id": 7, "findings": []}, {"findings": []}):
             with self.subTest(payload=payload):
                 seen, rec = self._episode("train", payload)
                 obs, r, term, trunc, info = seen[-1]
                 self.assertEqual((r, term, trunc), (-1.0, True, False))
                 self.assertFalse(info["valid"])
                 self.assertEqual(info["tp"], None)
+
+    def test_foreign_episode_id_is_scored_not_rejected(self):
+        """Чужой episode_id — не ошибка структуры: ответ оценивается против текущего эпизода, в журнале предупреждение."""
+        seen, rec = self._episode("train", {**oracle_findings(self.truth), "episode_id": "ep-OTHER00000"})
+        obs, r, term, trunc, info = seen[-1]
+        self.assertEqual((obs["result"], term, trunc), ({"accepted": True}, True, False))
+        self.assertTrue(info["valid"])
+        self.assertAlmostEqual(r, 1 - 0.002 * 3)
+        self.assertEqual(len(rec["warnings"]), 1)
+        seen, rec = self._episode("train", oracle_findings(self.truth))
+        self.assertEqual(rec["warnings"], [])
 
     def test_malformed_submit_wrapper(self):
         env = local_env()
