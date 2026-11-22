@@ -26,8 +26,7 @@ jobs:
       - name: docker build
         run: docker build -t audit-env .
       - name: base image digest (для --build-arg BASE_IMAGE=python@sha256:...)
-        run: docker image inspect --format '{{join .RepoDigests "
-"}}' python:3.11.9-slim-bookworm
+        run: docker image inspect --format '{{json .RepoDigests}}' python:3.11.9-slim-bookworm
       - name: docker run --network none (= python check.py), 2 CPU, 4 GB
         run: docker run --rm --network none --cpus 2 --memory 4g audit-env
       - name: demo in container
