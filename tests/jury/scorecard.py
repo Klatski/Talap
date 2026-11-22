@@ -1,4 +1,4 @@
-"""Карточка жюри: раздел 10 Case.md («Критерии оценки») и раздел 06, переведённые в код один в один.
+"""Карточка жюри: раздел 10 кейса («Критерии оценки») и раздел 06, переведённые в код один в один.
 
     python tests/jury/scorecard.py [--salt S] [--out reports/jury_scorecard.md]
     (в составе единой проверки — этап 7 python check.py)
@@ -809,7 +809,7 @@ def run_scorecard(root: Path, salt: str, rewards: dict | None = None) -> dict:
 
 def markdown(card: dict) -> str:
     lines = ["# Jury scorecard (emulation)", "",
-             "Case.md section 10 translated into code one to one (`tests/jury/scorecard.py`, stage 7 of `python check.py`).",
+             "Case section 10 translated into code one to one (`tests/jury/scorecard.py`, stage 7 of `python check.py`).",
              f"Closed set emulated by `generator.holdout`: {card['episodes']} salted episodes with new parameter combinations "
              "(5 clean, 5 with interacting errors) and their permuted + renamed pairs. The jury's real seeds are unknown, so "
              "20/20 here is necessary, not sufficient.", "",

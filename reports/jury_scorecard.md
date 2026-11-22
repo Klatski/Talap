@@ -1,6 +1,6 @@
 # Jury scorecard (emulation)
 
-Case.md section 10 translated into code one to one (`tests/jury/scorecard.py`, stage 7 of `python check.py`).
+Case section 10 translated into code one to one (`tests/jury/scorecard.py`, stage 7 of `python check.py`).
 Closed set emulated by `generator.holdout`: 20 salted episodes with new parameter combinations (5 clean, 5 with interacting errors) and their permuted + renamed pairs. The jury's real seeds are unknown, so 20/20 here is necessary, not sufficient.
 
 | block | passed | points |

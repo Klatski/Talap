@@ -12,7 +12,7 @@
   6. имитация закрытой проверки: 20 новых эпизодов с солью (5 чистых, 5 взаимодействующих) + 20
      пар «перестановка + смена ID»; все политики через изолированную среду; oracle = 1 везде,
      награды пар совпадают -> reports/holdout.{md,json};
-  7. карточка жюри: раздел 10 Case.md в коде (tests/jury/scorecard.py) на закрытых эпизодах этапа 6 —
+  7. карточка жюри: раздел 10 кейса в коде (tests/jury/scorecard.py) на закрытых эпизодах этапа 6 —
      20 проверок контракта, 20 эпизодов, 20 проверок награды, 20 парных проверок -> reports/jury_scorecard.md.
 Снимки (golden): результаты этапов 4 и 6 по каждому эпизоду (награда, P/R/F1, TP/FP/FN, шаги, причины
 FP; без времени) и карточка этапа 7 сравниваются с закоммиченными reports/*; расхождение = FAIL.
@@ -351,7 +351,7 @@ def main(argv=None) -> int:
         with tempfile.TemporaryDirectory(prefix="holdout-") as tmp:
             state: dict = {}
             st.run("6. closed-check emulation (holdout + pairs)", lambda: stage_holdout(args.update, args.salt, Path(tmp), state))
-            st.run("7. jury scorecard (Case.md section 10, 4 x 20 checks)", lambda: stage_jury(args.update, args.salt, state))
+            st.run("7. jury scorecard (case section 10, 4 x 20 checks)", lambda: stage_jury(args.update, args.salt, state))
     print("\n=== SUMMARY")
     for name, ok, dt, note in st.results:
         print(f"{'PASS' if ok else 'FAIL'}  {name:55s} {dt:6.1f} s  {note}")

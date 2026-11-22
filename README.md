@@ -7,7 +7,58 @@
 сопоставляет выводы с эталоном и считает награду. Все данные вымышлены. Сеть, GPU и сторонние
 пакеты не нужны: только Python 3.11 stdlib.
 
-Полное описание проекта в одном файле: [`docs/overview.md`](docs/overview.md).
+## Для жюри: проверка одной командой
+
+```bash
+docker build -t audit-env .
+docker run --rm --network none --cpus 2 --memory 4g audit-env      # = python check.py, 7 этапов
+```
+
+Без Docker то же самое делает `python check.py` из корня (Python 3.11, ставить ничего не нужно; `make check` —
+синоним). Итог — `ALL CHECKS PASSED`, все 7 этапов `PASS`, код возврата 0; обычно 3–5 минут. Что проверяет
+каждый этап — в разделе «Единая команда проверки» ниже.
+
+Дальше:
+1. Демо со скриптовой политикой: `docker run --rm --network none audit-env python -m env.demo` (шаги, награда
+   и выводы на эпизоде-заглушке). Видеозапись демо лежит в папке сдачи рядом с кодом.
+2. Свои эпизоды, seed и политики — через `judge_adapter.py` (раздел «Интерфейс жюри»).
+3. Устройство среды и честные ограничения — [`docs/design.md`](docs/design.md); весь проект в одном файле —
+   [`docs/overview.md`](docs/overview.md); форматы и типы ошибок — [`docs/contract.md`](docs/contract.md).
+
+### Что сдано и где лежит
+
+| Пункт сдачи | Где |
+|---|---|
+| Исходный код с лицензией и зафиксированными зависимостями | `generator/` (генератор), `env/` (среда), `LICENSE` (MIT), `requirements.txt` (только stdlib) |
+| README: контейнер и единая команда проверки | этот файл; `Dockerfile`, `check.py`, `Makefile` |
+| Matcher и награда, схемы, политики | `grader/` (`validate.py`, `matcher.py`, `metrics.py`, `scoring.py`), `schemas/*.schema.json` (10 схем), `policies/` |
+| Эпизоды: 10 train + 10 dev | `episodes/train`, `episodes/dev` (+ заглушка `episodes/stub`); эталон и история генерации — `private/{truth,provenance}.json` |
+| Тесты среды, сопоставления и награды | `tests/` — 318 тестов: среда 151, оценщик 82, генератор 81, карточка жюри 4 |
+| Четыре базовые политики | `policies/random_explorer.py`, `reconcile.py`, `flag_all.py`, `oracle.py` (+ скриптовый аудитор `auditor.py`) |
+| Траектории | `trajectories/trajectories.jsonl` — 950 строк с полями episode_id, step, action, observation, reward, terminated, truncated; эталона в наблюдениях нет (сканер утечек, этап 5) |
+| Записка о дизайне | [`docs/design.md`](docs/design.md) |
+| Демо | `python -m env.demo`; видео — в папке сдачи |
+| Интерфейс жюри: `generate_episode`, `make_env`, `score_episode`, `load_policy` | `judge_adapter.py`; правила жюри в тестах: `tests/env/test_env_jury_adapter.py` (C01–C20, блок 4), `tests/grader/test_grader_jury_rules.py` (блок 3, M01–M12) |
+| Политика в отдельном ограниченном процессе | `env/sandbox.py`, `env/sandbox_child.py`, `tests/env/test_env_sandbox.py` |
+| Критерии оценки (раздел 10) как проверки: 4 × 20 + баллы | `tests/jury/scorecard.py` → `reports/jury_scorecard.md` |
+| Диагностика P, R, F1, возврат, шаги, время; разбор сбоев | `reports/baselines.md` (train + dev), `reports/holdout.md` (имитация закрытого прогона) |
+| CI | `.github/workflows/check.yml`: Linux и Docker с `--network none` |
+
+### Результаты
+
+Снимки `reports/`, их пересчитывает и сверяет `check.py`. Режим eval, изолированные процессы, средние по эпизодам.
+
+| Политика | train + dev (20): F1 | возврат | имитация закрытого прогона (20): F1 | возврат |
+|---|---|---|---|---|
+| random | 0.100 | −0.816 | 0.100 | −0.814 |
+| reconcile (простая сверка) | 0.207 | −0.622 | 0.220 | −0.592 |
+| flag_all («пометить всё») | 0.000 | −1.000 | 0.000 | −1.000 |
+| oracle | 1.000 | 1.000 | 1.000 | 1.000 |
+| auditor (скриптовый, без эталона) | 1.000 | 0.955 | 1.000 | 0.962 |
+
+F1 = 0.1 у random — только чистые компании: пустой ответ на пустом эталоне даёт F1 = 1. Карточка жюри
+(`reports/jury_scorecard.md`) на имитации — 100/100. Это необходимое условие, а не достаточное: настоящих seed
+жюри мы не знаем.
 
 ## Единая команда проверки
 
@@ -15,7 +66,7 @@
 python check.py            # или: make check
 python check.py --quick    # без имитации закрытого прогона и карточки жюри (этапы 6–7)
 python check.py --update   # после намеренных изменений: перезаписать траектории и снимки reports/*
-python tools/clean_run.py  # перед сдачей: то же с нуля — свежий клон, новый venv, 2 CPU, сеть запрещена
+python tools/clean_run.py --source .   # то же с нуля из git-клона: свежий клон, новый venv, 2 CPU, сеть запрещена
 ```
 
 Этапы (обычно 3–5 минут на ноутбуке, при нехватке памяти дольше):
@@ -220,60 +271,27 @@ python -m env.runner --episodes-root /data/jury --splits episodes,pairs --mode e
 дописываются в журнал оценщика сразу по завершении эпизода. JSON-lines сервер `python -m env.server` (методы
 `reset`, `step`, `close`) подходит для политики на любом языке.
 
-## Что где (соответствие ТЗ)
-
-| Требование | Где |
-|---|---|
-| Генератор: 4 типа ошибок, 2 сценария, чистые компании, отвлекающие случаи | `generator/`, [`docs/generator.md`](docs/generator.md) |
-| Эталон с наборами доказательств, история генерации | `episodes/*/*/private/{truth,provenance}.json` |
-| 10 train + 10 dev эпизодов (+ заглушка) | `episodes/train`, `episodes/dev`, `episodes/stub` |
-| Интерфейс жюри: `generate_episode`, `make_env`, `score_episode`, `{"name","args"}`, `closed` + `episode_dir` | `judge_adapter.py`, `tests/env/test_env_jury_adapter.py` (C01–C20, парные проверки) |
-| reset/step, действия, курсоры, калькулятор, лимиты, тайм-аут, изоляция процессов | `env/` |
-| Политика в отдельном ограниченном процессе (граница доступа) | `env/sandbox.py`, `env/sandbox_child.py`, `tests/env/test_env_sandbox.py` |
-| Валидация submit, matcher (паросочетание), метрики, награда, train/eval/closed | `grader/`, `tests/grader/test_grader_jury_rules.py` (блок 3 и M01–M12) |
-| Схемы | `schemas/*.schema.json` |
-| 4 базовые политики: random, reconcile, flag_all, oracle (+ демо-аудитор) | `policies/` |
-| Траектории без эталона | `trajectories/trajectories.jsonl` |
-| Тесты среды, сопоставления, награды, атак | `tests/env`, `tests/grader`, `tests/generator` |
-| Критерии оценки (раздел 10) как проверки: 4 × 20 + баллы | `tests/jury/scorecard.py` → `reports/jury_scorecard.md` |
-| Диагностика P, R, F1, возврат, шаги, время; разбор сбоев | `reports/baselines.md`, `reports/holdout.md` |
-| Записка о дизайне и честные ограничения | [`docs/design.md`](docs/design.md) |
-| Контейнер и единая команда | `Dockerfile`, `check.py`, `Makefile`; CI `.github/workflows/check.yml` (Linux + Docker `--network none`) |
-| Лицензия, зависимости | `LICENSE` (MIT), `requirements.txt` (только stdlib) |
-
 ## Команды по частям
 
 ```bash
-python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница, файлы CI (141 тест)
+python -m unittest discover -s tests/env -p "test_env_*.py"          # среда, адаптер жюри, песочница, файлы CI (151 тест)
 python tests/jury/scorecard.py [--salt S] [--out card.md]            # карточка жюри на своей соли (≈45 с)
-python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (78 тестов)
+python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (82 теста)
 python tests/grader/test_grader_handworked.py --show                 # ручные примеры: «вручную | программа»
 python -m grader --episode episodes/stub/ep-SUW6BEVZNR --submission answer.json --steps 3   # свой ответ: TP/FP/FN, формула награды
-python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (79 тестов)
+python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (81 тест)
 python -m env.runner --policies random,reconcile,flag_all,oracle,auditor --splits train,dev --mode eval
 python -m env.runner --splits train --mode closed --policy-file tests/env/attack_policies/read_truth.py  # атака в песочнице
 python -m generator check-splits                       # и build-splits, audit <ep>, stress, leakcheck, holdout
 python -m generator scan-trajectories trajectories/trajectories.jsonl
 ```
 
-## Разделение труда
+## Перекрёстные проверки
 
-Работают два человека, подробности — в `CLAUDE.md`.
-
-**Человек A — генератор и эталон:** скрытая история компании и рендер ledger, invoices, payments,
-fx, policy, manifest; бухгалтерские инварианты до и после внесения ошибки; 4 типа ошибок,
-2 взаимодействующих сценария, чистые компании, отвлекающие случаи; `truth.json` с наборами
-доказательств, `provenance.json`; преобразование «перестановка и смена ID» и переотображение
-truth; oracle; 10 train + 10 dev эпизодов.
-
-**Человек B — среда и оценщик:** reset/step, изоляция процессов, лимит 100 шагов, тайм-аут,
-truncated; действия, пагинация с курсорами, безопасный калькулятор, ограниченные ошибки;
-валидация submit, matcher с паросочетанием, метрики, награда, режимы train и eval; тесты награды
-и атак; политики random, flag_all, reconcile; trajectories.jsonl, Docker, единая команда проверки.
-
-**Перекрёстная проверка (с 21 ноября).** B проверяет данные A: независимый аудитор
-`policies/auditor.py` заново выводит все расхождения из открытых записей, а простая сверка
-служит детектором утечек (`tests/grader/test_grader_crosscheck_data.py`). A проверяет среду B:
-36 атак через оценщик и через `step(submit)`, oracle через изолированную среду, сканер утечек
-траекторий (`tests/generator/test_gen_crosscheck_tools.py`, `test_gen_against_env.py`).
-Детерминизм между процессами каждый проверяет на своей части.
+Генератор и среда проверяют друг друга. Независимый аудитор `policies/auditor.py` заново выводит все
+расхождения из открытых записей и сверяется с эталоном. Простая сверка служит детектором утечек: если бы она
+находила ошибки без анализа доказательств, генератор выдавал бы их по артефактам
+(`tests/grader/test_grader_crosscheck_data.py`). В обратную сторону: 36 атак через оценщик и через
+`step(submit)`, oracle через изолированную среду, сканер утечек траекторий
+(`tests/generator/test_gen_crosscheck_tools.py`, `test_gen_against_env.py`). Детерминизм между процессами
+проверяется с обеих сторон.

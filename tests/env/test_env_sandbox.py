@@ -176,7 +176,7 @@ class Sandbox(unittest.TestCase):
             SandboxedPolicy.from_file(self.oracle_import)
 
     def test_runner_cli_runs_a_policy_file(self):
-        """Регрессия /code-review: `python -m env.runner --policy-file` (CLAUDE.md, README) запускает эпизоды."""
+        """Регрессия /code-review: `python -m env.runner --policy-file` (README) запускает эпизоды."""
         out = subprocess.run([sys.executable, "-m", "env.runner", "--policy-file", str(self.library), "--splits", "stub",
                               "--mode", "closed"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
                              timeout=120)
