@@ -112,7 +112,7 @@ python -m env.runner --episodes-root DIR --splits S --mode closed --policy-file 
 **truth.json для своих фикстур:** `{"episode_id", "issues": [{"issue_id", "type", "affected_ids",
 "expected_amount_minor", "currency", "evidence_sets": [[...], ...], "amount_tolerance_minor"}]}`.
 `evidence_sets` — допустимые наборы, хватает любого целиком. τ = `amount_tolerance_minor`: без поля 0,
-генератор публикует 1 для всех типов. `provenance.json` необязателен.
+генератор публикует 0 для дубля, cut-off и неразнесённого платежа и 1 для курсовой разницы (округление). `provenance.json` необязателен.
 
 **Сопоставление** (`grader/matcher.py`, точные соглашения жюри):
 * ID сравниваются точно. `affected_ids` — множество, оно должно совпасть с каноническим.
@@ -188,7 +188,9 @@ with AuditEnv(grader_log="reports/grader_log.jsonl") as env:
 
 Генератор — чистая функция `(seed, config, версия[, соль]) → файлы`. Конфиг — пресет из
 `generator/configs/` или свой JSON, параметры описаны в [`docs/generator.md`](docs/generator.md):
-число ошибок каждого типа независимо, сценарии, размер, валюты, правило даты курса, округление.
+число ошибок каждого типа независимо, вариант ошибки (`variants`, например
+`{"unapplied_payment": ["missing_allocation", "partial_allocation"]}` — один полный пропуск и одно частичное
+разнесение), сценарии, размер, валюты, правило даты курса, округление.
 Эталон и история генерации пишутся в `private/`, агент их не видит.
 
 ```bash
@@ -243,7 +245,7 @@ python tests/jury/scorecard.py [--salt S] [--out card.md]            # карт�
 python -m unittest discover -s tests/grader -p "test_grader_*.py"    # оценщик и правила жюри (78 тестов)
 python tests/grader/test_grader_handworked.py --show                 # ручные примеры: «вручную | программа»
 python -m grader --episode episodes/stub/ep-SUW6BEVZNR --submission answer.json --steps 3   # свой ответ: TP/FP/FN, формула награды
-python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (68 тестов)
+python -m unittest discover -s tests/generator -p "test_gen_*.py"    # генератор и перекрёстные проверки (79 тестов)
 python -m env.runner --policies random,reconcile,flag_all,oracle,auditor --splits train,dev --mode eval
 python -m env.runner --splits train --mode closed --policy-file tests/env/attack_policies/read_truth.py  # атака в песочнице
 python -m generator check-splits                       # и build-splits, audit <ep>, stress, leakcheck, holdout

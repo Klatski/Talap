@@ -55,6 +55,9 @@ def document_features(public: dict[str, str]) -> list[tuple[str, dict[str, bool]
                 "weekend_company_tz": local.weekday() >= 5,
                 "posted": posted_ts is not None,
                 "posting_differs_from_document_time": posted_ts is not None and posted_ts != ts,
+                # временные метки книги: раньше выдавали cut-off (строки вне периода, проводка раньше документа)
+                "posting_outside_period": posted_ts is not None and not start <= posted_ts < end,
+                "posted_before_document": posted_ts is not None and posted_ts < ts,
                 "foreign_currency": rec["currency"] != manifest["base_currency"],
             }
             out.append((rec[id_field], feats))
@@ -66,7 +69,8 @@ def document_features(public: dict[str, str]) -> list[tuple[str, dict[str, bool]
 # содержательные: ошибка конкретного типа по определению ими обладает.
 ARTIFACT_FEATURES = (
     "last_10pct_of_file", "round_amount_1000", "non_company_offset", "utc_offset", "weekend_company_tz",
-    "posting_differs_from_document_time", "file_position_decile", "ledger_position_decile", "hour_utc",
+    "posting_differs_from_document_time", "posting_outside_period", "posted_before_document",
+    "file_position_decile", "ledger_position_decile", "hour_utc",
     "amount_magnitude", "line_items", "id_first_char", "doc_id_first_char",
 )
 
